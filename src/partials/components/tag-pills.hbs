@@ -1,0 +1,13 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Tags as pills (FD-110): sentence-case label, --bg-2 fill, no border, --r-3 radius, body font
+14 px. One component for Portfolio, the "View all" pages, project pages and Home Selected work.
+Usage: {{> components/tag-pills tags=list}}; `withStatus=true` ends the row with the project's status (Home
+Selected work). --}}
+<ul class="list-unstyled pill-row mb-0">
+  {{#each tags}}
+  <li class="pill">{{this}}</li>
+  {{/each}}
+  {{#if (and withStatus status)}}
+  <li class="card-status">{{> components/status-chip}}</li>
+  {{/if}}
+</ul>

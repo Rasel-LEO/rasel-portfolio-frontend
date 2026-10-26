@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Portfolio" description=profile.summary ogType="profile"}}
+  </head>
+  <body data-page="portfolio">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      {{!-- FD-107: six curated sections on alternating surfaces (bg-0, bg-1). Counts and "View all
+      {count}" are computed from the data (tools/content.mjs portfolioView). --}}
+      <section class="pf-profile" aria-labelledby="pf-name" data-pf-section="profile">
+        <div class="container">
+          <p class="eyebrow mb-0" data-pf-enter>Portfolio</p>
+          <h1 class="pf-name mb-0" id="pf-name" data-pf-enter>{{profile.name}}</h1>
+          <div class="pf-intro">
+            <picture class="pf-avatar" data-pf-enter="portrait">
+              <source type="image/avif" srcset="/images/avatar/avatar-512.avif" />
+              <img
+                src="/images/avatar/avatar-512.webp"
+                alt="Portrait of {{profile.name}}"
+                width="512"
+                height="512"
+                fetchpriority="high"
+                decoding="async"
+              />
+            </picture>
+            <div class="pf-intro-text" data-pf-enter>
+              <p class="t-label pf-role mb-0">{{portfolio.profile.eyebrow}}</p>
+              <p class="t-body-l pf-summary mb-0">{{portfolio.profile.summary_line}}</p>
+              <p class="pf-location mb-0">
+                {{> icons/pf-icon name="pin"}}<span>{{portfolio.profile.location_line}}</span>
+              </p>
+            </div>
+          </div>
+
+          <dl class="pf-counts mb-0" data-pf-enter>
+            {{#each portfolioView.counts}}
+            <div class="pf-count">
+              <dt>{{label}}</dt>
+              <dd data-count="{{key}}">{{value}}</dd>
+            </div>
+            {{/each}}
+          </dl>
+
+          <div class="pf-actions" data-pf-enter>
+            {{> components/cv-button variant="btn-primary" id="cv" lead=true}}
+            <a class="btn btn-secondary" href="/hire.html">
+              Hire me
+              <svg
+                class="icon icon-arrow"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+
+          <ul class="list-unstyled pf-links mb-0" aria-label="Research and social profiles">
+            {{#each links}}
+            <li>
+              <a class="pf-link" href="{{url}}" target="_blank" rel="me noopener noreferrer"
+                >{{> icons/pf-icon name=id}}<span class="pf-link-label">{{label}}</span
+                ><span class="visually-hidden"> (opens in a new tab)</span>{{> icons/pf-icon
+                name="external"}}</a
+              >
+            </li>
+            {{/each}}
+          </ul>
+
+          <nav class="pf-nav" aria-label="Portfolio sections" data-section-nav>
+            <ul class="list-unstyled mb-0">
+              {{#each portfolio.profile.section_nav}}
+              <li><a href="{{href}}">{{label}}</a></li>
+              {{/each}}
+            </ul>
+          </nav>
+        </div>
+      </section>
+
+      <section
+        class="pf-section band"
+        id="publications"
+        aria-labelledby="publications-title"
+        data-pf-section="publications"
+      >
+        <div class="container">
+          <p class="eyebrow mb-0">{{portfolio.publications.eyebrow}}</p>
+          <h2 class="t-display-l section-title mb-0" id="publications-title" data-reveal>
+            {{portfolio.publications.heading}}
+          </h2>
+          <p class="t-body-l section-intro mb-0">{{portfolio.publications.intro}}</p>
+          <div class="pf-body">
+            {{> components/pf-tabs}}
+            <ol class="list-unstyled pf-pubs mb-0" data-pub-list>
+              {{#each portfolioView.publications}} {{> sections/pf-pub tag="h3"}} {{/each}}
+            </ol>
+          </div>
+          <div class="pf-end">
+            <a class="btn btn-accent-outline" href="/publications.html">
+              {{portfolioView.publicationsCta}}
+              <svg
+                class="icon icon-arrow"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+      <section
+        class="pf-section"
+        id="research"
+        aria-labelledby="research-title"
+        data-pf-section="research"
+      >
+        <div class="container">
+          <p class="eyebrow mb-0">{{portfolio.projects.eyebrow}}</p>
+          <h2 class="t-display-l section-title mb-0" id="research-title" data-reveal>
+            {{portfolio.projects.heading}}
+          </h2>
+          <p class="t-body-l section-intro mb-0">{{portfolio.projects.intro}}</p>
+          <div class="pf-body">
+            <ul class="list-unstyled row pf-cards mb-0">
+              {{#each portfolioView.projects}}
+              <li class="col-md-6 col-lg-4" data-project-card>{{> sections/pf-card tag="h3"}}</li>
+              {{/each}}
+            </ul>
+          </div>
+          <div class="pf-end">
+            <a class="btn btn-accent-outline" href="/research.html">
+              {{portfolioView.projectsCta}}
+              <svg
+                class="icon icon-arrow"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+          </div>
+        </div>
+      </section>
+      <section
+        class="pf-section band"
+        id="awards"
+        aria-labelledby="awards-title"
+        data-pf-section="awards"
+      >
+        <div class="container">
+          <p class="eyebrow mb-0">{{portfolio.awards.eyebrow}}</p>
+          <h2 class="t-display-l section-title mb-0" id="awards-title" data-reveal>
+            {{portfolio.awards.heading}}
+          </h2>
+          <p class="t-body-l section-intro mb-0">{{portfolio.awards.intro}}</p>
+          <ul class="list-unstyled pf-awards pf-body mb-0">
+            {{#each portfolio.awards.items}}
+            <li class="pf-award" data-reveal>
+              <span class="pf-award-icon">{{> icons/pf-icon name=icon}}</span>
+              <div class="pf-award-body">
+                <h3 class="pf-award-title mb-0">{{title}}</h3>
+                <p class="pf-award-kind mb-0">{{kind}}</p>
+                <p class="pf-award-meta mb-0">{{year}} · {{by}}</p>
+              </div>
+              {{#if highlight}}
+              <p class="pf-award-highlight mb-0">{{highlight}}</p>
+              {{/if}}
+            </li>
+            {{/each}}
+          </ul>
+          <div class="pf-end pf-cv">
+            <p class="pf-note mb-0">{{portfolio.awards.note}}</p>
+            {{> components/cv-button variant="btn-primary" lead=true arrow=true}}
+          </div>
+        </div>
+      </section>
+      <section
+        class="pf-section"
+        id="experience"
+        aria-labelledby="experience-title"
+        data-pf-section="experience"
+      >
+        <div class="container">
+          <p class="eyebrow mb-0">{{portfolio.experience.eyebrow}}</p>
+          <h2 class="t-display-l section-title mb-0" id="experience-title" data-reveal>
+            {{portfolio.experience.heading}}
+          </h2>
+          <p class="t-body-l section-intro mb-0">{{portfolio.experience.intro}}</p>
+          <div class="pf-body pf-columns">
+            <div class="pf-column">
+              <h3 class="pf-column-head">
+                {{> icons/pf-icon name="briefcase"}}<span>Research experience</span>
+              </h3>
+              {{#each portfolio.experience.roles}}
+              <article class="pf-entry" data-reveal>
+                <div class="pf-entry-head">
+                  <h4 class="pf-entry-title mb-0">{{title}}</h4>
+                  <p class="t-meta pf-entry-date mb-0">{{period}}</p>
+                </div>
+                <p class="pf-entry-sub mb-0">
+                  <span>{{unit}}</span>
+                  <span>{{institution}}</span>
+                </p>
+                <p class="pf-entry-text mb-0">{{text}}</p>
+                <ul class="pf-bullets mb-0">
+                  {{#each bullets}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              </article>
+              {{/each}}
+            </div>
+            <div class="pf-column">
+              <h3 class="pf-column-head">
+                {{> icons/pf-icon name="mortarboard"}}<span>Education</span>
+              </h3>
+              <ul class="list-unstyled mb-0">
+                {{#each portfolio.experience.education}}
+                <li class="pf-entry" data-reveal>
+                  <div class="pf-entry-head">
+                    <h4 class="pf-entry-title mb-0">{{degree}}</h4>
+                    <p class="t-meta pf-entry-date mb-0">{{year}}</p>
+                  </div>
+                  <p class="pf-entry-sub mb-0">{{institution}}</p>
+                </li>
+                {{/each}}
+              </ul>
+            </div>
+          </div>
+          <p class="pf-end pf-note pf-rule mb-0">
+            <span>{{portfolio.experience.note}}</span> {{> components/cv-button link=true}}
+          </p>
+        </div>
+      </section>
+      <section
+        class="pf-section band"
+        id="expertise"
+        aria-labelledby="expertise-title"
+        data-pf-section="expertise"
+      >
+        <div class="container">
+          <p class="eyebrow mb-0">{{portfolio.expertise.eyebrow}}</p>
+          <h2 class="t-display-l section-title mb-0" id="expertise-title" data-reveal>
+            {{portfolio.expertise.heading}}
+          </h2>
+          <p class="t-body-l section-intro mb-0">{{portfolio.expertise.intro}}</p>
+          <ul class="list-unstyled pf-groups pf-body mb-0">
+            {{#each portfolio.expertise.groups}}
+            <li class="pf-group" data-reveal>
+              <span class="pf-group-icon">{{> icons/pf-icon name=icon}}</span>
+              <div class="pf-group-body">
+                <h3 class="pf-group-title mb-0">{{title}}</h3>
+                <ul class="list-unstyled pf-group-items mb-0">
+                  {{#each items}}
+                  <li>{{this}}</li>
+                  {{/each}}
+                </ul>
+              </div>
+            </li>
+            {{/each}}
+          </ul>
+          <div class="pf-training">
+            <h3 class="pf-training-title mb-0">{{portfolio.expertise.training_heading}}</h3>
+            <ul class="list-unstyled pf-certs mb-0">
+              {{#each portfolio.expertise.training}}
+              <li class="pf-cert" data-reveal>
+                {{> icons/pf-icon name="document"}}
+                <div>
+                  <p class="pf-cert-title mb-0">{{title}}</p>
+                  <p class="pf-cert-by mb-0">{{by}}</p>
+                </div>
+              </li>
+              {{/each}}
+            </ul>
+            <p class="t-small pf-note pf-training-note mb-0">{{portfolio.expertise.note}}</p>
+          </div>
+        </div>
+      </section>
+      {{> sections/articles-ld articles=portfolioView.articles}}
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

@@ -1,0 +1,108 @@
+// Author: Rasel Al Mamun
+// Bootstrap 5.3 with variables mapped to design tokens (src/scss/base/_tokens.scss).
+// Grid breakpoints stay at Bootstrap's defaults (docs/architecture.md).
+// Theme-dependent values are applied through CSS custom properties in _base.scss
+// and _components.scss, so these Sass values only seed the dark defaults.
+
+// Colours (dark theme values; the theme switch overrides --bs-* in _base.scss)
+$body-bg: $token-bg-0;
+$body-color: $token-fg-0;
+$body-emphasis-color: $token-fg-0;
+$body-secondary-bg: $token-bg-1;
+$body-secondary-color: $token-fg-1;
+$body-tertiary-bg: $token-bg-2;
+$body-tertiary-color: $token-fg-2;
+$border-color: $token-line;
+$primary: $token-accent;
+$info: $token-info;
+$success: $token-success;
+$danger: $token-error;
+$link-color: $token-accent;
+$focus-ring-color: $token-focus;
+$enable-dark-mode: false;
+
+// Sizes come from the type tokens (_type.scss), never from RFS.
+$enable-rfs: false;
+
+// Type
+$font-family-sans-serif: $token-font-sans;
+$font-family-monospace: $token-font-mono;
+$line-height-base: $token-type-body-line-height;
+$headings-font-weight: $token-type-h2-weight;
+
+// Radius (Phase 4 §3): chips 2, buttons and cards 4, media 8 px.
+$border-radius-sm: $token-r-1;
+$border-radius: $token-r-2;
+$border-radius-lg: $token-r-3;
+$border-radius-xl: $token-r-3;
+$border-radius-xxl: $token-r-3;
+$border-radius-pill: $token-r-full;
+
+// Spacers: Bootstrap's scale 1–5 equals the tokens s-1, s-2, s-4, s-5, s-7.
+// Kept in px as tokens.json defines them (same values as Bootstrap's rem at 16px).
+$spacer: $token-s-4;
+$spacers: (
+  0: 0,
+  1: $token-s-1,
+  2: $token-s-2,
+  3: $token-s-4,
+  4: $token-s-5,
+  5: $token-s-7,
+);
+
+// Layout (Phase 4 §3): one container, max 1280 px; its side padding and the row
+// gutters follow --gutter (16 / 24 / 32 px) in _base.scss.
+$container-max-widths: (
+  sm: 1280px,
+);
+$grid-gutter-width: $token-s-4;
+
+// Buttons: disabled at 40 % (Phase 4 §5.1); colours come from --bs-btn-* in _components.scss.
+$btn-disabled-opacity: 0.4;
+
+@import "bootstrap/scss/functions";
+@import "bootstrap/scss/variables";
+@import "bootstrap/scss/variables-dark";
+
+// Only the token colours exist as theme colours: no secondary, warning, light or dark.
+$theme-colors: (
+  "primary": $primary,
+  "info": $info,
+  "success": $success,
+  "danger": $danger,
+);
+
+@import "bootstrap/scss/maps";
+
+// _maps.scss defines these without !default, so they are narrowed after it.
+$theme-colors-text: (
+  "primary": $primary-text-emphasis,
+  "info": $info-text-emphasis,
+  "success": $success-text-emphasis,
+  "danger": $danger-text-emphasis,
+);
+$theme-colors-bg-subtle: (
+  "primary": $primary-bg-subtle,
+  "info": $info-bg-subtle,
+  "success": $success-bg-subtle,
+  "danger": $danger-bg-subtle,
+);
+$theme-colors-border-subtle: (
+  "primary": $primary-border-subtle,
+  "info": $info-border-subtle,
+  "success": $success-border-subtle,
+  "danger": $danger-border-subtle,
+);
+
+@import "bootstrap/scss/mixins";
+@import "bootstrap/scss/utilities";
+@import "bootstrap/scss/root";
+@import "bootstrap/scss/reboot";
+@import "bootstrap/scss/type";
+@import "bootstrap/scss/containers";
+@import "bootstrap/scss/grid";
+@import "bootstrap/scss/transitions";
+@import "bootstrap/scss/buttons";
+@import "bootstrap/scss/offcanvas";
+@import "bootstrap/scss/helpers";
+@import "bootstrap/scss/utilities/api";

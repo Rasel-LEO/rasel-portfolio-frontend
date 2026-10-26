@@ -1,0 +1,23 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Form field (Phase 4 §5.4, FD-38): visible label, "(required)" or "(optional)" in text,
+optional hint, inline error (hidden until forms.js validates; the messages live there).
+`control` is input (default), textarea or select (with `options`). The error id joins
+aria-describedby only while the field is invalid. --}}
+<div class="field">
+  <label class="field-label" for="{{id}}">{{label}}{{#if required}} <span class="field-req">(required)</span>{{/if}}{{#if optional}} <span class="field-req">(optional)</span>{{/if}}</label>
+  {{#if (eq control "textarea")}}
+  <textarea class="field-control" id="{{id}}" name="{{name}}" rows="6"{{#if required}} required{{/if}}{{#if hint}} aria-describedby="{{id}}-hint"{{/if}}></textarea>
+  {{else if (eq control "select")}}
+  <select class="field-control" id="{{id}}" name="{{name}}"{{#if hint}} aria-describedby="{{id}}-hint"{{/if}}>
+    {{#each options}}
+    <option>{{this}}</option>
+    {{/each}}
+  </select>
+  {{else}}
+  <input class="field-control" id="{{id}}" name="{{name}}" type="{{#if type}}{{type}}{{else}}text{{/if}}"{{#if autocomplete}} autocomplete="{{autocomplete}}"{{/if}}{{#if required}} required{{/if}}{{#if hint}} aria-describedby="{{id}}-hint"{{/if}} />
+  {{/if}}
+  {{#if hint}}
+  <p class="field-hint mb-0" id="{{id}}-hint">{{hint}}</p>
+  {{/if}}
+  <p class="field-error mb-0" id="{{id}}-error" hidden><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" /><path d="M12 8v5M12 16h.01" /></svg><span data-error-text></span></p>
+</div>

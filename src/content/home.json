@@ -1,0 +1,84 @@
+{
+  "hero_name_lines": ["Rasel", "Al Mamun"],
+  "ctas": [
+    {
+      "label": "Hire me",
+      "href": "hire.html",
+      "variant": "primary"
+    },
+    {
+      "label": "Portfolio",
+      "href": "portfolio.html",
+      "variant": "secondary"
+    },
+    {
+      "label": "CV",
+      "href": "cv",
+      "variant": "secondary-small"
+    }
+  ],
+  "fork": {
+    "heading": "Two sides of this site",
+    "portfolio": {
+      "title": "Portfolio",
+      "text": "Research projects, peer-reviewed publications and awards — the evidence behind the work.",
+      "tags": ["Publications", "Research", "Awards"],
+      "cta": "Open the portfolio",
+      "href": "portfolio.html"
+    },
+    "blog": {
+      "title": "Blog",
+      "text": "Notes on agricultural engineering, technology reviews and learning through research.",
+      "tags": ["Agricultural engineering", "Tech review", "Education"],
+      "cta": "Read the blog",
+      "href": "blog.html"
+    }
+  },
+  "hire_intro": "Research, software development and AI engineering. Send a short brief to discuss the scope.",
+  "selected": {
+    "eyebrow": "Portfolio",
+    "heading": "Selected work",
+    "intro": "Featured research projects.",
+    "cta": "Full portfolio",
+    "large_eyebrow": "Featured project"
+  },
+  "latest": {
+    "eyebrow": "Blog",
+    "heading": "Latest posts",
+    "intro": "Notes from research, engineering and technology.",
+    "cta": "All posts",
+    "item_cta": "Read article"
+  },
+  "contact_band": {
+    "heading": "Have a project or a research idea?",
+    "text": "Research collaborations, software projects and technical questions.",
+    "primary": "Contact"
+  },
+  "screen2": {
+    "eyebrow": "Research × Development",
+    "headline_lines": ["Hardware. Data.", "Software."],
+    "headline_highlight": "Connected.",
+    "support": "Intelligent systems for agriculture and beyond.",
+    "pillars": [
+      {
+        "label": "Research",
+        "lines": ["Peer-reviewed papers", "Working prototypes"],
+        "href": "portfolio.html#publications"
+      },
+      {
+        "label": "Development",
+        "lines": ["Dependable web, apps", "& software"],
+        "href": "portfolio.html#research"
+      }
+    ],
+    "areas_label": "Areas of work",
+    "areas_interactive": false,
+    "areas_show_index": false
+  },
+  "publications": {
+    "eyebrow": "Research",
+    "heading": "Selected publications",
+    "intro": "First-author papers",
+    "cta": "Full portfolio"
+  }
+}

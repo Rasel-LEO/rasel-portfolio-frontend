@@ -1,0 +1,8 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Blog empty state (FD-36): shown when no post is built; otherwise hidden until blog.js
+filters to a category without posts, which shows its own line. --}}
+<div class="empty-state" data-blog-empty{{#if hidden}} hidden{{/if}}>
+  <p class="mb-0" data-empty-all>{{blogPage.empty}}</p>
+  <p class="mb-0" data-empty-category hidden>{{blogPage.empty_category}}</p>
+  <a class="profile-link" href="/portfolio.html#publications"><span class="link">See the publications</span></a>
+</div>

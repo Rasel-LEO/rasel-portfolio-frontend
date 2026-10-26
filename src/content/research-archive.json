@@ -1,0 +1,43 @@
+{
+  "back_label": "Back to Portfolio",
+  "heading": "Research projects",
+  "intro": "IoT, automation and applied AI for agriculture.",
+  "search_label": "Search projects",
+  "search_placeholder": "Search by title or keyword…",
+  "topic_label": "Topic",
+  "topic_all": "All topics",
+  "count_label": "Showing {shown} of {total} projects",
+  "empty": "No project matches. Try another keyword or topic.",
+  "topics": [
+    {
+      "id": "poultry",
+      "label": "Poultry systems",
+      "icon": "hen"
+    },
+    {
+      "id": "aquaculture",
+      "label": "Aquaculture & fisheries",
+      "icon": "fish"
+    },
+    {
+      "id": "irrigation",
+      "label": "Irrigation",
+      "icon": "sun-water"
+    },
+    {
+      "id": "machinery",
+      "label": "Farm machinery",
+      "icon": "tractor"
+    },
+    {
+      "id": "crop",
+      "label": "Crop & post-harvest",
+      "icon": "leaf"
+    },
+    {
+      "id": "cea",
+      "label": "Controlled environment",
+      "icon": "greenhouse"
+    }
+  ]
+}

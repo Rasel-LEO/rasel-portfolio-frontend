@@ -1,0 +1,942 @@
+// Author: Rasel Al Mamun
+// Home: the stage as a plain document (handoff §3) and the sections after it.
+// Visual reference: design prototype revision 12, Home view. No motion here; _stage.scss
+// and the motion modules pin and animate the stage through the data-stage* hooks without changing this resting layout.
+
+// The original 720 × 1300 portraits (P5, P6) on phones (FD-86, FD-93): a window of the image
+// that holds the whole figure — P5's opaque pixels span x 0–479, y 395–1273; P6's x 20–510,
+// y 395–1272 — so only transparent margin is clipped, never the figure, and its proportions
+// stay. The window is the box; the image inside is offset by percentages of its width.
+$fig-window-w: 490;
+$fig-window-h: 920;
+
+@mixin figure-window($x, $y, $w: $fig-window-w) {
+  display: block;
+  aspect-ratio: #{$w} / #{$fig-window-h};
+  overflow: hidden;
+
+  img {
+    width: calc(720 / #{$w} * 100%);
+    max-width: none;
+    height: auto;
+    margin-top: calc(-#{$y} / #{$w} * 100%);
+    margin-left: calc(-#{$x} / #{$w} * 100%);
+  }
+}
+
+// The hero's role line keeps the measure it was approved with: from 1200 px wide (and 600 px
+// tall) it stopped short of the field rail's labels (FD-71). FD-84 removed the rail from Home;
+// the measure stays so the approved hero does not reflow.
+$rail-beside: "(width >= 1200px) and (height >= 600px)";
+
+@mixin clear-rail($measure) {
+  @media #{$rail-beside} {
+    max-width: min(
+      #{$measure},
+      calc(
+        100% - max(
+            0px,
+            var(--fig-left) + var(--rail-offset) + var(--rail-reach) + var(--s-5) - 100cqi * 5 / 12
+          )
+      )
+    );
+  }
+}
+
+// Stage: hero + screen 2 + Fork (Phase 4 §3: text columns 1–7, figure 8–12).
+// The top space sits on the container, which the desktop stage pins, so pinning
+// never moves it.
+// From lg the photo's empty right edge may pass the window (FD-83): clipped, never scrolled.
+.stage {
+  @include media-breakpoint-up(lg) {
+    overflow-x: clip;
+  }
+}
+
+.stage > .container {
+  padding-top: clamp(var(--s-5), 5vw, var(--s-8));
+}
+
+// The figure box is sized in CSS from the photo's ratio, so nothing shifts when it loads.
+// Below md it is the whole seated figure, centred between the hero text and screen 2 (FD-86);
+// from md it fills its column up to the first screen's height. 100cqi is the stage row's width.
+.stage-main {
+  --fig-ratio: calc(#{$fig-window-w} / #{$fig-window-h});
+  --fig-h: min(60svh, 85cqi);
+  --fig-w: calc(var(--fig-h) * var(--fig-ratio));
+
+  // Where the field rail stood (FD-71), for the hero role's approved measure only (above).
+  --rail-offset: calc(var(--s-8) + var(--s-2) + var(--fig-w) * 0.05);
+  --rail-reach: 200px;
+
+  position: relative;
+  container-type: inline-size;
+
+  @include media-breakpoint-up(md) {
+    --fig-ratio: calc(720 / 1300);
+    --fig-h: min(
+      calc(100svh - var(--header-h) - var(--s-8)),
+      calc((100cqi * 5 / 12 - var(--gutter)) / var(--fig-ratio)),
+      800px
+    );
+  }
+
+  // FD-83, desktop (≥ 992 px, staged or not): the photo 8 % larger than the box it had (the
+  // base, which still sets the column's height, so nothing shifts and the stage fits as
+  // before) and its left edge --fig-shift further right (32 px up to 1280 px wide, 48 px from
+  // 1440 px). Its bottom rises by --fig-lift where the window is too short for the push-in
+  // (scale 1.1 and 40 px nearer about the face carry the shoes down by up to 6.5 % of the
+  // photo's height), so the shoes never leave the frame; the box's top 30 % is empty, so it may
+  // reach under the header. The box's empty right third may pass the window edge (the stage
+  // clips it); the visible photo keeps more than the gutter.
+  @include media-breakpoint-up(lg) {
+    --fig-base-h: min(
+      calc(100svh - var(--header-h) - var(--s-8)),
+      calc((100cqi * 5 / 12 - var(--gutter)) / var(--fig-ratio)),
+      800px
+    );
+    --fig-base-w: calc(var(--fig-base-h) * var(--fig-ratio));
+    --fig-h: calc(var(--fig-base-h) * 1.08);
+    --fig-shift: clamp(var(--s-6), 10vw - 96px, var(--s-7));
+    --fig-room: calc(
+      100svh - var(--header-h) - clamp(var(--s-5), 5vw, var(--s-8)) - var(--fig-base-h)
+    );
+    --fig-lift: max(0px, var(--fig-h) * 0.065 - var(--fig-room));
+    --fig-top: calc(var(--fig-base-h) - var(--fig-h) - var(--fig-lift));
+    --fig-left: calc(var(--fig-base-w) - var(--fig-shift));
+  }
+}
+
+// Phones (FD-73, FD-86): text first — eyebrow, name, role line and CTAs — then the portrait,
+// then screen 2. The DOM has the text column first; its two blocks join the row's flex flow
+// (display: contents) so the band can sit between them. The figure is decorative, so the
+// reading order stays name → statement.
+@include media-breakpoint-down(md) {
+  .stage-main {
+    .stage-text {
+      display: contents;
+    }
+
+    .stage-hero,
+    .stage-statement {
+      width: 100%;
+      padding-inline: calc(var(--bs-gutter-x) * 0.5);
+    }
+
+    .stage-figure-col {
+      order: 1;
+      margin-top: var(--s-6);
+    }
+
+    .stage-statement {
+      order: 2;
+      margin-top: var(--s-7);
+    }
+  }
+}
+
+.stage-figure {
+  position: relative;
+  width: var(--fig-w);
+  height: var(--fig-h);
+  margin-left: auto;
+
+  // Synthetic contact shadow under the feet: an ellipse 60 % of the figure's width.
+  &::before {
+    position: absolute;
+    bottom: calc(var(--s-3) * -1);
+    left: 8%;
+    width: 60%;
+    height: var(--s-5);
+    content: "";
+    background: var(--figure-shadow);
+    filter: blur(24px);
+    border-radius: 50%;
+
+    // The Home stage fades it out as the figure becomes the back-to-top photo (FD-97).
+    opacity: var(--figure-floor, 1);
+  }
+
+  picture,
+  img {
+    position: relative;
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  // Phones (FD-86): the whole figure, centred, in the window of the original image. The
+  // parallax (home-motion.js) moves and scales the window, so it never crops; the column's
+  // top margin and screen 2's leave room for its travel.
+  @include media-breakpoint-down(md) {
+    margin-inline: auto;
+
+    picture {
+      @include figure-window(0, 380);
+
+      height: auto;
+    }
+  }
+
+  // FD-83: the larger box over the base one, from the base's left edge + --fig-shift.
+  @include media-breakpoint-up(lg) {
+    margin-top: var(--fig-top);
+    margin-right: calc(var(--fig-base-w) - var(--fig-w) - var(--fig-shift));
+    margin-bottom: var(--fig-lift);
+  }
+}
+
+.stage-text {
+  display: grid;
+  gap: var(--s-7);
+  align-content: start;
+}
+
+.stage-hero {
+  display: grid;
+  gap: var(--s-4);
+  justify-items: start;
+}
+
+.hero-eyebrow {
+  max-width: 60ch;
+}
+
+// Phase 4 §2.2: display-xl at width 88; below 400 px the name may take three lines but its
+// size never drops under 44 px (the token's clamp floor).
+.hero-name {
+  max-width: 100%;
+  overflow-wrap: break-word;
+
+  .hero-line {
+    display: block;
+  }
+
+  .hero-line + .hero-line {
+    color: var(--fg-1);
+  }
+}
+
+.hero-role {
+  max-width: 40ch;
+  color: var(--fg-1);
+
+  @include clear-rail(40ch);
+}
+
+.hero-ctas,
+.band-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  align-items: center;
+}
+
+.hero-ctas {
+  margin-top: var(--s-2);
+}
+
+// Screen 2 (FD-84): intro, pillars and the Areas-of-work grid, one stage layer.
+.stage-statement {
+  display: grid;
+  gap: var(--s-7);
+
+  // Short desktop windows: closer blocks, so screen 2 still fits the pinned frame (1024×640).
+  @include media-breakpoint-up(lg) {
+    @media (height < 800px) {
+      gap: var(--s-6);
+    }
+  }
+}
+
+.screen2-intro {
+  display: grid;
+  gap: var(--s-4);
+}
+
+.screen2-eyebrow {
+  color: var(--accent);
+}
+
+// Two lines from the data; "Connected." in solid accent — the one-word brand exception to
+// "accent only for interaction" (FD-84), AA as text in both themes (FD-47).
+.screen2-headline {
+  @include t-display-l;
+
+  .screen2-line {
+    display: block;
+  }
+}
+
+.screen2-highlight {
+  color: var(--accent);
+}
+
+.screen2-support {
+  @include t-body-l;
+
+  max-width: 40ch;
+  color: var(--fg-1);
+}
+
+// Pillars: two links side by side, each under a 1 px rule (its own element, so the entrance
+// can draw it); hover and focus turn the rule and the arrow accent.
+.screen2-pillars {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-5);
+
+  // Under 360 px two columns wrap every line; one above the other, as the grid.
+  @media (width < 360px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.pillar {
+  position: relative;
+  display: grid;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding-top: var(--s-3);
+  color: var(--fg-0);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--fg-0);
+
+    .pillar-rule {
+      background: var(--accent);
+    }
+
+    .pillar-arrow {
+      color: var(--accent);
+    }
+  }
+}
+
+.pillar-rule {
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: var(--line);
+  transform-origin: 0 50%;
+  transition: background-color var(--d-fast) var(--e-out);
+}
+
+.pillar-head {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pillar-label {
+  @include t-label;
+}
+
+.pillar-arrow {
+  width: 20px;
+  height: 20px;
+  color: var(--fg-2);
+  transition: color var(--d-fast) var(--e-out);
+}
+
+.pillar-lines {
+  display: grid;
+  color: var(--fg-1);
+}
+
+.pillar-line {
+  display: block;
+}
+
+// Areas of work (FD-99): icon and label per item, side by side; 3 columns (3 × 2) from lg,
+// 2 below, 1 under 360 px.
+.screen2-areas {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.screen2-areas-title {
+  @include t-label;
+
+  color: var(--fg-2);
+}
+
+.screen2-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2) var(--s-5);
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  @media (width < 360px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+// FD-87: plain text, not links — no hover, focus or pointer styling.
+.area {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  column-gap: var(--s-3);
+  align-items: center;
+  min-height: 44px;
+  padding-block: var(--s-2);
+  color: var(--fg-0);
+
+  .area-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--fg-1);
+  }
+}
+
+.area-index {
+  @include t-label;
+
+  color: var(--accent);
+}
+
+.area-label {
+  @include t-small;
+
+  font-weight: 500;
+}
+
+// Fork (Phase 4 §5.1): two cards of identical size and weight; a 2 px accent seam between
+// them from lg (decorative).
+.fork {
+  padding-block: var(--section-pad);
+}
+
+.fork-title {
+  margin-bottom: var(--s-6);
+}
+
+.fork-cols {
+  position: relative;
+}
+
+.fork-row {
+  --bs-gutter-y: var(--s-4);
+
+  @include media-breakpoint-up(lg) {
+    --bs-gutter-x: var(--s-7);
+  }
+}
+
+.fork-card {
+  display: grid;
+  grid-template-rows: auto auto 1fr auto auto;
+  gap: var(--s-3);
+  height: 100%;
+  padding: var(--s-5);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+}
+
+.fork-chip {
+  justify-self: start;
+}
+
+.fork-text {
+  max-width: 48ch;
+  color: var(--fg-1);
+}
+
+.fork-cta {
+  justify-self: start;
+  margin-top: var(--s-2);
+}
+
+.fork-seam {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  display: none;
+  width: 2px;
+  background: var(--accent);
+  transform: translateX(-50%);
+
+  @include media-breakpoint-up(lg) {
+    display: block;
+  }
+}
+
+// Sections after the stage.
+.home-section {
+  padding-block: var(--section-pad);
+}
+
+.band {
+  background: var(--bg-1);
+  border-block: 1px solid var(--line);
+}
+
+.section-title {
+  margin-top: var(--s-2);
+}
+
+.section-intro {
+  max-width: 62ch;
+  margin-top: var(--s-4);
+  color: var(--fg-1);
+}
+
+.band-head {
+  --bs-gutter-y: var(--s-5);
+
+  align-items: end;
+}
+
+.band-aside {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.band-text {
+  max-width: 62ch;
+  color: var(--fg-1);
+}
+
+.band-actions {
+  margin-top: var(--s-3);
+}
+
+// Services on the bg-1 band take the page surface (prototype .hire .service).
+.home-services {
+  margin-top: var(--s-5);
+
+  @include media-breakpoint-up(lg) {
+    margin-top: var(--s-7);
+  }
+
+  .service {
+    background: var(--bg-0);
+  }
+}
+
+// Selected work, Selected publications, Latest posts (FD-90 … FD-92): head, body, then the
+// "more" action — full width on phones; from lg top right, beside the head (the DOM keeps it
+// after the body, the order on phones).
+.home-block {
+  display: grid;
+  grid-template-areas:
+    "head"
+    "body"
+    "more";
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: var(--s-6);
+
+  @include media-breakpoint-up(lg) {
+    grid-template-areas:
+      "head more"
+      "body body";
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: var(--s-6);
+  }
+}
+
+.home-head {
+  grid-area: head;
+}
+
+.home-body {
+  grid-area: body;
+}
+
+.home-more {
+  grid-area: more;
+
+  .btn {
+    width: 100%;
+  }
+
+  // Level with the heading (design specification, FD-102, FD-103).
+  @include media-breakpoint-up(lg) {
+    align-self: center;
+
+    .btn {
+      width: auto;
+    }
+  }
+}
+
+// FD-102: the amber "Full portfolio →" text link (from lg).
+.more-link {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  min-height: 44px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+
+  .link {
+    color: inherit;
+    background-image:
+      linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent));
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// The action after the body at every width (Selected publications).
+.home-block-end {
+  @include media-breakpoint-up(lg) {
+    grid-template-areas:
+      "head"
+      "body"
+      "more";
+    grid-template-columns: minmax(0, 1fr);
+
+    .home-more {
+      justify-self: start;
+    }
+  }
+}
+
+// FD-91: Selected publications — rows with a mono index, type, title, short authors and venue;
+// DOI and Project right of a divider from lg, two buttons under the citation below.
+.home-pub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-4);
+  padding-block: var(--s-5);
+
+  & + & {
+    border-top: 1px solid var(--line);
+  }
+
+  &:first-child {
+    padding-top: 0;
+  }
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: var(--s-9) minmax(0, 1fr);
+  }
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: var(--s-9) minmax(0, 1fr) auto;
+    column-gap: var(--s-6);
+    align-items: start;
+  }
+}
+
+.home-pub-index {
+  display: none;
+  padding-top: var(--s-1);
+  color: var(--fg-2);
+
+  @include media-breakpoint-up(md) {
+    display: block;
+  }
+}
+
+.home-pub-body {
+  display: grid;
+  gap: var(--s-2);
+}
+
+.home-pub-type {
+  color: var(--fg-2);
+}
+
+.home-pub-title {
+  @include t-h3;
+
+  max-width: 52ch;
+}
+
+.home-pub-authors,
+.home-pub-venue {
+  color: var(--fg-1);
+
+  strong {
+    font-weight: 600;
+    color: var(--fg-0);
+  }
+}
+
+.home-pub-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+
+  @include media-breakpoint-up(md) {
+    grid-column: 2;
+  }
+
+  @include media-breakpoint-up(lg) {
+    grid-column: auto;
+    gap: 0;
+    align-items: center;
+  }
+}
+
+// Below lg two outlined buttons; from lg text actions with a 1 px divider between them.
+.home-pub-action {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: center;
+  min-width: var(--s-10);
+  min-height: 44px;
+  padding: var(--s-2) var(--s-5);
+  font-weight: 600;
+  color: var(--fg-0);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  transition:
+    color var(--d-fast) var(--e-out),
+    border-color var(--d-fast) var(--e-out);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+
+  &:hover {
+    color: var(--fg-0);
+    border-color: var(--fg-2);
+  }
+
+  @include media-breakpoint-up(lg) {
+    min-width: 0;
+    padding: 0 var(--s-5);
+    border: 0;
+    border-radius: 0;
+
+    & + & {
+      border-left: 1px solid var(--line);
+    }
+
+    &:hover {
+      color: var(--accent);
+    }
+  }
+}
+
+// FD-102: one large card (about 7/12) and the other two stacked beside it from lg; one column
+// below, large first. The action on each card's bottom.
+.work-cards {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-4);
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--s-5);
+  }
+}
+
+.work-cards-large {
+  @include media-breakpoint-up(lg) {
+    grid-row: span 2;
+  }
+}
+
+.work-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.work-card-large {
+  gap: var(--s-4);
+
+  @include media-breakpoint-up(lg) {
+    padding: var(--s-7) var(--s-6);
+  }
+
+  // "Poultry farm monitoring / with edge AI", as in the design specification: a measure that holds the
+  // first three words (11.1em) but not the fourth, filled greedily (not balanced).
+  .card-title {
+    max-width: 12.5em;
+    text-wrap: wrap;
+  }
+
+  @include media-breakpoint-up(lg) {
+    .work-link {
+      padding-top: var(--s-4);
+    }
+  }
+}
+
+.work-eyebrow {
+  color: var(--accent);
+}
+
+.work-role,
+.work-role-line {
+  color: var(--fg-2);
+}
+
+.work-summary {
+  color: var(--fg-1);
+}
+
+.work-period {
+  color: var(--fg-2);
+}
+
+.work-link {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: auto;
+  font-weight: 600;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// FD-105 (early part of FD-76): Home's text actions per the design specification — "View project",
+// the services' actions and, from lg, the publications' DOI and Project: an --accent underline
+// (1 px) at rest; on hover or keyboard focus the text turns --accent on a 2 px underline.
+// "Read article" (Latest posts) has no underline, only the arrow; hover turns it --accent.
+@mixin accent-underline {
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 100% / 100% 1px;
+  transition:
+    color var(--d-fast) var(--e-out),
+    background-size var(--d-fast) var(--e-out);
+}
+
+@mixin accent-underline-on {
+  color: var(--accent);
+  background-size: 100% 2px;
+}
+
+.work-card .work-link,
+.home-services .service-evidence {
+  transition: color var(--d-fast) var(--e-out);
+
+  .link {
+    @include accent-underline;
+  }
+
+  &:is(:hover, :focus-visible) {
+    color: var(--accent);
+
+    .link {
+      @include accent-underline-on;
+    }
+  }
+}
+
+@include media-breakpoint-up(lg) {
+  .home-pub-label {
+    @include accent-underline;
+
+    padding-block: 4px;
+  }
+
+  .home-pub-action:is(:hover, :focus-visible) .home-pub-label {
+    @include accent-underline-on;
+  }
+}
+
+.latest-card .work-link {
+  .link {
+    padding-block: 0;
+    background: none;
+  }
+
+  &:is(:hover, :focus-visible),
+  &:is(:hover, :focus-visible) .link {
+    color: var(--accent);
+  }
+}
+
+// FD-92: Latest posts — three cards from lg, stacked below; the action on each card's bottom.
+.latest-cards {
+  --bs-gutter-y: var(--s-4);
+}
+
+.latest-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.latest-category {
+  color: var(--accent);
+}
+
+.latest-excerpt {
+  color: var(--fg-1);
+}
+
+// Contact band: the seated P6 photograph, decorative (DD-15). FD-72: from md as tall as the
+// text block beside it (360–420 px, never above the 1300 px source); on phones the whole figure
+// under the action (FD-93, below). Its settle (scale and slide, home-motion.js) never widens the
+// page.
+.contact-band-row {
+  --bs-gutter-y: var(--s-6);
+
+  align-items: end;
+
+  .band-text {
+    margin-top: var(--s-4);
+  }
+}
+
+.contact-band-email {
+  margin-top: var(--s-2);
+}
+
+.contact-band-figure-col {
+  justify-content: center;
+}
+
+.contact-band {
+  overflow-x: clip;
+}
+
+.contact-band-figure img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: clamp(360px, 6vw + 280px, 420px);
+  filter: drop-shadow(0 10px 10px var(--figure-shadow));
+}
+
+// FD-93, phones: the whole original portrait — chair and shoes — centred under the action, in
+// a window of the image that clips only its transparent margin (as the hero, FD-86; P6 is one
+// pixel wider, so its window is 493 px from x 19).
+@include media-breakpoint-down(md) {
+  .contact-band-figure picture {
+    @include figure-window(19, 380, 493);
+
+    width: calc(min(60svh, 85vw) * 493 / #{$fig-window-h});
+
+    // The shadow on the window, not the image: the window would clip it at its edges.
+    filter: drop-shadow(0 10px 10px var(--figure-shadow));
+
+    img {
+      filter: none;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pillar-rule,
+  .pillar-arrow,
+  .home-pub-action {
+    transition: none;
+  }
+}

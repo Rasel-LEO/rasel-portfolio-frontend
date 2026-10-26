@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title=post.title shortTitle=post.short_title description=post.description
+    ogType="article"}}
+  </head>
+  <body data-page="post">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      {{!-- FD-114: the article (~66 ch) and, from lg, a sticky sidebar — On this page (the h2s, the
+      section in view marked by post.js), the author card, More posts. Below lg the author card and
+      More posts follow the article. --}}
+      <div class="container">
+        <div class="row post-layout">
+          <article class="col-lg-8 post">
+            <header class="page-head">
+              <nav aria-label="Breadcrumb">
+                <ol class="list-unstyled breadcrumb-list mb-0">
+                  <li><a class="link" href="/blog.html">Blog</a></li>
+                  <li>{{post.categoryLabel}}</li>
+                </ol>
+              </nav>
+              <h1 class="mb-0">{{post.title}}</h1>
+              {{#if post.draft}}
+              <div class="entry-status">{{> components/draft-chip}}</div>
+              {{/if}}
+              <p class="t-meta entry-meta mb-0">
+                {{#if post.date}}<time datetime="{{post.date}}">{{post.date}}</time>{{/if}}<span
+                  >{{post.readingTime}}</span
+                >
+              </p>
+            </header>
+            {{#if post.cover}}
+            <div class="blog-cover post-cover">
+              {{#if post.cover.src}}
+              <picture>
+                {{#if post.cover.avif}}
+                <source type="image/avif" srcset="{{post.cover.avif}}" />
+                {{/if}}
+                <img
+                  src="{{post.cover.src}}"
+                  alt="{{post.cover.alt}}"
+                  width="{{post.cover.width}}"
+                  height="{{post.cover.height}}"
+                  loading="eager"
+                  decoding="async"
+                />
+              </picture>
+              {{else}} {{> icons/illustration name=post.cover.illustration alt=post.cover.alt}}
+              {{/if}}
+            </div>
+            {{/if}}
+            <div class="prose" data-post-body>
+              <p
+                class="t-body-l standfirst{{#if (isPlaceholder post.standfirst)}} is-placeholder{{/if}}"
+              >
+                {{post.standfirst}}
+              </p>
+              {{{post.html}}}
+            </div>
+            <footer class="post-foot">
+              <p class="mb-0">
+                <a class="profile-link" href="/blog.html"
+                  ><span class="link">Back to the blog</span></a
+                >
+              </p>
+            </footer>
+          </article>
+
+          <aside class="col-lg-4 post-aside" aria-label="About this post">
+            <div class="post-aside-inner">
+              {{#if post.toc.length}}
+              <nav class="post-toc" aria-labelledby="toc-title" data-post-toc>
+                <h2 class="eyebrow mb-0" id="toc-title">{{postSidebar.toc_heading}}</h2>
+                <ol class="list-unstyled post-toc-list mb-0">
+                  {{#each post.toc}}
+                  <li>
+                    <a class="post-toc-link" href="#{{id}}"
+                      ><span class="link">{{{label}}}</span></a
+                    >
+                  </li>
+                  {{/each}}
+                </ol>
+              </nav>
+              {{/if}}
+
+              <section class="aside-box author-card" aria-labelledby="author-title">
+                <h2 class="eyebrow mb-0" id="author-title">{{postSidebar.author_heading}}</h2>
+                <div class="author-row">
+                  <picture>
+                    <source type="image/avif" srcset="/images/avatar/avatar-96.avif" />
+                    <img
+                      class="author-avatar"
+                      src="/images/avatar/avatar-96.webp"
+                      alt=""
+                      width="56"
+                      height="56"
+                      loading="lazy"
+                      decoding="async"
+                    />
+                  </picture>
+                  <div>
+                    <p class="author-name mb-0">{{profile.name}}</p>
+                    <p class="author-role mb-0">
+                      {{profile.position}} · {{profile.affiliation_short}}
+                    </p>
+                  </div>
+                </div>
+                <ul class="list-unstyled author-links mb-0">
+                  <li>
+                    <a class="profile-link" href="/portfolio.html"
+                      ><span class="link">Portfolio</span></a
+                    >
+                  </li>
+                  <li>
+                    <a class="profile-link" href="/contact.html"
+                      ><span class="link">Contact</span></a
+                    >
+                  </li>
+                </ul>
+              </section>
+
+              {{#if post.more.length}}
+              <nav class="post-more" aria-labelledby="more-title">
+                <h2 class="eyebrow mb-0" id="more-title">{{postSidebar.more_heading}}</h2>
+                <ul class="list-unstyled post-more-list mb-0">
+                  {{#each post.more}}
+                  <li>
+                    <a class="post-more-link" href="/{{file}}">
+                      <span class="t-label post-more-category">{{categoryLabel}}</span>
+                      <span class="post-more-title"><span class="link">{{title}}</span></span>
+                    </a>
+                  </li>
+                  {{/each}}
+                </ul>
+              </nav>
+              {{/if}}
+            </div>
+          </aside>
+        </div>
+        {{#if post.ld}}
+        <script type="application/ld+json">
+          {{{jsonLd post.ld}}}
+        </script>
+        {{/if}}
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

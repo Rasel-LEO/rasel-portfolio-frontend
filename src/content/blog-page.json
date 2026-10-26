@@ -1,0 +1,36 @@
+{
+  "eyebrow_draft": "Blog / Draft preview",
+  "heading": "Posts and articles",
+  "intro": "Notes on agricultural engineering, IoT and applied AI.",
+  "categories": [
+    {
+      "id": "agricultural-engineering",
+      "label": "Agricultural engineering"
+    },
+    {
+      "id": "tech-review",
+      "label": "Tech review"
+    },
+    {
+      "id": "education",
+      "label": "Education"
+    }
+  ],
+  "empty": "First posts are on their way. Meanwhile, the publications on the Portfolio show the research behind them.",
+  "empty_category": "No posts in this category yet.",
+  "count_label_draft": "{count} drafts",
+  "covers": {
+    "edge-ai-poultry-farm": {
+      "illustration": "sensor-node",
+      "alt": "Line illustration of a wireless sensor node on a farm post"
+    },
+    "esp32-vs-raspberry-pi-farm-iot": {
+      "illustration": "two-boards",
+      "alt": "Line illustration of two microcontroller boards side by side"
+    },
+    "thesis-to-journal-paper": {
+      "illustration": "notebook-journal",
+      "alt": "Line illustration of an open notebook beside a journal"
+    }
+  }
+}

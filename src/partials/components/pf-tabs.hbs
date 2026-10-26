@@ -1,0 +1,12 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Publication tabs (FD-107, FD-111): real buttons with aria-pressed and an amber underline that
+slides to the pressed one (portfolio.js). Not shown without JS, when every row is shown (.js-only,
+laid out from the first paint, so nothing shifts). The polite live region names how many rows the
+tab shows. --}}
+<div class="pf-tabs js-only" role="group" aria-label="Filter publications by type" data-pub-tabs>
+  <button type="button" class="pf-tab" data-type="all" aria-pressed="true">All</button>
+  <button type="button" class="pf-tab" data-type="journal" aria-pressed="false">Journal</button>
+  <button type="button" class="pf-tab" data-type="conference" aria-pressed="false">Conference</button>
+  <span class="pf-tab-ink" aria-hidden="true"></span>
+</div>
+<p class="visually-hidden" aria-live="polite" data-pub-count></p>

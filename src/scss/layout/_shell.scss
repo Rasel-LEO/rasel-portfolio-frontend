@@ -1,0 +1,543 @@
+// Author: Rasel Al Mamun
+// Shared shell: skip link, header, drawer, footer, back-to-top (DD-08, DD-17, FD-11, FD-13).
+// Visual reference: design prototype, revision 12.
+
+@mixin sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+:root {
+  // Back-to-top box (FD-13): 76 × 96 px below md, 110 × 140 px from md.
+  --btt-w: 76px;
+  --btt-h: 96px;
+  --btt-bottom: max(var(--s-5), env(safe-area-inset-bottom, 0px));
+  --btt-rest: 0.7; // FD-18
+
+  @include media-breakpoint-up(md) {
+    --btt-w: 110px;
+    --btt-h: 140px;
+  }
+}
+
+// Skip link: first focusable element, visible on focus.
+.skip-link {
+  @include t-meta;
+
+  position: absolute;
+  top: var(--s-3);
+  left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  z-index: $zindex-toast;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: var(--s-2) var(--s-3);
+  color: var(--accent-ink);
+  text-decoration: none;
+  background: var(--accent-strong);
+  border-radius: var(--r-2);
+  transform: translateY(calc(-100% - var(--s-6)));
+
+  &:focus {
+    transform: none;
+  }
+}
+
+// Header
+.site-header {
+  position: sticky;
+  top: env(safe-area-inset-top, 0);
+  z-index: $zindex-sticky;
+  background: var(--bg-0);
+  border-bottom: 1px solid var(--line);
+
+  @supports (backdrop-filter: blur(12px)) {
+    background: color-mix(in srgb, var(--bg-0) 86%, transparent);
+    backdrop-filter: blur(12px);
+  }
+}
+
+.site-header-bar {
+  display: flex;
+  gap: var(--s-3);
+  align-items: center;
+  min-height: var(--header-h);
+}
+
+.brand {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+  min-height: 44px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  color: var(--fg-0);
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+// The name shortens before it can touch "Hire me" on narrow phones.
+// The header's text boxes have a fixed width in em (FD-65): font-size does not change when the
+// web fonts swap in, so the nav and the tools never move, whatever the fallback's widths. Each is
+// the text's width in the web fonts (measured in Chromium), rounded up to 0.01em.
+.brand-name {
+  width: 7.55em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.brand-mark {
+  flex: none;
+  width: 28px;
+  height: 28px;
+  overflow: hidden;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-full);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+}
+
+.site-nav {
+  margin-left: var(--s-4);
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 10px var(--s-3);
+    color: var(--fg-1);
+    text-decoration: none;
+    border-radius: var(--r-2);
+    transition:
+      color var(--d-fast) var(--e-out),
+      background-color var(--d-fast) var(--e-out);
+
+    &:hover,
+    &[aria-current] {
+      color: var(--fg-0);
+      background: var(--bg-1);
+    }
+
+    // Current page is marked by shape as well as colour.
+    &[aria-current] {
+      box-shadow: inset 0 -2px 0 var(--accent);
+    }
+  }
+}
+
+// The nav labels have fixed widths in em, like the brand name (FD-65, FD-121): the web-font
+// widths measured in Chromium at 17 px, rounded up to 0.01em, centred in their links.
+.site-nav li {
+  --nav-text: 4.08em; // Portfolio
+
+  &:nth-child(2) {
+    --nav-text: 2.09em; // Blog
+  }
+
+  &:nth-child(3) {
+    --nav-text: 3.7em; // Contact
+  }
+
+  a {
+    justify-content: center;
+    width: calc(var(--nav-text) + 2 * var(--s-3));
+  }
+}
+
+.site-header-tools {
+  display: flex;
+  gap: var(--s-1);
+  align-items: center;
+  margin-left: auto;
+}
+
+// Prototype rev 12: Hire me stands a little apart from the nav at lg and up.
+.hire-cta {
+  @include media-breakpoint-up(lg) {
+    margin-left: var(--s-3);
+  }
+}
+
+.hire-cta-text {
+  flex: none;
+  width: 3.67em;
+  white-space: nowrap;
+}
+
+// The theme state, "Dark" or "Light" by the theme theme-init.js set before the first paint.
+.site-header [data-theme-state] {
+  width: 2.57em;
+  white-space: nowrap;
+}
+
+[data-theme="light"] .site-header [data-theme-state] {
+  width: 3.21em;
+}
+
+// Narrow phones (380–429 px): the full wordmark (FD-24) fits beside the tools when the
+// "Hire me" arrow is dropped and the bar is a little tighter.
+@media (width < 430px) {
+  .site-header-bar {
+    gap: var(--s-2);
+  }
+
+  .brand {
+    gap: var(--s-2);
+    font-size: 1rem;
+  }
+
+  .hire-cta {
+    --bs-btn-padding-x: var(--s-2);
+  }
+
+  .hire-cta .icon-arrow {
+    display: none;
+  }
+}
+
+// Very narrow phones: the brand text and the theme button move to the drawer only.
+@media (width < 380px) {
+  .brand-name {
+    @include sr-only;
+  }
+
+  .site-header .theme-toggle {
+    display: none;
+  }
+
+  .hire-cta {
+    --bs-btn-font-size: var(--t-small);
+  }
+}
+
+// Drawer: Bootstrap Offcanvas, full screen, below lg (FD-11).
+.drawer {
+  --bs-offcanvas-width: 100%;
+  --bs-offcanvas-bg: var(--bg-0);
+  --bs-offcanvas-color: var(--fg-0);
+  --bs-offcanvas-border-width: 0;
+  --bs-offcanvas-transition: transform var(--d-slow) var(--e-out);
+
+  gap: var(--s-5);
+  padding: max(var(--s-3), env(safe-area-inset-top, 0px))
+    max(var(--gutter), env(safe-area-inset-right, 0px))
+    max(var(--s-5), env(safe-area-inset-bottom, 0px))
+    max(var(--gutter), env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+}
+
+.drawer-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: calc(var(--header-h) - var(--s-3));
+}
+
+// FD-24: the wordmark beside the avatar mark; "Menu" stays the dialog's name.
+.drawer-title {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.drawer-links a {
+  display: grid;
+  gap: 6px;
+  padding-block: 14px;
+  font-size: clamp(1.75rem, 1.2rem + 2.4vw, 3rem);
+  line-height: 1.1;
+  color: var(--fg-0);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+
+  &:hover {
+    color: var(--accent);
+  }
+
+  &[aria-current] {
+    font-weight: 600;
+    color: var(--accent);
+  }
+}
+
+.drawer-sub {
+  @include t-label;
+
+  font-weight: 400;
+  color: var(--fg-2);
+}
+
+.drawer-tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+// Footer (FD-94): brand block and three link groups (four columns from lg; on phones the brand,
+// then Explore | Research profiles side by side (5 : 7) from 360 px, then Connect), a rule, then the
+// copyright and Theme. FD-95, FD-104: no reserve for the back-to-top photo under the footer —
+// the bottom row keeps its slot (its height, and its width where it reaches into the container),
+// so at the page end the always-shown photo covers no footer link.
+.site-footer {
+  padding-top: var(--s-8);
+  padding-bottom: var(--btt-bottom);
+
+  @include t-small;
+
+  color: var(--fg-2);
+}
+
+.site-footer-main {
+  --bs-gutter-y: var(--s-6);
+
+  padding-bottom: var(--s-6);
+}
+
+.footer-brand {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+}
+
+.footer-name {
+  @include t-h2;
+
+  color: var(--fg-0);
+}
+
+.footer-role {
+  font-size: var(--type-body-size);
+  line-height: var(--type-body-line-height);
+  color: var(--fg-1);
+}
+
+.footer-affiliation {
+  color: var(--fg-2);
+}
+
+.footer-group {
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+
+  // Under 360 px the two groups stack, as everything else.
+  @media (width < 360px) {
+    flex: 0 0 100%;
+    width: 100%;
+  }
+}
+
+.footer-group-title {
+  @include t-label;
+
+  color: var(--fg-2);
+}
+
+.footer-link {
+  display: inline-flex;
+  gap: var(--s-3);
+  align-items: center;
+  min-height: 44px;
+  font-size: var(--type-body-size);
+  color: var(--fg-0);
+  text-decoration: none;
+
+  .footer-icon {
+    width: 24px;
+    height: 24px;
+    color: var(--fg-1);
+  }
+
+  .footer-mark {
+    fill: currentcolor;
+    stroke: none;
+  }
+
+  .footer-external {
+    width: 14px;
+    height: 14px;
+    margin-left: calc(var(--s-2) * -1);
+    color: var(--fg-2);
+  }
+
+  // FD-94: no underline at rest; the FD-76 hover / focus
+  // state and the current page's 2 px line come from the site-wide .link rules.
+  .link {
+    background-size: 0 1px;
+  }
+}
+
+.footer-email {
+  margin-top: var(--s-2);
+}
+
+// Phones: LinkedIn and GitHub on one line.
+@include media-breakpoint-down(lg) {
+  .footer-connect ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--s-6);
+  }
+}
+
+// The bottom row: as tall as the back-to-top box and, where the box reaches into the container,
+// that much narrower on the right (+ --s-4), so the photo sits beside it, never over it.
+.site-footer-bottom {
+  --btt-slot: calc(var(--btt-w) + max(var(--s-5), env(safe-area-inset-right, 0px)) + var(--s-4));
+
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3) var(--s-5);
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--btt-h);
+  padding-top: var(--s-4);
+  padding-right: max(0px, calc(var(--btt-slot) - (100vw - 100%) / 2));
+  border-top: 1px solid var(--line);
+
+  @include media-breakpoint-down(md) {
+    flex-direction: column-reverse;
+    align-items: flex-start;
+    justify-content: center;
+  }
+}
+
+.footer-theme {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+// Back to top (DD-17): the seated P5 photograph, shown after the first screen. The sentinel
+// runs from the top of the page to the threshold, so even a jump across it changes its
+// intersection; the Home stage sets its height to the hand-off point (FD-54).
+.back-to-top-sentinel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: calc(100svh - 1px);
+  pointer-events: none;
+}
+
+.back-to-top {
+  position: fixed;
+  right: max(var(--s-5), env(safe-area-inset-right, 0px));
+  bottom: var(--btt-bottom);
+  z-index: $zindex-fixed;
+  display: grid;
+
+  // One track the size of the box, so the photo's 100 % height is the box's height (an auto
+  // track grew to the image's natural 1300 px; prototype .mini-figure).
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: end end;
+  width: var(--btt-w);
+  height: var(--btt-h);
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  border: 0;
+  border-radius: var(--r-2);
+  opacity: 0;
+  transition: opacity var(--d-slow) var(--e-out);
+
+  // FD-18: 0.7 at rest (DD-17 had 40 %) so the control stays legible; 1 on hover/focus.
+  &.is-on {
+    opacity: var(--btt-rest);
+  }
+
+  &.is-on:hover,
+  &.is-on:focus-visible {
+    opacity: 1;
+  }
+
+  // Home stage hand-off (FD-54, FD-97): while the stage runs (.is-handoff) the button never
+  // fades, so it and the figure swap in one frame; before the hand-off (.is-held) the figure
+  // is the portrait and the button is hidden and takes no pointer. Keyboard focus still shows
+  // it at once, fully.
+  &.is-handoff {
+    transition: none;
+  }
+
+  &.is-held:not(:focus-visible) {
+    pointer-events: none;
+    opacity: 0;
+  }
+
+  picture {
+    display: block;
+    height: 100%;
+  }
+
+  img {
+    display: block;
+    width: auto;
+    height: 100%;
+    filter: drop-shadow(0 10px 10px var(--figure-shadow));
+    transition: transform var(--d-fast) var(--e-out);
+  }
+
+  &:hover img {
+    transform: translateY(-4px);
+  }
+}
+
+html:not(.js) .back-to-top {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition-duration: var(--d-base);
+  }
+
+  .back-to-top img {
+    transition: none;
+  }
+
+  .back-to-top:hover img {
+    transform: none;
+  }
+}
+
+// Offcanvas focuses the panel itself on open; the dialog is announced by its name,
+// so the full-screen ring adds nothing.
+.drawer:focus-visible {
+  outline: none;
+}
+
+// Back-to-top fade-jump (FD-70, back-to-top.js): the page content fades out (--jump-out), the
+// page jumps to the top, then fades in (--jump-in). The header stays: it does not move, and the
+// brand link takes focus.
+main,
+.site-footer {
+  transition: opacity var(--jump-in, 0s) var(--e-out);
+}
+
+.is-jumping {
+  main,
+  .site-footer {
+    opacity: 0;
+    transition: opacity var(--jump-out) var(--e-inout);
+  }
+}

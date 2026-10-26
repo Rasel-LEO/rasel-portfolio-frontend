@@ -1,0 +1,238 @@
+// Author: Rasel Al Mamun
+// Home stage motion (FD-51 … FD-54, FD-66). Without JS, under reduced motion, below
+// 992 px or when the stage does not fit, the stage is the static document of _home.scss.
+
+$stage-desktop: "(min-width: 992px) and (prefers-reduced-motion: no-preference)";
+
+// Desktop (≥ 992 px, motion allowed). The stage becomes a tall wrapper whose container sticks
+// under the header for --stage-dist of scrolling (prototype .stage-wrap and .stage). Hero,
+// screen 2 (FD-84) and Fork share that frame as layers.
+@mixin staged {
+  --stage-dist: 360svh; // FD-69
+
+  position: relative;
+  height: calc(var(--stage-dist) + 100svh - var(--header-h));
+
+  // The Fork columns start 40 px out and the small figure travels into the page margin;
+  // clip, not hidden, so the sticky frame keeps the page as its scroll container.
+  overflow-x: clip;
+
+  > .container {
+    position: sticky;
+    top: var(--header-h);
+    height: calc(100svh - var(--header-h));
+  }
+
+  // Hero and screen 2 share one grid cell: the hero stays where it was at rest, screen 2 is
+  // centred on the text column.
+  .stage-text {
+    grid-template: "layer" 1fr / minmax(0, 1fr);
+  }
+
+  .stage-hero,
+  .stage-statement {
+    grid-area: layer;
+  }
+
+  .stage-hero {
+    align-self: start;
+  }
+
+  .stage-statement {
+    align-self: center;
+  }
+
+  // The photo as a plane (handoff §4): perspective on the box, the picture is the plane
+  // turning about the face point; the pointer tilts the image inside it.
+  .stage-figure {
+    perspective: 1400px;
+  }
+
+  .stage-figure picture {
+    transform-origin: 49.4% 40%;
+    transform-style: preserve-3d;
+  }
+
+  .stage-figure img {
+    transform-origin: 49.4% 40%;
+  }
+
+  // Fork: a layer over the whole frame, at the full container width as at rest (FD-47).
+  .fork {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    align-content: safe center;
+    padding-block: var(--s-6);
+    padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+    padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  }
+}
+
+// .is-staged: stage-desktop.js has built the stage. Layers that are hidden take no pointer, nor
+// screen 2 while its entrance plays (FD-85: nothing invisible can be clicked). The Fork layer
+// lies over the whole frame and never takes the pointer itself; each card does once it is
+// seen in full (FD-96: stage-desktop.js sets .is-off on it until then).
+.stage.is-staged {
+  @include staged;
+
+  .fork {
+    pointer-events: none;
+  }
+
+  .fork-card {
+    pointer-events: auto;
+  }
+
+  .is-off,
+  [data-screen2="playing"] {
+    pointer-events: none;
+  }
+}
+
+// FD-66: from the first paint (html.js is set before it, theme-init.js) the stage already
+// shows its p = 0 state — the staged frame with screen 2 and the Fork hidden — so the script
+// only takes over and nothing moves or blinks. stage-desktop.js sets .is-unstaged when the stage does not fit (or fails to build): the document comes back.
+// Fail-safe: if the stage is not built within 4 s (a script that never arrives), CSS
+// animations restore the static document; building it later still works. They restore what
+// moves or hides something; the stage's `position: relative` and horizontal clip (FD-83), the
+// layers' `align-self` and the figure's perspective stay, as they change nothing in the static
+// grid.
+@media #{$stage-desktop} {
+  html.js .stage:not(.is-staged, .is-unstaged) {
+    @include staged;
+
+    animation: stage-static 0s 4s forwards;
+
+    > .container {
+      animation: stage-static-frame 0s 4s forwards;
+    }
+
+    .stage-text {
+      animation: stage-static-text 0s 4s forwards;
+    }
+
+    .stage-hero {
+      animation: stage-static-layer 0s 4s forwards;
+    }
+
+    // Hidden, not only transparent: until the script takes over, nothing in these layers
+    // takes keyboard focus or covers the hero's links.
+    .stage-statement {
+      visibility: hidden;
+      opacity: 0;
+      animation: stage-static-layer 0s 4s forwards;
+    }
+
+    .fork {
+      visibility: hidden;
+      opacity: 0;
+      animation: stage-static-fork 0s 4s forwards;
+    }
+  }
+}
+
+@keyframes stage-static {
+  to {
+    height: auto;
+  }
+}
+
+@keyframes stage-static-frame {
+  to {
+    position: static;
+    height: auto;
+  }
+}
+
+@keyframes stage-static-text {
+  to {
+    grid-template: none;
+  }
+}
+
+@keyframes stage-static-layer {
+  to {
+    grid-area: auto;
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+@keyframes stage-static-fork {
+  to {
+    position: static;
+    display: block;
+    padding-block: var(--section-pad);
+    padding-inline: 0;
+    visibility: visible;
+    opacity: 1;
+  }
+}
+
+// will-change only while the stage is on screen (ScrollTrigger isActive).
+.stage.is-active {
+  .stage-figure,
+  .stage-figure picture,
+  .stage-figure img,
+  .fork-title,
+  .fork-card,
+  .fork-seam {
+    will-change: transform, opacity;
+  }
+
+  // Screen 2 fades out as one layer (FD-85).
+  .stage-statement {
+    will-change: opacity;
+  }
+}
+
+// Scroll cue (prototype .scroll-cue), created by JS, decorative.
+.stage-cue {
+  @include t-meta;
+
+  position: absolute;
+  bottom: var(--s-5);
+  left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  margin: 0;
+  color: var(--fg-2);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  pointer-events: none;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentcolor;
+    stroke-width: 1.5;
+  }
+}
+
+// Phones and tablets (< 992 px, motion allowed): the Fork cards reveal once on enter (stage.js
+// toggles .is-pre); screen 2 plays its entrance (screen2.js).
+.stage-reveal {
+  transition:
+    opacity var(--d-slow) var(--e-out) var(--reveal-delay, 0ms),
+    transform var(--d-slow) var(--e-out) var(--reveal-delay, 0ms);
+
+  &.is-pre {
+    opacity: 0;
+    transform: translateY(var(--m-24));
+    transition: none;
+  }
+
+  &.is-instant {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stage-reveal.is-pre {
+    opacity: 1;
+    transform: none;
+  }
+}

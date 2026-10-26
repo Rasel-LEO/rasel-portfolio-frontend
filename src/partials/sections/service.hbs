@@ -1,0 +1,46 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- One Hire me service (DD-10, FD-39, FD-89), Hire me and Home. Context: an item of
+hire.services; `tag` is the title's heading level. One action per card, at its bottom: → for a
+page of this site, ↗ for another site (a new tab, FD-76). --}}
+<article class="service" data-reveal>
+  <p class="t-label service-number mb-0" aria-hidden="true">{{n}}</p>
+  <{{tag}} class="t-h3 service-title mb-0">{{title}}</{{tag}}>
+  <p class="service-summary mb-0">{{summary}}</p>
+  <ul class="plain-list service-items mb-0">
+    {{#each items}}
+    <li>{{this}}</li>
+    {{/each}}
+  </ul>
+  {{#if (isExternal evidence.href)}}
+  <a
+    class="profile-link service-evidence"
+    href="{{evidence.href}}"
+    target="_blank"
+    rel="noopener noreferrer"
+    ><span class="link">{{evidence.label}}</span
+    ><span class="visually-hidden"> (opens in a new tab)</span
+    ><svg
+      class="icon"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M7 17L17 7M9 7h8v8" /></svg
+  ></a>
+  {{else}}
+  <a class="profile-link service-evidence" href="/{{evidence.href}}"
+    ><span class="link">{{evidence.label}}</span
+    ><svg
+      class="icon"
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" /></svg
+  ></a>
+  {{/if}}
+</article>

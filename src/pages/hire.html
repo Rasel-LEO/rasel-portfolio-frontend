@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Hire me" description=meta.hire}}
+  </head>
+  <body data-page="hire">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      <div class="container">
+        {{!-- FD-117: the head as Home's services band — heading left; the availability line and the
+        two actions right from lg ("Hire me" jumps to the brief form). --}}
+        <header class="page-head hire-head">
+          <div class="row band-head">
+            <div class="col-lg-7">
+              <p class="eyebrow mb-0">Hire me</p>
+              <h1 class="mb-0">{{hire.heading}}</h1>
+            </div>
+            <div class="col-lg-5 band-aside">
+              <p class="t-body-l band-text mb-0">{{hire.availability}}</p>
+              <div class="band-actions">
+                <a class="btn btn-primary" href="#brief">
+                  Hire me
+                  <svg
+                    class="icon icon-arrow"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </a>
+                {{> components/cv-button variant="btn-secondary" icon=true}}
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <section aria-labelledby="services-title">
+          <h2 class="visually-hidden" id="services-title">Services</h2>
+          <ul class="list-unstyled row services mb-0">
+            {{#each hire.services}}
+            <li class="col-lg-4">{{> sections/service tag="h3"}}</li>
+            {{/each}}
+          </ul>
+        </section>
+
+        <section class="page-section" aria-labelledby="process-title">
+          <h2 id="process-title" data-reveal>How it works</h2>
+          <ol class="list-unstyled row steps mb-0">
+            {{#each hire.process}}
+            <li class="col-md-6 col-lg-3 step" data-reveal>
+              <p class="t-label step-number mb-0" aria-hidden="true">{{n}}</p>
+              <h3 class="mb-0">{{title}}</h3>
+              <p class="step-text mb-0">{{text}}</p>
+            </li>
+            {{/each}}
+          </ol>
+        </section>
+
+        <div class="page-section form-section" id="brief" tabindex="-1">
+          <div class="row form-row">
+            <div class="col-lg-7">
+              <h2 class="form-title" id="brief-title">Start a brief</h2>
+              <form
+                class="site-form"
+                method="post"
+                aria-labelledby="brief-title"
+                data-form="hire"
+                data-email="{{profile.email}}"
+              >
+                {{> components/field id="hire-name" name="name" label="Name" required=true
+                autocomplete="name"}} {{> components/field id="hire-email" name="email"
+                label="Email" type="email" required=true autocomplete="email"}} {{> components/field
+                id="hire-kind" name="kind" label="What do you need?" control="select"
+                options=hire.form_kinds }} {{> components/field id="hire-organisation"
+                name="organisation" label="Organisation" optional=true autocomplete="organization"}}
+                {{> components/field id="hire-brief" name="brief" label="Brief" control="textarea"
+                required=true hint=contact.privacy_note}}
+                <div class="form-actions">
+                  <button class="btn btn-primary" type="submit">
+                    Send the brief
+                    <svg
+                      class="icon icon-arrow"
+                      viewBox="0 0 24 24"
+                      width="20"
+                      height="20"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M5 12h14M13 6l6 6-6 6" />
+                    </svg>
+                  </button>
+                  <p class="form-status mb-0" role="status" data-form-status></p>
+                </div>
+              </form>
+            </div>
+            <aside class="col-lg-5 form-aside" aria-label="Other ways to start">
+              {{> components/email-box}}
+              <div class="aside-box">
+                <h2 class="eyebrow mb-0">CV</h2>
+                {{> components/cv-button variant="btn-secondary" icon=true}}
+              </div>
+              <div class="aside-box">
+                <h2 class="eyebrow mb-0">Also</h2>
+                <a class="profile-link" href="/portfolio.html"
+                  ><span class="link">See the portfolio first</span></a
+                >
+              </div>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

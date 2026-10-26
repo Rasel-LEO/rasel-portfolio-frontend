@@ -1,0 +1,14 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Direct email (FD-27): selectable address and, with JS, a Copy button (forms.js). The
+status stays rendered while empty so screen readers announce it when the text arrives. --}}
+<div class="aside-box">
+  <h2 class="eyebrow mb-0">Direct</h2>
+  <p class="email-text mb-0"><a class="profile-link" href="mailto:{{profile.email}}"><span class="link">{{profile.email}}</span></a></p>
+  <div class="copy-row">
+    <button type="button" class="btn btn-secondary btn-sm js-only" data-copy-email="{{profile.email}}">
+      Copy<span class="visually-hidden"> email address</span>
+      <svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M9 9h10v10H9zM5 15V5h10" /></svg>
+    </button>
+    <p class="t-meta copy-status mb-0" role="status" data-copy-status></p>
+  </div>
+</div>

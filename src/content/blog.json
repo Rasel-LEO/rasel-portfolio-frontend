@@ -1,0 +1,26 @@
+[
+  {
+    "slug": "edge-ai-poultry-farm",
+    "category": "agricultural-engineering",
+    "title": "Edge AI on the poultry farm: why decisions belong next to the sensor",
+    "short_title": "Edge AI on the poultry farm",
+    "standfirst": "Exploring local processing for farm monitoring and control.",
+    "status": "draft"
+  },
+  {
+    "slug": "esp32-vs-raspberry-pi-farm-iot",
+    "category": "tech-review",
+    "title": "ESP32 or Raspberry Pi for farm IoT? A practical comparison",
+    "short_title": "ESP32 or Raspberry Pi for farm IoT?",
+    "standfirst": "A practical guide to choosing a controller for farm IoT.",
+    "status": "draft"
+  },
+  {
+    "slug": "thesis-to-journal-paper",
+    "category": "education",
+    "title": "From undergraduate thesis to journal paper: what publishing taught me",
+    "short_title": "From thesis to journal paper",
+    "standfirst": "Lessons from turning a research project into a journal article.",
+    "status": "draft"
+  }
+]

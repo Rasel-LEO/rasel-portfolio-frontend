@@ -1,0 +1,17 @@
+node_modules/
+dist/
+.vite/
+coverage/
+playwright-report/
+test-results/
+tests/screenshots/
+.lighthouseci/
+*.log
+.env
+.env.*
+!.env.example
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

@@ -1,0 +1,13 @@
+dist/
+node_modules/
+playwright-report/
+test-results/
+tests/screenshots/
+package-lock.json
+src/fonts/
+src/scss/base/_tokens.scss
+# Handlebars partials put block helpers inside tags ({{#if id}} id="{{id}}"{{/if}}), which
+# neither the HTML nor the Glimmer parser accepts.
+src/partials/
+# One-row-per-decision table with long cells: aligned padding would multiply its size.
+docs/decisions.md

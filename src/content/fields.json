@@ -1,0 +1,32 @@
+[
+  {
+    "label": "Precision agriculture",
+    "target": "portfolio.html#research",
+    "icon": "sprout"
+  },
+  {
+    "label": "IoT & edge AI",
+    "target": "portfolio.html#research",
+    "icon": "network"
+  },
+  {
+    "label": "Machine vision",
+    "target": "portfolio.html#research",
+    "icon": "camera"
+  },
+  {
+    "label": "Farm machinery",
+    "target": "portfolio.html#research",
+    "icon": "tractor"
+  },
+  {
+    "label": "Software & web",
+    "target": "hire.html",
+    "icon": "code"
+  },
+  {
+    "label": "Publications",
+    "target": "portfolio.html#publications",
+    "icon": "document"
+  }
+]

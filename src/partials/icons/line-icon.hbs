@@ -1,0 +1,75 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- System, result and topic icons (FD-115, FD-116): in-house line drawings on a 48 px grid,
+1.5 px strokes at every size (non-scaling), currentColor with the .la parts in --accent, so they
+follow the theme. Decorative: the text beside each one names it.
+Usage: {{> icons/line-icon name="tank" size=96}} — system and results: tank, dashboard, relay, soil,
+pump, monitor, gear, sun; topics: hen, fish, sun-water, tractor, leaf, greenhouse. `size` sets
+the box (default 24). --}}
+<svg class="line-art line-icon" viewBox="0 0 48 48" width="{{#if size}}{{size}}{{else}}24{{/if}}" height="{{#if size}}{{size}}{{else}}24{{/if}}" aria-hidden="true" focusable="false">
+  {{#if (eq name "tank")}}
+  <ellipse cx="24" cy="14" rx="18" ry="5" />
+  <path d="M6,14V34A18,5,0,0,0,42,34V14" />
+  <path d="M14,30Q18,26,22,30Q18,34,14,30ZM22,30L25,28V32Z" />
+  <g class="la">
+    <path d="M8,22Q12,19,16,22T24,22T32,22T40,22" />
+    <path d="M32,4V27" />
+    <circle cx="32" cy="29" r="2" />
+  </g>
+  {{else if (eq name "dashboard")}}
+  <rect x="4" y="8" width="30" height="22" rx="2" />
+  <path d="M19,30V36M13,36H25" />
+  <rect x="34" y="16" width="10" height="20" rx="2" />
+  <path d="M37,32H41" />
+  <path class="la" d="M8,24L14,18L19,22L26,14L30,17" />
+  {{else if (eq name "relay")}}
+  <rect x="4" y="10" width="24" height="28" rx="2" />
+  <path d="M10,38V44M16,38V44M22,38V44M10,30H14L20,26M20,30H22" />
+  <circle cx="16" cy="18" r="3" />
+  <path class="la" d="M28,16H42M28,24H42M28,32H42M39,13L42,16L39,19M39,21L42,24L39,27M39,29L42,32L39,35" />
+  {{else if (eq name "soil")}}
+  <path d="M4,22H44" />
+  <path d="M8,30H16M22,30H30M36,30H44M4,38H12M18,38H26M32,38H40" stroke-dasharray="1 4" />
+  <path d="M18,22V9M18,14Q12,13,10,8Q16,8,18,14M18,12Q23,11,25,6Q20,6,18,12" />
+  <path class="la" d="M34,8V40M31,8H37" />
+  {{else if (eq name "pump")}}
+  <circle cx="18" cy="26" r="10" />
+  <path d="M4,26H8M18,16V8H34M28,20H42V32H28M6,40H42" />
+  <circle cx="18" cy="26" r="3" />
+  <path class="la" d="M36,8H44M41,5L44,8L41,11" />
+  {{else if (eq name "monitor")}}
+  <rect x="6" y="8" width="36" height="24" rx="2" />
+  <path d="M24,32V38M16,38H32" />
+  <path class="la" d="M12,26L18,20L22,24L30,16L36,18" />
+  {{else if (eq name "gear")}}
+  <path transform="scale(2)" d="M19.18,10.22L21.37,10.44L21.37,13.56L19.18,13.78L18.34,15.82L19.73,17.52L17.52,19.73L15.82,18.34L13.78,19.18L13.56,21.37L10.44,21.37L10.22,19.18L8.18,18.34L6.48,19.73L4.27,17.52L5.66,15.82L4.82,13.78L2.63,13.56L2.63,10.44L4.82,10.22L5.66,8.18L4.27,6.48L6.48,4.27L8.18,5.66L10.22,4.82L10.44,2.63L13.56,2.63L13.78,4.82L15.82,5.66L17.52,4.27L19.73,6.48L18.34,8.18z" />
+  <circle class="la" cx="24" cy="24" r="6" />
+  {{else if (eq name "sun")}}
+  <circle class="la" cx="24" cy="24" r="8" />
+  <path d="M24,4V10M24,38V44M4,24H10M38,24H44M10,10L14,14M34,34L38,38M10,38L14,34M34,14L38,10" />
+  {{else if (eq name "hen")}}
+  <circle cx="15" cy="15" r="4" />
+  <path d="M11,15L8,16.5L11,18" />
+  <path d="M18,18C21,21,22,24,26,22C31,19,36,14,40,17C43,25,37,36,27,36C19,36,13,31,13,24V19" />
+  <path d="M22,36V42M28,36V42M20,42H24M26,42H30M28,26Q32,24,34,20" />
+  <path class="la" d="M12,11Q13,7,15,10Q16,6,18,11" />
+  {{else if (eq name "fish")}}
+  <path d="M5,24C11,14,27,14,35,24C27,34,11,34,5,24ZM35,24L44,16V32Z" />
+  <circle cx="12" cy="22" r="1.5" />
+  <path class="la" d="M18,18Q22,24,18,30" />
+  {{else if (eq name "sun-water")}}
+  <path d="M4,24H44M14,24A10,10,0,0,1,34,24" />
+  <path d="M24,6V10M11,11L14,14M37,11L34,14M5,18H9M39,18H43" />
+  <path class="la" d="M6,32Q9,29,12,32T18,32T24,32T30,32T36,32T42,32M10,40Q13,37,16,40T22,40T28,40T34,40T40,40" />
+  {{else if (eq name "tractor")}}
+  <circle cx="14" cy="32" r="9" />
+  <circle cx="37" cy="36" r="5" />
+  <path d="M8,23V10H22L26,23H40V31M33,23V15M23,32H32" />
+  <circle class="la" cx="14" cy="32" r="3" />
+  {{else if (eq name "leaf")}}
+  <path d="M8,40C8,20,22,8,42,8C42,28,30,40,8,40Z" />
+  <path class="la" d="M8,40L32,16M17,31H25M22,26L29,25" />
+  {{else if (eq name "greenhouse")}}
+  <path d="M6,40V22L24,8L42,22V40ZM15,40V15M33,40V15M6,22H42" />
+  <path class="la" d="M22,40V33Q17,33,17,28Q22,28,22,33M26,40V33Q31,33,31,28Q26,28,26,33" />
+  {{/if}}
+</svg>

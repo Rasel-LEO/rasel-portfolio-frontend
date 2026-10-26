@@ -1,0 +1,301 @@
+[
+  {
+    "id": "poultry-aiot-edge",
+    "title": "IoT-Based Monitoring and Control System with AI-Edge Computing for Poultry Farm Management",
+    "role": "Research Assistant (M.S. thesis project)",
+    "period": "January 2024 – present",
+    "status": "in-progress",
+    "featured": true,
+    "contribution": "Developing an IoT-based monitoring and control system with AI-edge computing for poultry farm optimisation: real-time data collection, control-algorithm development, and collaboration with stakeholders to meet industry standards.",
+    "tags": ["IoT", "Edge AI", "Poultry", "Control systems"],
+    "short_title": "Poultry farm monitoring with edge AI",
+    "short_summary": "IoT-based monitoring and control with AI-edge computing.",
+    "featured_order": 1,
+    "featured_tags": ["IoT", "Edge AI", "Control systems"],
+    "featured_large": true,
+    "featured_role_line": "Research Assistant · M.S. thesis project",
+    "topic": "poultry"
+  },
+  {
+    "id": "poultry-iot-undergrad",
+    "title": "Development of an IoT-Based Real-Time Intelligent Monitoring and Controlling System of Poultry Farm",
+    "role": "Undergraduate research (B.Sc. thesis)",
+    "period": "January 2022 – April 2023",
+    "status": "done",
+    "featured": false,
+    "contribution": "Designed and implemented an IoT-based monitoring system for poultry farms; integrated sensors and devices for tracking and monitoring; data analysis and report writing.",
+    "tags": ["IoT", "Sensors", "Poultry"],
+    "topic": "poultry",
+    "short_title": "Real-time poultry farm monitoring & control",
+    "short_summary": "IoT monitoring system for poultry farms (B.Sc. thesis)."
+  },
+  {
+    "id": "biofloc-iot",
+    "title": "Development of an IoT-Based Biofloc Monitoring and Controlling System",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": true,
+    "contribution": "Planning, system development, hardware design, data collection, data analysis, manuscript writing and reviewing the paper.",
+    "tags": ["IoT", "Aquaculture", "Biofloc", "Automation"],
+    "short_title": "Biofloc monitoring & control",
+    "short_summary": "IoT monitoring and control for aquaculture.",
+    "featured_order": 2,
+    "featured_tags": ["IoT", "Aquaculture", "Automation"],
+    "topic": "aquaculture",
+    "detail": {
+      "summary_line": "Real-time water-quality monitoring and automated control for biofloc aquaculture.",
+      "facts": {
+        "role": "Research team",
+        "institution": "Bangladesh Agricultural University",
+        "unit": "Farm Power and Machinery",
+        "technology": "ESP32 · Blynk",
+        "output": "Journal article · 2024"
+      },
+      "system": [
+        {
+          "icon": "tank",
+          "title": "Sense water quality",
+          "text": "Temperature · pH · DO · TDS · Turbidity · Water level"
+        },
+        {
+          "icon": "dashboard",
+          "title": "Monitor with ESP32 + Blynk",
+          "text": "Mobile and desktop readings"
+        },
+        {
+          "icon": "relay",
+          "title": "Control equipment",
+          "text": "Heater · Water pump · Air pump"
+        }
+      ],
+      "system_note": "Simplified system overview · Based on the published study",
+      "overview": "Biofloc water conditions need close monitoring. The system measures water quality continuously, sends alerts and switches equipment automatically when readings leave their target ranges.",
+      "contribution": [
+        "System planning and hardware design",
+        "System development",
+        "Data collection and analysis",
+        "Manuscript writing and review"
+      ],
+      "results": [
+        {
+          "icon": "monitor",
+          "title": "Remote monitoring",
+          "text": "Sensor readings available through Blynk on mobile and desktop."
+        },
+        {
+          "icon": "gear",
+          "title": "Automated response",
+          "text": "Relays switch the heater, water pump and air pump when readings leave their target ranges."
+        }
+      ],
+      "context": "Study context: mono-sex Nile tilapia (Oreochromis niloticus). See the paper for details."
+    }
+  },
+  {
+    "id": "machinery-tracking",
+    "title": "Real-Time IoT-Edge-AI Tracking and Hiring System for Agricultural Machinery",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Investigation, hardware design, software development, data collection and data analysis.",
+    "tags": ["IoT", "Edge AI", "Farm machinery", "Software"],
+    "topic": "machinery",
+    "short_title": "Farm machinery tracking & hiring",
+    "short_summary": "IoT and edge AI for tracking and hiring agricultural machinery."
+  },
+  {
+    "id": "solar-irrigation",
+    "title": "IoT-Enabled Solar-Powered Smart Irrigation for Precision Agriculture",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": true,
+    "contribution": "System development, hardware design, data collection, manuscript writing and reviewing the paper.",
+    "tags": ["IoT", "Solar energy", "Irrigation", "Precision agriculture"],
+    "short_title": "Solar-powered smart irrigation",
+    "short_summary": "IoT-enabled irrigation for precision agriculture.",
+    "featured_order": 3,
+    "featured_tags": ["IoT", "Solar energy", "Irrigation"],
+    "topic": "irrigation",
+    "detail": {
+      "summary_line": "Solar-powered IoT monitoring and automatic pump control for precision irrigation.",
+      "facts": {
+        "role": "Research team",
+        "institution": "Bangladesh Agricultural University",
+        "unit": "Farm Power and Machinery",
+        "technology": "ESP8266 · Raspberry Pi 4 · Django",
+        "output": "Journal article · 2025"
+      },
+      "system": [
+        {
+          "icon": "soil",
+          "title": "Sense field conditions",
+          "text": "Soil moisture · Air temperature · Humidity"
+        },
+        {
+          "icon": "dashboard",
+          "title": "Monitor over MQTT",
+          "text": "ESP8266 substations · Raspberry Pi 4 · Django web dashboard"
+        },
+        {
+          "icon": "pump",
+          "title": "Control the pump",
+          "text": "On below 45 % soil moisture · off at 80 %"
+        }
+      ],
+      "system_note": "Simplified system overview · Based on the published study",
+      "overview": "Field substations measure soil moisture and climate and report to a solar-powered base station, which switches the irrigation pump automatically and lets farmers monitor and control it remotely.",
+      "contribution": [
+        "System development",
+        "Hardware design",
+        "Data collection",
+        "Manuscript writing and review"
+      ],
+      "results": [
+        {
+          "icon": "monitor",
+          "title": "Remote monitoring and control",
+          "text": "Real-time readings and pump control through a web dashboard."
+        },
+        {
+          "icon": "sun",
+          "title": "Solar autonomy",
+          "text": "A 20 W panel and a 12 V, 7.5 Ah battery run the pump for at least two hours at night."
+        }
+      ],
+      "context": null
+    }
+  },
+  {
+    "id": "fish-feed-spreader",
+    "title": "Modification and Evaluation of an IoT-Based Solar Automated Fish Feed Spreader",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "System development, machine design and data collection.",
+    "tags": ["IoT", "Aquaculture", "Machine design", "Solar energy"],
+    "topic": "aquaculture",
+    "short_title": "Solar-powered fish feed spreader",
+    "short_summary": "Modification and evaluation of an IoT-based automated fish feeder."
+  },
+  {
+    "id": "potato-grading-nn",
+    "title": "Neural Network Model for Predicting Volume, Weight of Potato and Size Grading Using Two-Dimensional RGB Images",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "System development and model analysis.",
+    "tags": ["Machine vision", "Neural networks", "Post-harvest"],
+    "topic": "crop",
+    "short_title": "Potato volume & size grading",
+    "short_summary": "Neural-network prediction from two-dimensional RGB images."
+  },
+  {
+    "id": "power-tiller-ergonomics",
+    "title": "Assessment of Ergonomic Performance of Power Tiller Based on Age",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Implementation, data collection and data analysis.",
+    "tags": ["Farm machinery", "Ergonomics", "Data analysis"],
+    "topic": "machinery",
+    "short_title": "Power tiller ergonomics by age",
+    "short_summary": "Ergonomic performance of power tiller operators of different ages."
+  },
+  {
+    "id": "biofloc-winter",
+    "title": "Modification of Biofloc System for Winter Season",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Planning, system development, hardware design and data collection.",
+    "tags": ["Aquaculture", "Biofloc", "Hardware"],
+    "topic": "aquaculture",
+    "short_title": "Biofloc system for winter",
+    "short_summary": "Modifying a biofloc system for the winter season."
+  },
+  {
+    "id": "egg-incubator",
+    "title": "Development of a Low-Cost Semi-Automated Egg Incubator for Homestead Egg Hatching",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Machine design and data collection.",
+    "tags": ["Machine design", "Poultry", "Automation"],
+    "topic": "poultry",
+    "short_title": "Low-cost egg incubator",
+    "short_summary": "Semi-automated incubator for homestead egg hatching."
+  },
+  {
+    "id": "hydroponics-led",
+    "title": "Effect of Different Combinations of Coloured LED Light in a Hydroponics System for Lettuce",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Data collection and data analysis.",
+    "tags": ["Controlled environment agriculture", "Hydroponics", "Data analysis"],
+    "topic": "cea",
+    "short_title": "LED lighting for hydroponic lettuce",
+    "short_summary": "Effect of coloured LED combinations in a hydroponic system."
+  },
+  {
+    "id": "multi-nozzle-sprayer",
+    "title": "Design and Development of a Walking-Type Multi-Nozzle Sprayer",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Data analysis and manuscript writing.",
+    "tags": ["Farm machinery", "Crop protection"],
+    "topic": "machinery",
+    "short_title": "Walking-type multi-nozzle sprayer",
+    "short_summary": "Design and development of a multi-nozzle sprayer."
+  },
+  {
+    "id": "rice-germination",
+    "title": "Comparing Sustainable and Conventional Approaches Aiming for Precision Agriculture in Rice Seed Germination",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Planning, system development and data collection.",
+    "tags": ["Precision agriculture", "Rice"],
+    "topic": "crop",
+    "short_title": "Precision rice seed germination",
+    "short_summary": "Sustainable and conventional approaches compared."
+  },
+  {
+    "id": "solar-irrigation-ai",
+    "title": "IoT-Enabled Smart Irrigation System Enhanced with Solar Power and AI for Optimised Decision Making",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "System development, hardware design and data analysis.",
+    "tags": ["IoT", "AI", "Irrigation", "Solar energy"],
+    "topic": "irrigation",
+    "short_title": "Solar & AI smart irrigation",
+    "short_summary": "IoT irrigation with solar power and AI decision making."
+  },
+  {
+    "id": "ice-storage-boxes",
+    "title": "Design and Comparative Performance Analysis of Sustainable Insulated Ice Storage Boxes for Marine Fisheries",
+    "role": "Research team",
+    "period": null,
+    "status": null,
+    "featured": false,
+    "contribution": "Planning, system development and data collection.",
+    "tags": ["Fisheries", "Post-harvest", "Design"],
+    "topic": "aquaculture",
+    "short_title": "Insulated ice boxes for fisheries",
+    "short_summary": "Sustainable ice storage boxes for marine fisheries compared."
+  }
+]

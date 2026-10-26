@@ -1,0 +1,38 @@
+[
+  {
+    "id": "orcid",
+    "label": "ORCID",
+    "handle": "0009-0007-7826-710X",
+    "url": "https://orcid.org/0009-0007-7826-710X"
+  },
+  {
+    "id": "scholar",
+    "label": "Google Scholar",
+    "handle": "mNjYDB0AAAAJ",
+    "url": "https://scholar.google.com/citations?user=mNjYDB0AAAAJ&hl=en"
+  },
+  {
+    "id": "scopus",
+    "label": "Scopus",
+    "handle": "59354503700",
+    "url": "https://www.scopus.com/authid/detail.uri?authorId=59354503700"
+  },
+  {
+    "id": "researchgate",
+    "label": "ResearchGate",
+    "handle": "Md-Rasel-Al-Mamun-3",
+    "url": "https://www.researchgate.net/profile/Md-Rasel-Al-Mamun-3"
+  },
+  {
+    "id": "linkedin",
+    "label": "LinkedIn",
+    "handle": "rasel-al-mamun",
+    "url": "https://www.linkedin.com/in/rasel-al-mamun/"
+  },
+  {
+    "id": "github",
+    "label": "GitHub",
+    "handle": "Rasel-LEO",
+    "url": "https://github.com/Rasel-LEO"
+  }
+]

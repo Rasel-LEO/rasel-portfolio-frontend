@@ -1,0 +1,21 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- One publication row (FD-107 publications-desktop / -mobile; FD-109 publications.html).
+Context: a publication from tools/content.mjs (publicationRows or portfolioView.publications);
+`tag` is the title's heading level. Type label left from lg; DOI (new tab) and Project right
+from lg, side by side under the citation below. `full` (publications.html, FD-109): every author,
+the site author in bold. Otherwise first-author papers read "Al Mamun, M. R., et al." and the others
+list every author, so the site author's part is never hidden. --}}
+<li class="pf-pub" data-type="{{type}}" data-pub-row data-reveal>
+  <p class="t-label pf-pub-type mb-0">{{#if (eq type "journal")}}Journal{{else}}Conference{{/if}}</p>
+  <div class="pf-pub-body">
+    <{{tag}} class="pf-pub-title mb-0">{{title}}</{{tag}}>
+    <p class="pf-pub-authors mb-0">{{#if (and first_author (not full))}}{{leadAuthor}}{{#if etAl}}, et al.{{/if}}{{else}}{{{authors authors}}}{{/if}}</p>
+    <p class="pf-pub-venue mb-0">{{venue}}{{#if shownDetails}} · {{shownDetails}}{{/if}}</p>
+  </div>
+  <div class="pf-pub-actions">
+    <a class="btn btn-secondary" href="{{doiUrl doi}}" target="_blank" rel="noopener noreferrer" aria-label="DOI: {{title}} (opens in a new tab)">DOI <svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M7 17L17 7M9 7h8v8" /></svg></a>
+    {{#if projectFile}}
+    <a class="btn btn-accent-outline" href="/{{projectFile}}" aria-label="Project: {{projectTitle}}">Project <svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
+    {{/if}}
+  </div>
+</li>

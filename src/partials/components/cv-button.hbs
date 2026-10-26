@@ -1,0 +1,19 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- CV action (FD-34), one rule for Portfolio, the drawer and Hire me: "Request CV" by email
+while profile.cv is null, "Download CV" once the PDF exists. `variant` is the button
+class (btn-primary / btn-secondary); `id` and `icon` (mail icon after the label) are optional.
+Portfolio (FD-108): `lead` puts the mail icon before the label, `arrow` adds → after it;
+`link` makes it the text link of a note (mail icon first, .pf-cv-link). --}}
+{{#if link}}
+{{#if profile.cv}}
+<a class="pf-cv-link" href="{{profile.cv.href}}" download><svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M3 6h18v12H3zM3 6l9 7 9-7" /></svg><span>Download CV <span class="btn-note">(PDF, {{profile.cv.size}})</span></span></a>
+{{else}}
+<a class="pf-cv-link" href="mailto:{{profile.email}}?subject=CV%20request"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M3 6h18v12H3zM3 6l9 7 9-7" /></svg><span>Request CV</span></a>
+{{/if}}
+{{else}}
+{{#if profile.cv}}
+<a class="btn {{variant}}"{{#if id}} id="{{id}}"{{/if}} href="{{profile.cv.href}}" download>Download CV <span class="btn-note">(PDF, {{profile.cv.size}})</span></a>
+{{else}}
+<a class="btn {{variant}}"{{#if id}} id="{{id}}"{{/if}} href="mailto:{{profile.email}}?subject=CV%20request">{{#if lead}}<svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M3 6h18v12H3zM3 6l9 7 9-7" /></svg> {{/if}}Request CV{{#if icon}} <svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M3 6h18v12H3zM3 6l9 7 9-7" /></svg>{{/if}}{{#if arrow}} <svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg>{{/if}}</a>
+{{/if}}
+{{/if}}

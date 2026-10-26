@@ -1,0 +1,35 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Home "Selected work" card (FD-102). Context: a featured project from tools/content.mjs;
+`tag` is the title's heading level. `large` makes it the one large card: the amber `eyebrow`
+("Featured project"), the role line, a larger title and summary, the period. Small cards show
+the role as their label. Short title, summary and tags (pills, FD-110; `cardTags`: featured_tags or all tags)
+here; the full ones are on the project page.
+The action is stretched over the card. --}}
+<article class="card work-card{{#if large}} work-card-large{{/if}}" data-reveal>
+  {{#if large}}
+  <p class="t-label work-eyebrow mb-0">{{eyebrow}}</p>
+  <p class="t-meta work-role-line mb-0">{{featured_role_line}}</p>
+  <{{tag}} class="t-h2 card-title mb-0">{{short_title}}</{{tag}}>
+  <p class="t-body-l work-summary mb-0">{{short_summary}}</p>
+  {{else}}
+  <p class="t-label work-role mb-0">{{role}}</p>
+  <{{tag}} class="t-h3 card-title mb-0">{{short_title}}</{{tag}}>
+  <p class="work-summary mb-0">{{short_summary}}</p>
+  {{/if}}
+  {{#if period}}
+  <p class="t-meta work-period mb-0">{{period}}</p>
+  {{/if}}
+  {{> components/tag-pills tags=cardTags withStatus=true}}
+  <a class="work-link stretched-link" href="/{{file}}" aria-label="View project: {{short_title}}"
+    ><span class="link">View project</span
+    ><svg
+      class="icon icon-arrow"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" /></svg
+  ></a>
+</article>

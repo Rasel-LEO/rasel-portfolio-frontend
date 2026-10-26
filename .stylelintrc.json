@@ -1,0 +1,4 @@
+{
+  "extends": "stylelint-config-standard-scss",
+  "ignoreFiles": ["src/scss/base/_tokens.scss"]
+}

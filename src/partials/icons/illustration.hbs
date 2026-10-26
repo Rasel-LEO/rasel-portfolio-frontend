@@ -1,0 +1,52 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Post covers (FD-113): in-house line drawings, 16:9, thin strokes — currentColor (the
+container sets --fg-2) and .la in --accent — on the --bg-1 of their frame, so they follow the
+theme. The same language as the project system icons (line-icon.hbs). Named for screen readers
+with the content's alt text; decorative (aria-hidden) when there is none.
+Usage: {{> icons/illustration name="sensor-node" alt=cover.alt}} — sensor-node, two-boards,
+notebook-journal. --}}
+<svg class="line-art illustration" viewBox="0 0 320 180" width="320" height="180" focusable="false"{{#if alt}} role="img" aria-label="{{alt}}"{{else}} aria-hidden="true"{{/if}}>
+  {{#if (eq name "sensor-node")}}
+  <path d="M0,152H320" />
+  <path d="M18,152V114M54,152V114M90,152V114M18,124H96M18,140H96" />
+  <path d="M228,152V104L258,82L288,104V152M228,104H288M250,152V126H266V152" />
+  <path d="M150,152V36M160,152V36M146,36H164" />
+  <rect x="134" y="78" width="42" height="50" rx="4" />
+  <path d="M142,110H168M142,117H160M154,128C154,140,146,142,146,152" />
+  <path d="M170,78V58" />
+  <circle cx="170" cy="55" r="2.5" />
+  <g class="la">
+    <circle cx="155" cy="94" r="4" />
+    <path d="M178,47A11,11,0,0,1,178,63M184,41A19,19,0,0,1,184,69" />
+    <path d="M162,47A11,11,0,0,0,162,63" />
+  </g>
+  {{else if (eq name "two-boards")}}
+  <path d="M24,160H296" />
+  <rect x="50" y="46" width="92" height="104" rx="4" />
+  <rect x="64" y="58" width="64" height="44" rx="2" />
+  <path d="M58,110V142M134,110V142" stroke-dasharray="1 5" />
+  <rect x="84" y="140" width="24" height="12" rx="2" />
+  <rect x="166" y="36" width="114" height="114" rx="4" />
+  <path d="M178,46H262" stroke-dasharray="1 5" />
+  <rect x="238" y="80" width="18" height="26" rx="2" />
+  <path d="M268,66H290V90H268M268,98H290V122H268M268,128H288V142H268" />
+  <path d="M182,126H222M182,134H210" />
+  <g class="la">
+    <path d="M72,70H82V78H90V70H98V78H106V70H114V78H120" />
+    <rect x="196" y="76" width="32" height="32" rx="2" />
+    <path d="M204,76V70M212,76V70M220,76V70M204,108V114M212,108V114M220,108V114" />
+  </g>
+  {{else if (eq name "notebook-journal")}}
+  <path d="M16,160H304" />
+  <path d="M34,132V58Q76,48,118,60V134Q76,124,34,132ZM118,60Q160,48,202,58V132Q160,124,118,134" />
+  <path d="M46,74Q76,66,106,74M46,86Q76,78,106,86M46,98Q76,90,106,98M130,74Q160,66,190,72M130,86Q160,78,190,84M130,98Q160,90,178,95" />
+  <rect x="218" y="44" width="72" height="100" rx="3" />
+  <path d="M230,44V144" />
+  <rect x="240" y="88" width="40" height="26" rx="2" />
+  <path d="M140,156L204,112L212,118L148,162Z" />
+  <g class="la">
+    <path d="M240,62H280M240,72H268" />
+    <path d="M140,156L136,166L148,162" />
+  </g>
+  {{/if}}
+</svg>

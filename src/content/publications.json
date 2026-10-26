@@ -1,0 +1,248 @@
+[
+  {
+    "id": "aim-2026-poultry-aiot",
+    "year": 2026,
+    "type": "conference",
+    "first_author": true,
+    "authors": [
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Ashik-E-Rabbani, M."
+      },
+      {
+        "name": "Basir, M. S."
+      },
+      {
+        "name": "Islam, M. B."
+      }
+    ],
+    "title": "AIoT-Driven Edge Computing System for Real-Time Optimization and Environmental Control in Poultry Farm Management",
+    "venue": "2026 ASABE Annual International Meeting",
+    "details": "p. 1. American Society of Agricultural and Biological Engineers",
+    "display_details": "",
+    "doi": "10.13031/aim.202600823",
+    "project": "poultry-aiot-edge"
+  },
+  {
+    "id": "aim-2026-solar-pump-ai",
+    "year": 2026,
+    "type": "conference",
+    "first_author": false,
+    "authors": [
+      {
+        "name": "Ashik-E-Rabbani, M."
+      },
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Basir, M. S."
+      },
+      {
+        "name": "Tonoy, M. I."
+      },
+      {
+        "name": "Opi, M. A. F. S."
+      },
+      {
+        "name": "Islam, M. B."
+      },
+      {
+        "name": "Haque, M. M."
+      }
+    ],
+    "title": "AI-driven IoT architecture for sustainable solar irrigation pump systems: Toward energy-aware and water-efficient smart agriculture",
+    "venue": "2026 ASABE Annual International Meeting",
+    "details": "p. 1. American Society of Agricultural and Biological Engineers",
+    "display_details": "",
+    "doi": "10.13031/aim.202600821",
+    "project": "solar-irrigation-ai"
+  },
+  {
+    "id": "jbau-2026-water-level",
+    "year": 2026,
+    "type": "journal",
+    "first_author": false,
+    "authors": [
+      {
+        "name": "Kabir, E."
+      },
+      {
+        "name": "Ali, M. R."
+      },
+      {
+        "name": "Mamun, M. R. A.",
+        "me": true
+      },
+      {
+        "name": "Ahmed, N. S."
+      },
+      {
+        "name": "Alam, M. S."
+      }
+    ],
+    "title": "IoT-Enabled Automatic Water Level Controller for Remote Monitoring and Management",
+    "venue": "Journal of the Bangladesh Agricultural University",
+    "details": "24(3), 275–283",
+    "doi": "10.3329/jbau.v24i3.93900",
+    "project": null
+  },
+  {
+    "id": "sat-2025-solar-irrigation",
+    "year": 2025,
+    "type": "journal",
+    "first_author": true,
+    "authors": [
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Ahmed, A. K."
+      },
+      {
+        "name": "Upoma, S. M."
+      },
+      {
+        "name": "Haque, M. M."
+      },
+      {
+        "name": "Ashik-E-Rabbani, M."
+      }
+    ],
+    "title": "IoT-enabled solar-powered smart irrigation for precision agriculture",
+    "venue": "Smart Agricultural Technology",
+    "details": "10, 100773",
+    "doi": "10.1016/j.atech.2025.100773",
+    "project": "solar-irrigation"
+  },
+  {
+    "id": "das-2025-fish-feed",
+    "year": 2025,
+    "type": "journal",
+    "first_author": false,
+    "authors": [
+      {
+        "name": "Alam, A. S."
+      },
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Hossain, M. S."
+      },
+      {
+        "name": "Haque, M. M."
+      },
+      {
+        "name": "Upoma, S. M."
+      },
+      {
+        "name": "Rahman, A."
+      },
+      {
+        "name": "Ashik-E-Rabbani, M."
+      }
+    ],
+    "title": "Floating mechanized spreader for uniform fish feed dispersion in rural aquafarms",
+    "venue": "Discover Applied Sciences",
+    "details": "7(11), 1270",
+    "doi": "10.1007/s42452-025-07522-z",
+    "project": "fish-feed-spreader"
+  },
+  {
+    "id": "jbau-2025-combine-failure",
+    "year": 2025,
+    "type": "journal",
+    "first_author": false,
+    "authors": [
+      {
+        "name": "Rahman, M. R."
+      },
+      {
+        "name": "Islam, A. S."
+      },
+      {
+        "name": "Akhter, F."
+      },
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Ashik-E-Rabbani, M."
+      }
+    ],
+    "title": "Analysis of Failure Frequency in Travelling Unit Components of Combine Harvesters",
+    "venue": "Journal of the Bangladesh Agricultural University",
+    "details": "23(2), 231–240",
+    "doi": "10.3329/jbau.v23i2.82592",
+    "project": null
+  },
+  {
+    "id": "sat-2024-biofloc",
+    "year": 2024,
+    "type": "journal",
+    "first_author": true,
+    "authors": [
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Ashik-E-Rabbani, M."
+      },
+      {
+        "name": "Haque, M. M."
+      },
+      {
+        "name": "Upoma, S. M."
+      }
+    ],
+    "title": "IoT-based real-time biofloc monitoring and controlling system",
+    "venue": "Smart Agricultural Technology",
+    "details": "9, 100598",
+    "doi": "10.1016/j.atech.2024.100598",
+    "project": "biofloc-iot"
+  },
+  {
+    "id": "jambe-2024-potato-nn",
+    "year": 2024,
+    "type": "journal",
+    "first_author": false,
+    "authors": [
+      {
+        "name": "Rahman, F."
+      },
+      {
+        "name": "Das, J."
+      },
+      {
+        "name": "Al Mamun, M. R.",
+        "me": true
+      },
+      {
+        "name": "Haque, M. M."
+      },
+      {
+        "name": "Upoma, S. M."
+      },
+      {
+        "name": "Rahman, A."
+      },
+      {
+        "name": "Ashik-E-Rabbani, M."
+      }
+    ],
+    "title": "Prediction of Potato Volume by Neural Network Regression Model",
+    "venue": "Journal of Agricultural Machinery and Bioresources Engineering",
+    "details": "8(2), 40–52",
+    "doi": "10.61361/jambe.v8i2.124",
+    "project": "potato-grading-nn"
+  }
+]

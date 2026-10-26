@@ -1,0 +1,11 @@
+{
+  "role_line": "Agricultural engineer · Researcher · Developer",
+  "groups": {
+    "explore": "Explore",
+    "research": "Research profiles",
+    "connect": "Connect"
+  },
+  "research_profiles": ["orcid", "scholar", "scopus", "researchgate"],
+  "connect_profiles": ["linkedin", "github"],
+  "copyright_name": "Rasel Al Mamun"
+}

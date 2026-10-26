@@ -1,0 +1,68 @@
+{
+  "heading": "Three ways to work with me",
+  "availability": "Open to research collaborations and selected projects.",
+  "services": [
+    {
+      "n": "01",
+      "title": "Research collaboration",
+      "summary": "Agricultural and engineering research.",
+      "items": [
+        "Research design & proposals",
+        "Experiments, prototypes & data",
+        "Scientific writing"
+      ],
+      "evidence": {
+        "label": "View publications",
+        "href": "portfolio.html#publications"
+      }
+    },
+    {
+      "n": "02",
+      "title": "Software development",
+      "summary": "Web, app and embedded software.",
+      "items": ["Websites & web applications", "Mobile & desktop apps", "Embedded & IoT software"],
+      "evidence": {
+        "label": "View code on GitHub",
+        "href": "https://github.com/Rasel-LEO"
+      }
+    },
+    {
+      "n": "03",
+      "title": "Consulting & AI engineering",
+      "summary": "Technical guidance and applied AI.",
+      "items": ["Technical consulting", "AI model development", "AI agent development"],
+      "evidence": {
+        "label": "View research projects",
+        "href": "portfolio.html#research"
+      }
+    }
+  ],
+  "process": [
+    {
+      "n": "01",
+      "title": "Brief",
+      "text": "You describe the need, the context and any deadline — the form below or an email is enough."
+    },
+    {
+      "n": "02",
+      "title": "Scoping call",
+      "text": "A short call to agree on goals, constraints and what success looks like."
+    },
+    {
+      "n": "03",
+      "title": "Proposal",
+      "text": "A written proposal with scope, milestones and timeline."
+    },
+    {
+      "n": "04",
+      "title": "Build and hand-over",
+      "text": "Work in milestones with reviews, then hand-over with documentation and agreed support."
+    }
+  ],
+  "form_kinds": [
+    "Research collaboration",
+    "Web, app or software development",
+    "Consulting or AI engineering",
+    "Something else"
+  ]
+}

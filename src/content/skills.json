@@ -1,0 +1,25 @@
+[
+  {
+    "group": "Programming",
+    "items": ["Python", "C++", "C#", "Dart / Flutter", "R", "JavaScript", "PHP", "HTML", "CSS"]
+  },
+  {
+    "group": "Embedded, IoT & AI",
+    "items": [
+      "Microcontroller programming",
+      "IoT systems",
+      "Edge AI",
+      "Robotics",
+      "Image processing",
+      "GPS–GIS"
+    ]
+  },
+  {
+    "group": "Data",
+    "items": ["R", "Tableau", "SQLite", "MySQL", "PostgreSQL"]
+  },
+  {
+    "group": "Design & tools",
+    "items": ["Fusion 360", "AutoCAD", "Proteus", "STELLA", "GraphPad Prism", "Adobe Illustrator"]
+  }
+]

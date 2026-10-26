@@ -1,0 +1,990 @@
+// Author: Rasel Al Mamun
+// Portfolio (FD-107 … FD-111): the six profile sections, the two "View all" pages
+// (publications.html, research.html) and their shared rows and cards, per the design
+// specification. Surfaces alternate bg-0 / bg-1 (the Home .band).
+
+// Section rhythm: the Home sections' padding and heads (.section-title, .section-intro).
+.pf-section {
+  padding-block: var(--section-pad);
+}
+
+.pf-body {
+  margin-top: var(--s-6);
+
+  @include media-breakpoint-up(lg) {
+    margin-top: var(--s-7);
+  }
+}
+
+// After a section's body: the "View all" button or the CV note.
+.pf-end {
+  margin-top: var(--s-6);
+
+  @include media-breakpoint-down(md) {
+    .btn-accent-outline {
+      width: 100%;
+    }
+  }
+}
+
+.pf-note {
+  color: var(--fg-1);
+}
+
+// 1. Profile (profile-desktop / profile-mobile).
+.pf-profile {
+  padding-block: clamp(var(--s-7), 8vw, var(--s-9)) var(--s-5);
+}
+
+.pf-name {
+  margin-top: var(--s-2);
+}
+
+// Portrait left of the text from md; centred above it on phones.
+.pf-intro {
+  display: grid;
+  gap: var(--s-5);
+  margin-top: var(--s-6);
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--s-7);
+    align-items: center;
+  }
+}
+
+.pf-avatar {
+  justify-self: center;
+
+  img {
+    display: block;
+    width: clamp(var(--s-10), 30vw, var(--s-11));
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background: var(--bg-2);
+    border: 1px solid var(--line);
+    border-radius: var(--r-full);
+  }
+}
+
+.pf-intro-text {
+  display: grid;
+  gap: var(--s-3);
+  align-content: center;
+}
+
+.pf-role {
+  color: var(--fg-2);
+}
+
+.pf-summary {
+  max-width: 44ch;
+  color: var(--fg-0);
+}
+
+.pf-location {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  color: var(--fg-1);
+
+  .icon {
+    width: var(--s-5);
+    height: var(--s-5);
+    color: var(--fg-2);
+  }
+}
+
+// Three counts with dividers (from the data), on a rule.
+.pf-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: var(--s-6);
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+
+// Phones: columns as wide as their labels (one line each); equal thirds from md.
+@include media-breakpoint-down(md) {
+  .pf-counts {
+    grid-template-columns: auto auto auto;
+    justify-content: space-between;
+  }
+}
+
+// The number above its label (dd first visually); a wrapped label grows downwards.
+.pf-count {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  min-width: 0;
+  padding-inline: var(--s-4);
+
+  @include media-breakpoint-down(md) {
+    padding-inline: clamp(var(--s-2), 3vw, var(--s-4));
+
+    &:last-child {
+      padding-right: 0;
+    }
+  }
+
+  &:first-child {
+    padding-left: 0;
+  }
+
+  & + & {
+    border-left: 1px solid var(--line);
+
+    @include media-breakpoint-up(lg) {
+      padding-left: var(--s-7);
+    }
+  }
+
+  dt {
+    font-weight: 400;
+    color: var(--fg-1);
+
+    @include media-breakpoint-down(sm) {
+      font-size: var(--t-small);
+    }
+  }
+
+  dd {
+    order: -1;
+    margin: 0;
+    font-size: var(--t-h2);
+    font-variant-numeric: tabular-nums;
+    line-height: 1.1;
+    color: var(--fg-0);
+  }
+}
+
+// Request CV + Hire me: side by side, half width each on phones.
+.pf-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-3);
+  margin-top: var(--s-5);
+
+  @include media-breakpoint-up(md) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-4);
+  }
+
+  .btn {
+    min-height: var(--s-7);
+    padding-inline: var(--s-5);
+  }
+}
+
+// Six profile links: one row spread across the measure from lg; a two-column list with
+// rules between rows below.
+.pf-links {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: var(--s-4);
+  margin-top: var(--s-5);
+
+  // Under 360 px one column: "ResearchGate" never breaks.
+  @media (width < 360px) {
+    grid-template-columns: minmax(0, 1fr);
+
+    li:nth-child(2) {
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @include media-breakpoint-up(lg) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    justify-content: space-between;
+  }
+
+  li {
+    min-width: 0;
+  }
+
+  @include media-breakpoint-down(lg) {
+    li:nth-child(n + 3) {
+      border-top: 1px solid var(--line);
+    }
+  }
+}
+
+.pf-link {
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  min-height: var(--s-7);
+  color: var(--fg-0);
+  text-decoration: none;
+
+  .icon {
+    width: var(--s-5);
+    height: var(--s-5);
+    color: var(--fg-0);
+
+    @include media-breakpoint-up(lg) {
+      width: var(--s-6);
+      height: var(--s-6);
+    }
+  }
+
+  // The ↗ at the end of the cell on phones, after the label from lg.
+  .pf-icon:last-child {
+    width: var(--s-4);
+    height: var(--s-4);
+    margin-left: auto;
+    color: var(--fg-1);
+    transition: transform var(--d-fast) var(--e-out);
+  }
+
+  @include media-breakpoint-up(lg) {
+    gap: var(--s-3);
+    min-height: 44px;
+
+    .pf-icon:last-child {
+      margin-left: 0;
+    }
+  }
+
+  &:hover .pf-link-label,
+  &:focus-visible .pf-link-label {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  &:hover .pf-icon:last-child {
+    color: var(--accent);
+    transform: translate(2px, -2px);
+  }
+}
+
+.pf-link-label {
+  min-width: 0;
+}
+
+// Brand marks are filled (the iD, LinkedIn, GitHub).
+.pf-mark,
+.pf-link .footer-mark {
+  fill: currentcolor;
+  stroke: none;
+}
+
+// Section nav: centred, dividers, wraps on phones; the section in view is underlined
+// (portfolio.js, aria-current).
+.pf-nav {
+  margin-top: var(--s-4);
+  padding-top: var(--s-4);
+  border-top: 1px solid var(--line);
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: var(--s-1);
+    justify-content: center;
+  }
+
+  li + li {
+    border-left: 1px solid var(--line);
+  }
+
+  // Phones (profile-mobile): three on the first row, two on the second; a row never starts
+  // with a divider.
+  @include media-breakpoint-down(sm) {
+    ul::before {
+      flex-basis: 100%;
+      order: 1;
+      content: "";
+    }
+
+    li:nth-child(n + 4) {
+      order: 2;
+    }
+
+    li:nth-child(4) {
+      border-left: 0;
+    }
+  }
+
+  a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding-inline: clamp(var(--s-2), 3.4vw, var(--s-7));
+    color: var(--fg-1);
+    text-decoration: none;
+    text-underline-offset: 0.45em;
+    transition: color var(--d-fast) var(--e-out);
+
+    &:hover,
+    &[aria-current] {
+      color: var(--fg-0);
+      text-decoration: underline;
+      text-decoration-color: var(--accent);
+      text-decoration-thickness: 2px;
+    }
+  }
+}
+
+// 2. Selected publications (publications-desktop / -mobile) and publications.html.
+// Tabs on a rule; the amber underline (.pf-tab-ink) is placed by portfolio.js under the
+// pressed tab.
+.pf-tabs {
+  position: relative;
+  display: flex;
+  gap: var(--s-2);
+  border-bottom: 1px solid var(--line);
+
+  // Invisible until tab-ink.js has the web fonts and the underline (FD-121): the font swap moves
+  // the tabs after the first, so it happens out of sight.
+  html.js &:not(.is-set) {
+    visibility: hidden;
+  }
+
+  // Phones: one row that scrolls sideways, snapping to the tabs, with
+  // no visible scrollbar; tab-ink.js scrolls the pressed tab into view.
+  @include media-breakpoint-down(sm) {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    .pf-tab {
+      flex: none;
+      scroll-snap-align: start;
+    }
+
+    // Inside the scroll box: on the rule, not below it (it would be clipped).
+    .pf-tab-ink {
+      bottom: 0;
+    }
+  }
+}
+
+.pf-tab {
+  min-width: 44px;
+  min-height: 48px;
+  padding: var(--s-2) var(--s-3);
+  font-family: var(--font-sans);
+  color: var(--fg-1);
+  cursor: pointer;
+  background: none;
+  border: 0;
+  transition: color var(--d-fast) var(--e-out);
+
+  &:hover,
+  &[aria-pressed="true"] {
+    color: var(--fg-0);
+  }
+
+  &[aria-pressed="true"] {
+    font-weight: 600;
+  }
+
+  &:focus-visible {
+    outline-offset: -2px;
+  }
+}
+
+.pf-tab-ink {
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: var(--ink-w, 0);
+  height: 2px;
+  pointer-events: none;
+  background: var(--accent);
+  transform: translate(var(--ink-x, 0), var(--ink-y, 0));
+}
+
+// Rows: type label | citation | actions from lg; stacked below, two buttons side by side.
+.pf-pub {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-3);
+  padding-block: var(--s-5);
+
+  // Visible rows only, so a tab never stacks two rules.
+  &:not([hidden]) ~ &:not([hidden]) {
+    border-top: 1px solid var(--line);
+  }
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: var(--s-11) minmax(0, 1fr) auto;
+    gap: var(--s-6);
+    align-items: start;
+  }
+}
+
+.pf-pub-type {
+  color: var(--fg-2);
+
+  @include media-breakpoint-up(lg) {
+    padding-top: 0.45em;
+  }
+}
+
+.pf-pub-body {
+  display: grid;
+  gap: var(--s-1);
+  max-width: 66ch;
+}
+
+.pf-pub-title {
+  @include t-body-l;
+
+  margin-bottom: var(--s-1);
+  font-weight: 500;
+  color: var(--fg-0);
+  text-wrap: pretty;
+}
+
+.pf-pub-authors,
+.pf-pub-venue {
+  color: var(--fg-1);
+
+  strong {
+    font-weight: 600;
+    color: var(--fg-0);
+  }
+}
+
+.pf-pub-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+  gap: var(--s-4);
+  margin-top: var(--s-2);
+
+  @include media-breakpoint-up(lg) {
+    display: flex;
+    gap: var(--s-4);
+    margin-top: 0;
+  }
+
+  .btn {
+    min-height: var(--s-7);
+    padding-inline: var(--s-5);
+  }
+}
+
+// 3. Selected research projects (projects-desktop / -mobile) and research.html: equal cards
+// (three from lg, two from md), the action at the bottom of each.
+.pf-cards {
+  --bs-gutter-y: var(--gutter);
+}
+
+.pf-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+
+  @include media-breakpoint-up(lg) {
+    padding: var(--s-6);
+  }
+
+  .pill-row {
+    margin-top: var(--s-1);
+  }
+}
+
+.pf-card-role {
+  color: var(--fg-2);
+}
+
+// One small-text line high, with or without a status.
+.pf-card-status,
+.pf-card-status-empty {
+  display: flex;
+  min-height: calc(var(--t-small) * var(--t-small-lh));
+  margin-top: calc(var(--s-1) * -1);
+}
+
+// A card without a status keeps the row from lg, so titles, pills and links line up across
+// the row (projects-desktop); phones drop it (projects-mobile).
+.pf-card-status-empty {
+  @include media-breakpoint-down(lg) {
+    display: none;
+  }
+}
+
+.pf-card-title {
+  margin-top: var(--s-1);
+  color: var(--fg-0);
+  text-wrap: wrap;
+}
+
+.pf-card-summary {
+  color: var(--fg-1);
+}
+
+// "View project →": amber text with the arrow; underlined on hover or keyboard focus. Scoped
+// to .pf-card to win over the shared `.card .stretched-link` reset.
+.pf-card .pf-card-link {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: auto;
+  padding-top: var(--s-2);
+  font-weight: 500;
+  color: var(--accent);
+  text-underline-offset: 0.25em;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    transition: transform var(--d-btn) var(--e-out);
+  }
+
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.pf-card:hover .pf-card-link {
+  text-decoration: underline;
+
+  .icon {
+    transform: translateX(4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pf-card:hover .pf-card-link .icon,
+  .pf-link:hover .pf-icon:last-child {
+    transform: none;
+  }
+}
+
+// A section focused by a section-nav jump (motion.js) is a target, not a control (as #main).
+[data-pf-section]:focus {
+  outline: none;
+}
+
+// 4. Awards & honours (awards-desktop / -mobile): icon | title, kind, year · organiser |
+// highlight (amber) from lg; the highlight under the text on phones. A rule after each row.
+.pf-award {
+  display: grid;
+  grid-template-columns: var(--s-8) minmax(0, 1fr);
+  gap: var(--s-2) var(--s-4);
+  align-items: start;
+  padding-block: var(--s-5);
+  border-bottom: 1px solid var(--line);
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: var(--s-9) minmax(0, 1fr) auto;
+    column-gap: var(--s-5);
+  }
+}
+
+.pf-award-icon {
+  display: flex;
+  padding-top: var(--s-1);
+  color: var(--fg-0);
+
+  // About 2 px strokes on screen at both sizes.
+  .icon {
+    width: var(--s-7);
+    height: var(--s-7);
+    stroke-width: 1;
+
+    @include media-breakpoint-up(lg) {
+      width: var(--s-8);
+      height: var(--s-8);
+      stroke-width: 0.75;
+    }
+  }
+}
+
+.pf-award-body {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.pf-award-title {
+  @include t-body-l;
+
+  font-weight: 500;
+  color: var(--fg-0);
+}
+
+.pf-award-kind {
+  color: var(--fg-1);
+}
+
+.pf-award-meta {
+  @include t-small;
+
+  color: var(--fg-2);
+}
+
+.pf-award-highlight {
+  @include t-body-l;
+
+  grid-column: 2;
+  font-weight: 600;
+  color: var(--accent);
+
+  @include media-breakpoint-up(lg) {
+    grid-column: 3;
+    grid-row: 1;
+    align-self: center;
+  }
+}
+
+// The CV note and its action (Awards; Experience has a text link).
+.pf-cv {
+  display: grid;
+  gap: var(--s-4);
+  justify-items: start;
+}
+
+// 5. Experience & education (experience-desktop / -mobile): two columns with a divider from
+// lg, stacked below; a rule under each column head and between entries.
+.pf-columns {
+  display: grid;
+  gap: var(--s-7);
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0;
+
+    .pf-column {
+      padding-right: var(--s-7);
+    }
+
+    .pf-column + .pf-column {
+      padding-right: 0;
+      padding-left: var(--s-7);
+      border-left: 1px solid var(--line);
+    }
+  }
+}
+
+.pf-column-head {
+  display: flex;
+  gap: var(--s-4);
+  align-items: center;
+  margin: 0;
+  padding-bottom: var(--s-4);
+  border-bottom: 1px solid var(--line);
+
+  .icon {
+    width: var(--s-6);
+    height: var(--s-6);
+    stroke-width: 1.25;
+  }
+}
+
+.pf-entry {
+  display: grid;
+  gap: var(--s-2);
+  padding-block: var(--s-5);
+
+  & + & {
+    border-top: 1px solid var(--line);
+  }
+}
+
+// The period / year right of the title from md, under it on phones.
+.pf-entry-head {
+  display: grid;
+  gap: var(--s-1);
+
+  @include media-breakpoint-up(md) {
+    display: flex;
+    gap: var(--s-4);
+    align-items: baseline;
+    justify-content: space-between;
+  }
+}
+
+.pf-entry-title {
+  @include t-h3;
+
+  color: var(--fg-0);
+}
+
+.pf-entry-date {
+  color: var(--fg-2);
+}
+
+.pf-entry-sub {
+  display: grid;
+  color: var(--fg-1);
+}
+
+.pf-entry-text {
+  margin-top: var(--s-2);
+  color: var(--fg-1);
+}
+
+.pf-bullets {
+  display: grid;
+  gap: var(--s-1);
+  padding-left: 1.4em;
+  color: var(--fg-1);
+
+  li::marker {
+    color: var(--fg-2);
+  }
+}
+
+// The closing note on a rule, with its CV text link (mail icon).
+.pf-rule {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-2);
+  align-items: center;
+  padding-top: var(--s-5);
+  border-top: 1px solid var(--line);
+}
+
+.pf-cv-link {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  min-height: 44px;
+  color: var(--fg-0);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+
+  .icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  &:hover {
+    color: var(--accent);
+    text-decoration-thickness: 2px;
+  }
+}
+
+// 6. Technical expertise: four columns with dividers from lg (expertise-desktop), 2 × 2 at
+// 768–991 px (expertise-tablet-2x2), one column below 768 px with the icon left and the items
+// on one line, joined by "·" (expertise-mobile).
+.pf-groups {
+  display: grid;
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.pf-group {
+  display: grid;
+  grid-template-columns: var(--s-7) minmax(0, 1fr);
+  gap: var(--s-4);
+  align-content: start;
+  align-items: start;
+  padding-block: var(--s-5);
+  border-bottom: 1px solid var(--line);
+
+  // The training block's rule follows the last group.
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  @include media-breakpoint-up(md) {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--s-5) var(--s-6);
+    border-bottom: 0;
+
+    &:nth-child(odd) {
+      padding-left: 0;
+    }
+
+    &:nth-child(even) {
+      padding-right: 0;
+      border-left: 1px solid var(--line);
+    }
+
+    &:nth-child(n + 3) {
+      border-top: 1px solid var(--line);
+    }
+  }
+
+  @include media-breakpoint-up(lg) {
+    padding-block: 0;
+
+    &:nth-child(n) {
+      padding-inline: var(--s-5);
+      border-top: 0;
+    }
+
+    &:first-child {
+      padding-left: 0;
+    }
+
+    &:last-child {
+      padding-right: 0;
+    }
+
+    & + & {
+      border-left: 1px solid var(--line);
+    }
+  }
+}
+
+.pf-group-icon .icon {
+  width: var(--s-7);
+  height: var(--s-7);
+  stroke-width: 1;
+
+  @include media-breakpoint-up(lg) {
+    width: var(--s-8);
+    height: var(--s-8);
+    stroke-width: 0.75;
+  }
+}
+
+.pf-group-body {
+  display: grid;
+  gap: var(--s-2);
+
+  @include media-breakpoint-up(md) {
+    gap: var(--s-3);
+    margin-top: var(--s-3);
+  }
+}
+
+.pf-group-title {
+  @include t-body-l;
+
+  font-weight: 600;
+  color: var(--fg-0);
+}
+
+.pf-group-items {
+  color: var(--fg-1);
+
+  // Phones: one line, "·" between the items. The "·" ends its item behind a no-break space,
+  // so a wrapped line never starts with it (the markup's space follows).
+  // Each item stays whole; lines break between items.
+  li {
+    display: inline;
+    white-space: nowrap;
+  }
+
+  li:not(:last-child)::after {
+    color: var(--fg-2);
+    content: "\00a0·" / "";
+  }
+
+  @include media-breakpoint-up(md) {
+    display: grid;
+    gap: var(--s-2);
+
+    li {
+      display: list-item;
+      white-space: normal;
+    }
+
+    li:not(:last-child)::after {
+      content: none;
+    }
+  }
+}
+
+// Selected training: on a rule; two certificates side by side with a divider from lg,
+// stacked with rules below.
+.pf-training {
+  display: grid;
+  gap: var(--s-4);
+  margin-top: var(--s-6);
+  padding-top: var(--s-6);
+  border-top: 1px solid var(--line);
+}
+
+.pf-training-title {
+  @include t-h3;
+}
+
+.pf-certs {
+  display: grid;
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.pf-cert {
+  display: grid;
+  grid-template-columns: var(--s-7) minmax(0, 1fr);
+  gap: var(--s-4);
+  align-items: start;
+  padding-block: var(--s-4);
+  border-bottom: 1px solid var(--line);
+
+  .icon {
+    width: var(--s-7);
+    height: var(--s-7);
+    stroke-width: 1;
+  }
+
+  @include media-breakpoint-up(lg) {
+    padding-right: var(--s-6);
+    border-bottom: 0;
+
+    & + & {
+      padding-right: 0;
+      padding-left: var(--s-6);
+      border-left: 1px solid var(--line);
+    }
+  }
+}
+
+.pf-cert-title {
+  @include t-body-l;
+
+  color: var(--fg-0);
+}
+
+.pf-cert-by {
+  color: var(--fg-2);
+}
+
+.pf-training-note {
+  color: var(--fg-2);
+}
+
+// 7. The "View all" pages (FD-109): the page head, then year groups (publications.html) or
+// the cards (research.html); the page ends with the section rhythm (FD-101).
+.pf-page {
+  padding-bottom: var(--section-pad);
+
+  .pf-tabs {
+    margin-bottom: var(--s-2);
+  }
+}
+
+.pf-year {
+  & + & {
+    margin-top: var(--s-5);
+  }
+
+  &[hidden] {
+    display: none;
+  }
+}
+
+.pf-year-title {
+  margin: 0;
+  padding-block: var(--s-5) var(--s-1);
+  color: var(--fg-2);
+  border-bottom: 1px solid var(--line);
+}

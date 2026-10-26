@@ -1,0 +1,24 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Blog image card (FD-112, FD-113). Context: a post from tools/content.mjs; `tag` is the title's
+heading level. Cover on top (16:9): the in-house line drawing now, a real photo (cover.src,
+WebP + AVIF) later in the same frame. The cover is decorative here (the card's link names the post; the
+post page names it). Category (amber mono) · Draft (only while drafts are
+shown), title, standfirst as the excerpt, "Read article →" stretched over the card. --}}
+<article class="card blog-card" data-reveal>
+  <div class="blog-cover">
+    {{#if cover.src}}
+    <picture>
+      {{#if cover.avif}}<source type="image/avif" srcset="{{cover.avif}}" />{{/if}}
+      <img src="{{cover.src}}" alt="" width="{{cover.width}}" height="{{cover.height}}" loading="lazy" decoding="async" />
+    </picture>
+    {{else if cover.illustration}}
+    {{> icons/illustration name=cover.illustration}}
+    {{/if}}
+  </div>
+  <div class="blog-card-body">
+    <p class="blog-card-meta mb-0"><span class="t-label blog-card-category">{{categoryLabel}}</span>{{#if draft}}<span class="blog-card-draft" data-draft-label>Draft</span>{{/if}}</p>
+    <{{tag}} class="t-h3 blog-card-title mb-0">{{title}}</{{tag}}>
+    <p class="blog-card-excerpt mb-0{{#if (isPlaceholder standfirst)}} is-placeholder{{/if}}">{{standfirst}}</p>
+    <a class="blog-card-link stretched-link" href="/{{file}}" aria-label="Read article: {{title}}"><span>Read article</span><svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
+  </div>
+</article>

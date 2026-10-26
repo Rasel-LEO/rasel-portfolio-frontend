@@ -1,0 +1,14 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Related publication on a project page (FD-116). Context: a publication from
+tools/content.mjs. Type · first author · year, the title, the full citation (every author, the
+site author in bold; venue in italics with display details), DOI and "Read publication", both opening
+doi.org in a new tab (FD-76). --}}
+<article class="related-pub" data-reveal aria-labelledby="pub-{{id}}">
+  <p class="t-label related-pub-label mb-0">{{#if (eq type "journal")}}Journal{{else}}Conference{{/if}}{{#if first_author}} · First author{{/if}} · {{year}}</p>
+  <h3 class="related-pub-title mb-0" id="pub-{{id}}">{{title}}</h3>
+  <p class="related-pub-citation mb-0">{{{authors authors}}} ({{year}}).<br /><em>{{venue}}</em>{{#if shownDetails}}, {{shownDetails}}{{/if}}.</p>
+  <div class="related-pub-actions">
+    <p class="related-pub-doi mb-0">DOI: <a class="ext-link" href="{{doiUrl doi}}" target="_blank" rel="noopener noreferrer"><span class="link">{{doi}}</span><span class="visually-hidden"> (opens in a new tab)</span><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M7 17L17 7M9 7h8v8" /></svg></a></p>
+    <a class="ext-link related-pub-read" href="{{doiUrl doi}}" target="_blank" rel="noopener noreferrer"><span class="link">Read publication</span><span class="visually-hidden">: {{title}} (opens in a new tab)</span><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M7 17L17 7M9 7h8v8" /></svg></a>
+  </div>
+</article>

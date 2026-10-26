@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Page not found" description=meta.[404]}}
+  </head>
+  <body data-page="not-found">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}} {{!-- FD-119: the inner pages'
+    section style — eyebrow, heading, the approved 404 line and the three ways on; the relaxed
+    seated photograph (P6) beside it from md, under it on phones. --}}
+    <main id="main" tabindex="-1" class="container not-found">
+      <div class="row align-items-center not-found-row">
+        <div class="col-md-7">
+          <p class="eyebrow mb-0">404</p>
+          <h1 class="mb-0">Page not found</h1>
+          <p class="t-body-l page-intro mb-0">{{meta.[404]}}</p>
+          <ul class="list-unstyled not-found-actions mb-0">
+            <li>
+              <a class="btn btn-primary" href="/index.html"
+                >Home
+                <svg
+                  class="icon icon-arrow"
+                  viewBox="0 0 24 24"
+                  width="20"
+                  height="20"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M5 12h14M13 6l6 6-6 6" /></svg
+              ></a>
+            </li>
+            <li><a class="btn btn-secondary" href="/portfolio.html">Portfolio</a></li>
+            <li><a class="btn btn-secondary" href="/blog.html">Blog</a></li>
+          </ul>
+        </div>
+        <div class="col-md-5 not-found-figure" aria-hidden="true">
+          <picture>
+            <source type="image/avif" srcset="/images/figure/P6-desktop-720x1300.avif" />
+            <img
+              src="/images/figure/P6-desktop-720x1300.webp"
+              alt=""
+              width="720"
+              height="1300"
+              loading="eager"
+              decoding="async"
+            />
+          </picture>
+        </div>
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

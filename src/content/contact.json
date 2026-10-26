@@ -1,0 +1,12 @@
+{
+  "heading": "Get in touch",
+  "intro": "For research collaborations, projects or questions, email me directly or use the form.",
+  "audiences": [
+    "Research collaborators and supervisors",
+    "Companies and organisations in agri-tech and IoT",
+    "Clients for web, app and software projects",
+    "Students"
+  ],
+  "subjects": ["Research collaboration", "Project or consulting", "Speaking or teaching", "Other"],
+  "privacy_note": "Your message goes only to me. I use your details only to reply and never share them."
+}

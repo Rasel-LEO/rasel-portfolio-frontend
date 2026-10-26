@@ -1,0 +1,42 @@
+{{!-- Author: Rasel Al Mamun --}}
+<script src="/js/theme-init.js"></script>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+{{!-- FD-128: the tab title is the short title (at most 60 characters with the name); the formal
+title stays in the h1 and the social cards. --}}
+<title>{{#if shortTitle}}{{shortTitle}}{{else}}{{title}}{{/if}} — {{profile.name}}</title>
+<meta name="description" content="{{description}}" />
+<meta name="author" content="Rasel Al Mamun" />
+{{#if @root.noindex}}
+{{!-- FD-131: the two template pages repeat a generated page; search engines skip them. --}}
+<meta name="robots" content="noindex" />
+{{/if}}
+{{#if siteUrl}}
+<link rel="canonical" href="{{siteUrl}}/{{pageFile}}" />
+<meta property="og:url" content="{{siteUrl}}/{{pageFile}}" />
+{{/if}}
+<meta property="og:site_name" content="{{profile.name}}" />
+<meta property="og:title" content="{{title}} — {{profile.name}}" />
+<meta property="og:description" content="{{description}}" />
+<meta property="og:type" content="{{#if ogType}}{{ogType}}{{else}}website{{/if}}" />
+<meta property="og:image" content="/images/avatar/avatar-512.webp" />
+<meta property="og:image:alt" content="Portrait of {{profile.name}}" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="{{title}} — {{profile.name}}" />
+<meta name="twitter:description" content="{{description}}" />
+<meta name="twitter:image" content="/images/avatar/avatar-512.webp" />
+<link rel="icon" href="data:," />
+{{!-- FD-65: the display and text font first, before the stylesheet asks for it (the hashed
+URL is written by the build); the header avatar (E3) too. --}}
+<link rel="preload" as="font" type="font/woff2" href="/fonts/bricolage-grotesque-latin-standard-normal.woff2" crossorigin />
+<link rel="preload" as="image" type="image/avif" href="/images/avatar/avatar-96.avif" />
+{{#if isHome}}
+{{!-- Home only, from 768 px: the hero figure (LCP). Phones preload no image: the name comes
+first and is the LCP there (FD-73). --}}
+<link rel="preload" as="image" type="image/avif" href="/images/figure/P5-desktop-720x1300.avif" imagesrcset="/images/figure/P5-desktop-720x1300.avif 720w" imagesizes="(min-width: 768px) 40vw" media="(min-width: 768px)" fetchpriority="high" />
+{{/if}}
+<script type="application/ld+json">{{{jsonLd person}}}</script>
+{{#if isHome}}
+<script type="application/ld+json">{{{jsonLd @root.website}}}</script>
+{{/if}}
+<script type="module" src="/js/main.js"></script>

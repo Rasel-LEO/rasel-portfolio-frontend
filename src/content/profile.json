@@ -1,0 +1,28 @@
+{
+  "name": "Rasel Al Mamun",
+  "full_name": "Md Rasel Al Mamun",
+  "citation_names": ["Al Mamun, M. R.", "Mamun, M. R. A."],
+  "position": "Research Assistant",
+  "department": "Department of Farm Power and Machinery",
+  "institution": "Bangladesh Agricultural University",
+  "location": "Mymensingh, Bangladesh",
+  "affiliation_short": "Farm Power and Machinery, Bangladesh Agricultural University",
+  "eyebrow": "Research Assistant · Department of Farm Power and Machinery, Bangladesh Agricultural University",
+  "role_line": "Agricultural engineer, researcher and developer — working across embedded hardware, robotics, IoT, AI models, data analytics and software.",
+  "statement": "I build intelligent systems that connect hardware, data and software — for agriculture and beyond. My research becomes peer-reviewed papers and working prototypes; my development work becomes dependable web, app and software products.",
+  "summary": "Agricultural engineer and Research Assistant working on IoT, AI-edge computing and automation for agriculture: poultry, aquaculture (biofloc and fish feeding), irrigation and farm machinery. Alongside research he develops web, app and embedded software, analyses data, and writes scientific papers and technical posts.",
+  "email": "mr.raselalmamun@gmail.com",
+  "languages": ["Bengali", "English", "Hindi", "Urdu"],
+  "cv": null,
+  "research_interests": [
+    "IoT- and AI-based agricultural automation",
+    "Controlled environment agriculture (CEA)",
+    "Image processing for agricultural applications",
+    "Tracking agricultural machinery for improved efficiency",
+    "Blockchain applications in agriculture",
+    "Security systems in farm operations",
+    "Automation in fisheries",
+    "Smart technology in the livestock sector",
+    "Precision agriculture and agricultural machinery automation"
+  ]
+}

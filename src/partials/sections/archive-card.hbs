@@ -1,0 +1,17 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Research archive card (FD-115). Context: a card of tools/content.mjs archive.cards; `tag` is
+the title's heading level. Topic (line icon + mono label) and, when set, the status; short
+title, role line, short summary, two pills, "View project →" stretched over the card. --}}
+<article class="card pf-card archive-card" data-reveal>
+  <div class="archive-card-head">
+    <p class="archive-topic mb-0">{{> icons/line-icon name=topicIcon size=28}}<span class="t-label">{{topicLabel}}</span></p>
+    {{#if status}}<p class="archive-status mb-0">{{> components/status-chip}}</p>{{/if}}
+  </div>
+  <{{tag}} class="t-h3 pf-card-title mb-0">{{short_title}}</{{tag}}>
+  <p class="archive-card-role mb-0">{{roleLine}}</p>
+  <p class="pf-card-summary mb-0">{{short_summary}}</p>
+  {{> components/tag-pills tags=cardTags}}
+  <div class="archive-card-foot">
+    <a class="pf-card-link stretched-link" href="/{{file}}" aria-label="View project: {{short_title}}"><span>View project</span><svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
+  </div>
+</article>

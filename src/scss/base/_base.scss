@@ -1,0 +1,112 @@
+// Author: Rasel Al Mamun
+@use "sass:map";
+
+// Bootstrap's body variables follow the theme tokens, so [data-theme="light"]
+// switches Bootstrap's reboot and our own components together.
+:root {
+  --bs-body-bg: var(--bg-0);
+  --bs-body-color: var(--fg-0);
+  --bs-emphasis-color: var(--fg-0);
+  --bs-secondary-bg: var(--bg-1);
+  --bs-secondary-color: var(--fg-1);
+  --bs-tertiary-bg: var(--bg-2);
+  --bs-tertiary-color: var(--fg-2);
+  --bs-border-color: var(--line);
+  --bs-heading-color: var(--fg-0);
+  --bs-font-sans-serif: var(--font-sans);
+  --bs-font-monospace: var(--font-mono);
+  --bs-body-font-size: var(--t-body);
+  --bs-body-line-height: var(--t-body-lh);
+
+  // Layout (Phase 4 §3)
+  --gutter: var(--s-4);
+  --section-pad: clamp(40px, 5vw, 80px); // FD-101 (was clamp(64px, 10vw, 160px))
+  --header-h: 64px;
+
+  // Focus ring (Phase 4 §5.1, §10)
+  --focus-ring: 2px solid var(--focus);
+
+  color-scheme: dark;
+
+  @include media-breakpoint-up(md) {
+    --gutter: var(--s-5);
+  }
+
+  @media (width >= 1280px) {
+    --gutter: var(--s-6);
+  }
+}
+
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+// Container: max 1280 px, side padding never smaller than the safe area.
+.container {
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+}
+
+.row {
+  --bs-gutter-x: var(--gutter);
+}
+
+// The rule above is emitted after Bootstrap's grid, so it would beat .g-* / .gx-*;
+// re-emit those utilities here so explicit gutters still win.
+@each $breakpoint in map.keys($grid-breakpoints) {
+  @include media-breakpoint-up($breakpoint) {
+    $infix: breakpoint-infix($breakpoint, $grid-breakpoints);
+
+    @each $key, $value in $gutters {
+      .g#{$infix}-#{$key},
+      .gx#{$infix}-#{$key} {
+        --bs-gutter-x: #{$value};
+      }
+    }
+  }
+}
+
+// One focus style for every interactive element; Bootstrap's focus shadows are off.
+:focus-visible {
+  outline: var(--focus-ring);
+  outline-offset: 2px;
+}
+
+// The skip link target receives focus programmatically; it is not a control.
+#main:focus {
+  outline: none;
+}
+
+#main {
+  scroll-margin-top: var(--header-h);
+}
+
+// Keep focused or scrolled-to elements clear of the sticky header and the back-to-top button.
+html {
+  scroll-padding-top: calc(var(--header-h) + var(--s-3));
+  scroll-padding-bottom: calc(var(--btt-h) + var(--btt-bottom));
+}
+
+// Inline links in running text (Phase 4 §3: padding-block reaches the 44 px touch target).
+a:not([class]) {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+  padding-block: 4px;
+
+  // FD-50: text links stay --accent (AA in both themes); --accent-strong is a surface colour.
+  // Hover thickens the underline instead.
+  &:hover {
+    text-decoration-thickness: 2px;
+  }
+}
+
+// Elements that only work with JavaScript (theme-init.js adds .js before first paint).
+html:not(.js) .js-only {
+  display: none;
+}
+
+// Placeholder copy stays visible in [brackets] until the final copy is supplied.
+.is-placeholder {
+  color: var(--fg-2);
+}

@@ -1,0 +1,14 @@
+{
+  "singleQuote": true,
+  "printWidth": 100,
+  "overrides": [
+    {
+      "files": "*.scss",
+      "options": { "singleQuote": false }
+    },
+    {
+      "files": "*.hbs",
+      "options": { "parser": "html" }
+    }
+  ]
+}

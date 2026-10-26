@@ -1,0 +1,10 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- A real project photograph (FD-35). Context: an image record from projects.json.
+  ratio: 3x2 or 4x3; loading: "eager" for the page cover (default lazy);
+  decorative: true inside a card, whose title link already names it. --}}
+<picture class="project-image project-image-{{ratio}}">
+  {{#if avif}}
+  <source type="image/avif" srcset="{{avif}}" />
+  {{/if}}
+  <img src="{{src}}" alt="{{#unless decorative}}{{alt}}{{/unless}}" width="{{width}}" height="{{height}}" loading="{{#if loading}}{{loading}}{{else}}lazy{{/if}}"{{#if (eq loading "eager")}} fetchpriority="high"{{/if}} decoding="async" />
+</picture>

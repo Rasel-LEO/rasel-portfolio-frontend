@@ -1,0 +1,21 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Home "Latest posts" card (FD-92). Context: a published post from tools/content.mjs; `tag`
+is the title's heading level, `cta` the action's label. The standfirst is the excerpt; the action
+is stretched over the card. --}}
+<article class="card latest-card" data-reveal>
+  <p class="t-label latest-category mb-0">{{categoryLabel}}</p>
+  <{{tag}} class="t-h3 card-title mb-0">{{title}}</{{tag}}>
+  <p class="latest-excerpt mb-0">{{standfirst}}</p>
+  <a class="work-link stretched-link" href="/{{file}}" aria-label="{{cta}}: {{title}}"
+    ><span class="link">{{cta}}</span
+    ><svg
+      class="icon icon-arrow"
+      viewBox="0 0 24 24"
+      width="20"
+      height="20"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path d="M5 12h14M13 6l6 6-6 6" /></svg
+  ></a>
+</article>

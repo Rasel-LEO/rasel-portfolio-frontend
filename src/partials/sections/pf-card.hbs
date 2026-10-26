@@ -1,0 +1,17 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Research project card (FD-107 projects-desktop / -mobile; FD-109 research.html). Context: a
+project from tools/content.mjs portfolioView (roleLine, cardTitle, cardSummary, cardTags); `tag`
+is the title's heading level. Role line (mono), status where set (FD-110), title, summary, tags
+(pills) and "View project →", which is stretched over the card. --}}
+<article class="card pf-card" data-reveal>
+  <p class="t-label pf-card-role mb-0">{{roleLine}}</p>
+  {{#if status}}
+  <p class="pf-card-status mb-0">{{> components/status-chip}}</p>
+  {{else}}
+  <p class="pf-card-status-empty mb-0" aria-hidden="true"></p>
+  {{/if}}
+  <{{tag}} class="t-h3 pf-card-title mb-0">{{cardTitle}}</{{tag}}>
+  <p class="pf-card-summary mb-0">{{cardSummary}}</p>
+  {{> components/tag-pills tags=cardTags}}
+  <a class="pf-card-link stretched-link" href="/{{file}}" aria-label="View project: {{cardTitle}}"><span>View project</span><svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
+</article>

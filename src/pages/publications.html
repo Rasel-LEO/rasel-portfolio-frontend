@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Publications" description=portfolioView.publicationsDescription}}
+  </head>
+  <body data-page="publications">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      {{!-- FD-109: every publication grouped by year, newest first, with the Portfolio rows and
+      tabs (Django /portfolio/publications/). --}}
+      <div class="container pf-page">
+        <header class="page-head">
+          <nav aria-label="Breadcrumb">
+            <ol class="list-unstyled breadcrumb-list mb-0">
+              <li><a class="link" href="/portfolio.html">Portfolio</a></li>
+              <li aria-current="page">Publications</li>
+            </ol>
+          </nav>
+          <h1 class="mb-0">Publications</h1>
+          <p class="t-body-l page-intro mb-0">{{portfolioView.publicationsIntro}}</p>
+        </header>
+        {{> components/pf-tabs}} {{#each publicationRows}}
+        <section class="pf-year" aria-labelledby="year-{{year}}" data-pub-year>
+          <h2 class="t-label pf-year-title" id="year-{{year}}">{{year}}</h2>
+          <ol class="list-unstyled pf-pubs mb-0">
+            {{#each items}} {{> sections/pf-pub tag="h3" full=true}} {{/each}}
+          </ol>
+        </section>
+        {{/each}}
+      </div>
+      {{> sections/articles-ld}}
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

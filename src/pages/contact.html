@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Contact" description=meta.contact}}
+  </head>
+  <body data-page="contact">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      <div class="container">
+        {{!-- FD-118: two columns from lg — the form | email + Copy, profile links, who I'd like to
+        hear from; stacked on phones. No decorative photo (FD-79). --}}
+        <header class="page-head">
+          <p class="eyebrow mb-0">Contact</p>
+          <h1 class="mb-0">{{contact.heading}}</h1>
+          <p class="t-body-l page-intro mb-0">{{contact.intro}}</p>
+        </header>
+
+        <div class="row form-row form-section">
+          <div class="col-lg-7">
+            <h2 class="visually-hidden" id="contact-form-title">Contact form</h2>
+            <form
+              class="site-form"
+              method="post"
+              aria-labelledby="contact-form-title"
+              data-form="contact"
+              data-email="{{profile.email}}"
+            >
+              {{> components/field id="contact-name" name="name" label="Name" required=true
+              autocomplete="name"}} {{> components/field id="contact-email" name="email"
+              label="Email" type="email" required=true autocomplete="email"}} {{> components/field
+              id="contact-subject" name="subject" label="Subject" control="select"
+              options=contact.subjects }} {{> components/field id="contact-organisation"
+              name="organisation" label="Organisation" optional=true autocomplete="organization"}}
+              {{> components/field id="contact-message" name="message" label="Message"
+              control="textarea" required=true hint=contact.privacy_note}}
+              <div class="form-actions">
+                <button class="btn btn-primary" type="submit">
+                  Send
+                  <svg
+                    class="icon icon-arrow"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M5 12h14M13 6l6 6-6 6" />
+                  </svg>
+                </button>
+                <p class="form-status mb-0" role="status" data-form-status></p>
+              </div>
+            </form>
+          </div>
+          <aside class="col-lg-5 form-aside" aria-label="Other ways to reach me">
+            {{> components/email-box}}
+            <div class="aside-box">
+              <h2 class="eyebrow mb-0" id="elsewhere-title">Elsewhere</h2>
+              {{> sections/profile-links labelledby="elsewhere-title"}}
+            </div>
+            <div class="aside-box">
+              <h2 class="eyebrow mb-0">Who I'd like to hear from</h2>
+              <ol class="plain-list mb-0">
+                {{#each contact.audiences}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ol>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

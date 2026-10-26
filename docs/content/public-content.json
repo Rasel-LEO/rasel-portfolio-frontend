@@ -1,0 +1,1211 @@
+{
+  "_about": "Public content for the website, taken from Rasel Al Mamun's CV (2026-10-24) and profile-links document. ONLY public fields: no phone, date of birth, family, address, religion, blood group, marital status, grades, referees or political affiliations (FD-23). The site's data files in src/content/*.json are built from it and are edited there.",
+  "profile": {
+    "name": "Rasel Al Mamun",
+    "full_name": "Md Rasel Al Mamun",
+    "citation_names": ["Al Mamun, M. R.", "Mamun, M. R. A."],
+    "position": "Research Assistant",
+    "department": "Department of Farm Power and Machinery",
+    "institution": "Bangladesh Agricultural University",
+    "location": "Mymensingh, Bangladesh",
+    "affiliation_short": "Farm Power and Machinery, Bangladesh Agricultural University",
+    "eyebrow": "Research Assistant · Department of Farm Power and Machinery, Bangladesh Agricultural University",
+    "role_line": "Agricultural engineer, researcher and developer — working across embedded hardware, robotics, IoT, AI models, data analytics and software.",
+    "statement": "I build intelligent systems that connect hardware, data and software — for agriculture and beyond. My research becomes peer-reviewed papers and working prototypes; my development work becomes dependable web, app and software products.",
+    "summary": "Agricultural engineer and Research Assistant working on IoT, AI-edge computing and automation for agriculture: poultry, aquaculture (biofloc and fish feeding), irrigation and farm machinery. Alongside research he develops web, app and embedded software, analyses data, and writes scientific papers and technical posts.",
+    "email": "mr.raselalmamun@gmail.com",
+    "languages": ["Bengali", "English", "Hindi", "Urdu"]
+  },
+  "links": [
+    {
+      "id": "orcid",
+      "label": "ORCID",
+      "handle": "0009-0007-7826-710X",
+      "url": "https://orcid.org/0009-0007-7826-710X"
+    },
+    {
+      "id": "scholar",
+      "label": "Google Scholar",
+      "handle": "mNjYDB0AAAAJ",
+      "url": "https://scholar.google.com/citations?user=mNjYDB0AAAAJ&hl=en"
+    },
+    {
+      "id": "scopus",
+      "label": "Scopus",
+      "handle": "59354503700",
+      "url": "https://www.scopus.com/authid/detail.uri?authorId=59354503700"
+    },
+    {
+      "id": "researchgate",
+      "label": "ResearchGate",
+      "handle": "Md-Rasel-Al-Mamun-3",
+      "url": "https://www.researchgate.net/profile/Md-Rasel-Al-Mamun-3"
+    },
+    {
+      "id": "linkedin",
+      "label": "LinkedIn",
+      "handle": "rasel-al-mamun",
+      "url": "https://www.linkedin.com/in/rasel-al-mamun/"
+    },
+    {
+      "id": "github",
+      "label": "GitHub",
+      "handle": "Rasel-LEO",
+      "url": "https://github.com/Rasel-LEO"
+    }
+  ],
+  "fields": [
+    {
+      "label": "Precision agriculture",
+      "target": "portfolio.html#research",
+      "icon": "sprout"
+    },
+    {
+      "label": "IoT & edge AI",
+      "target": "portfolio.html#research",
+      "icon": "network"
+    },
+    {
+      "label": "Machine vision",
+      "target": "portfolio.html#research",
+      "icon": "camera"
+    },
+    {
+      "label": "Farm machinery",
+      "target": "portfolio.html#research",
+      "icon": "tractor"
+    },
+    {
+      "label": "Software & web",
+      "target": "hire.html",
+      "icon": "code"
+    },
+    {
+      "label": "Publications",
+      "target": "portfolio.html#publications",
+      "icon": "document"
+    }
+  ],
+  "research_interests": [
+    "IoT- and AI-based agricultural automation",
+    "Controlled environment agriculture (CEA)",
+    "Image processing for agricultural applications",
+    "Tracking agricultural machinery for improved efficiency",
+    "Blockchain applications in agriculture",
+    "Security systems in farm operations",
+    "Automation in fisheries",
+    "Smart technology in the livestock sector",
+    "Precision agriculture and agricultural machinery automation"
+  ],
+  "publications": [
+    {
+      "id": "aim-2026-poultry-aiot",
+      "year": 2026,
+      "type": "conference",
+      "first_author": true,
+      "authors": [
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Ashik-E-Rabbani, M."
+        },
+        {
+          "name": "Basir, M. S."
+        },
+        {
+          "name": "Islam, M. B."
+        }
+      ],
+      "title": "AIoT-Driven Edge Computing System for Real-Time Optimization and Environmental Control in Poultry Farm Management",
+      "venue": "2026 ASABE Annual International Meeting",
+      "details": "p. 1. American Society of Agricultural and Biological Engineers",
+      "display_details": "",
+      "doi": "10.13031/aim.202600823",
+      "project": "poultry-aiot-edge"
+    },
+    {
+      "id": "aim-2026-solar-pump-ai",
+      "year": 2026,
+      "type": "conference",
+      "first_author": false,
+      "authors": [
+        {
+          "name": "Ashik-E-Rabbani, M."
+        },
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Basir, M. S."
+        },
+        {
+          "name": "Tonoy, M. I."
+        },
+        {
+          "name": "Opi, M. A. F. S."
+        },
+        {
+          "name": "Islam, M. B."
+        },
+        {
+          "name": "Haque, M. M."
+        }
+      ],
+      "title": "AI-driven IoT architecture for sustainable solar irrigation pump systems: Toward energy-aware and water-efficient smart agriculture",
+      "venue": "2026 ASABE Annual International Meeting",
+      "details": "p. 1. American Society of Agricultural and Biological Engineers",
+      "display_details": "",
+      "doi": "10.13031/aim.202600821",
+      "project": "solar-irrigation-ai"
+    },
+    {
+      "id": "jbau-2026-water-level",
+      "year": 2026,
+      "type": "journal",
+      "first_author": false,
+      "authors": [
+        {
+          "name": "Kabir, E."
+        },
+        {
+          "name": "Ali, M. R."
+        },
+        {
+          "name": "Mamun, M. R. A.",
+          "me": true
+        },
+        {
+          "name": "Ahmed, N. S."
+        },
+        {
+          "name": "Alam, M. S."
+        }
+      ],
+      "title": "IoT-Enabled Automatic Water Level Controller for Remote Monitoring and Management",
+      "venue": "Journal of the Bangladesh Agricultural University",
+      "details": "24(3), 275–283",
+      "doi": "10.3329/jbau.v24i3.93900",
+      "project": null
+    },
+    {
+      "id": "sat-2025-solar-irrigation",
+      "year": 2025,
+      "type": "journal",
+      "first_author": true,
+      "authors": [
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Ahmed, A. K."
+        },
+        {
+          "name": "Upoma, S. M."
+        },
+        {
+          "name": "Haque, M. M."
+        },
+        {
+          "name": "Ashik-E-Rabbani, M."
+        }
+      ],
+      "title": "IoT-enabled solar-powered smart irrigation for precision agriculture",
+      "venue": "Smart Agricultural Technology",
+      "details": "10, 100773",
+      "doi": "10.1016/j.atech.2025.100773",
+      "project": "solar-irrigation"
+    },
+    {
+      "id": "das-2025-fish-feed",
+      "year": 2025,
+      "type": "journal",
+      "first_author": false,
+      "authors": [
+        {
+          "name": "Alam, A. S."
+        },
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Hossain, M. S."
+        },
+        {
+          "name": "Haque, M. M."
+        },
+        {
+          "name": "Upoma, S. M."
+        },
+        {
+          "name": "Rahman, A."
+        },
+        {
+          "name": "Ashik-E-Rabbani, M."
+        }
+      ],
+      "title": "Floating mechanized spreader for uniform fish feed dispersion in rural aquafarms",
+      "venue": "Discover Applied Sciences",
+      "details": "7(11), 1270",
+      "doi": "10.1007/s42452-025-07522-z",
+      "project": "fish-feed-spreader"
+    },
+    {
+      "id": "jbau-2025-combine-failure",
+      "year": 2025,
+      "type": "journal",
+      "first_author": false,
+      "authors": [
+        {
+          "name": "Rahman, M. R."
+        },
+        {
+          "name": "Islam, A. S."
+        },
+        {
+          "name": "Akhter, F."
+        },
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Ashik-E-Rabbani, M."
+        }
+      ],
+      "title": "Analysis of Failure Frequency in Travelling Unit Components of Combine Harvesters",
+      "venue": "Journal of the Bangladesh Agricultural University",
+      "details": "23(2), 231–240",
+      "doi": "10.3329/jbau.v23i2.82592",
+      "project": null
+    },
+    {
+      "id": "sat-2024-biofloc",
+      "year": 2024,
+      "type": "journal",
+      "first_author": true,
+      "authors": [
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Ashik-E-Rabbani, M."
+        },
+        {
+          "name": "Haque, M. M."
+        },
+        {
+          "name": "Upoma, S. M."
+        }
+      ],
+      "title": "IoT-based real-time biofloc monitoring and controlling system",
+      "venue": "Smart Agricultural Technology",
+      "details": "9, 100598",
+      "doi": "10.1016/j.atech.2024.100598",
+      "project": "biofloc-iot"
+    },
+    {
+      "id": "jambe-2024-potato-nn",
+      "year": 2024,
+      "type": "journal",
+      "first_author": false,
+      "authors": [
+        {
+          "name": "Rahman, F."
+        },
+        {
+          "name": "Das, J."
+        },
+        {
+          "name": "Al Mamun, M. R.",
+          "me": true
+        },
+        {
+          "name": "Haque, M. M."
+        },
+        {
+          "name": "Upoma, S. M."
+        },
+        {
+          "name": "Rahman, A."
+        },
+        {
+          "name": "Ashik-E-Rabbani, M."
+        }
+      ],
+      "title": "Prediction of Potato Volume by Neural Network Regression Model",
+      "venue": "Journal of Agricultural Machinery and Bioresources Engineering",
+      "details": "8(2), 40–52",
+      "doi": "10.61361/jambe.v8i2.124",
+      "project": "potato-grading-nn"
+    }
+  ],
+  "projects": [
+    {
+      "id": "poultry-aiot-edge",
+      "title": "IoT-Based Monitoring and Control System with AI-Edge Computing for Poultry Farm Management",
+      "role": "Research Assistant (M.S. thesis project)",
+      "period": "January 2024 – present",
+      "status": "in-progress",
+      "featured": true,
+      "contribution": "Developing an IoT-based monitoring and control system with AI-edge computing for poultry farm optimisation: real-time data collection, control-algorithm development, and collaboration with stakeholders to meet industry standards.",
+      "tags": ["IoT", "Edge AI", "Poultry", "Control systems"],
+      "short_title": "Poultry farm monitoring with edge AI",
+      "short_summary": "IoT-based monitoring and control with AI-edge computing.",
+      "featured_order": 1,
+      "featured_tags": ["IoT", "Edge AI", "Control systems"],
+      "featured_large": true,
+      "featured_role_line": "Research Assistant · M.S. thesis project",
+      "topic": "poultry"
+    },
+    {
+      "id": "poultry-iot-undergrad",
+      "title": "Development of an IoT-Based Real-Time Intelligent Monitoring and Controlling System of Poultry Farm",
+      "role": "Undergraduate research (B.Sc. thesis)",
+      "period": "January 2022 – April 2023",
+      "status": "done",
+      "featured": false,
+      "contribution": "Designed and implemented an IoT-based monitoring system for poultry farms; integrated sensors and devices for tracking and monitoring; data analysis and report writing.",
+      "tags": ["IoT", "Sensors", "Poultry"],
+      "topic": "poultry",
+      "short_title": "Real-time poultry farm monitoring & control",
+      "short_summary": "IoT monitoring system for poultry farms (B.Sc. thesis)."
+    },
+    {
+      "id": "biofloc-iot",
+      "title": "Development of an IoT-Based Biofloc Monitoring and Controlling System",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": true,
+      "contribution": "Planning, system development, hardware design, data collection, data analysis, manuscript writing and reviewing the paper.",
+      "tags": ["IoT", "Aquaculture", "Biofloc", "Automation"],
+      "short_title": "Biofloc monitoring & control",
+      "short_summary": "IoT monitoring and control for aquaculture.",
+      "featured_order": 2,
+      "featured_tags": ["IoT", "Aquaculture", "Automation"],
+      "topic": "aquaculture",
+      "detail": {
+        "summary_line": "Real-time water-quality monitoring and automated control for biofloc aquaculture.",
+        "facts": {
+          "role": "Research team",
+          "institution": "Bangladesh Agricultural University",
+          "unit": "Farm Power and Machinery",
+          "technology": "ESP32 · Blynk",
+          "output": "Journal article · 2024"
+        },
+        "system": [
+          {
+            "icon": "tank",
+            "title": "Sense water quality",
+            "text": "Temperature · pH · DO · TDS · Turbidity · Water level"
+          },
+          {
+            "icon": "dashboard",
+            "title": "Monitor with ESP32 + Blynk",
+            "text": "Mobile and desktop readings"
+          },
+          {
+            "icon": "relay",
+            "title": "Control equipment",
+            "text": "Heater · Water pump · Air pump"
+          }
+        ],
+        "system_note": "Simplified system overview · Based on the published study",
+        "overview": "Biofloc water conditions need close monitoring. The system measures water quality continuously, sends alerts and switches equipment automatically when readings leave their target ranges.",
+        "contribution": [
+          "System planning and hardware design",
+          "System development",
+          "Data collection and analysis",
+          "Manuscript writing and review"
+        ],
+        "results": [
+          {
+            "icon": "monitor",
+            "title": "Remote monitoring",
+            "text": "Sensor readings available through Blynk on mobile and desktop."
+          },
+          {
+            "icon": "gear",
+            "title": "Automated response",
+            "text": "Relays switch the heater, water pump and air pump when readings leave their target ranges."
+          }
+        ],
+        "context": "Study context: mono-sex Nile tilapia (Oreochromis niloticus). See the paper for details."
+      }
+    },
+    {
+      "id": "machinery-tracking",
+      "title": "Real-Time IoT-Edge-AI Tracking and Hiring System for Agricultural Machinery",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Investigation, hardware design, software development, data collection and data analysis.",
+      "tags": ["IoT", "Edge AI", "Farm machinery", "Software"],
+      "topic": "machinery",
+      "short_title": "Farm machinery tracking & hiring",
+      "short_summary": "IoT and edge AI for tracking and hiring agricultural machinery."
+    },
+    {
+      "id": "solar-irrigation",
+      "title": "IoT-Enabled Solar-Powered Smart Irrigation for Precision Agriculture",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": true,
+      "contribution": "System development, hardware design, data collection, manuscript writing and reviewing the paper.",
+      "tags": ["IoT", "Solar energy", "Irrigation", "Precision agriculture"],
+      "short_title": "Solar-powered smart irrigation",
+      "short_summary": "IoT-enabled irrigation for precision agriculture.",
+      "featured_order": 3,
+      "featured_tags": ["IoT", "Solar energy", "Irrigation"],
+      "topic": "irrigation",
+      "detail": {
+        "summary_line": "Solar-powered IoT monitoring and automatic pump control for precision irrigation.",
+        "facts": {
+          "role": "Research team",
+          "institution": "Bangladesh Agricultural University",
+          "unit": "Farm Power and Machinery",
+          "technology": "ESP8266 · Raspberry Pi 4 · Django",
+          "output": "Journal article · 2025"
+        },
+        "system": [
+          {
+            "icon": "soil",
+            "title": "Sense field conditions",
+            "text": "Soil moisture · Air temperature · Humidity"
+          },
+          {
+            "icon": "dashboard",
+            "title": "Monitor over MQTT",
+            "text": "ESP8266 substations · Raspberry Pi 4 · Django web dashboard"
+          },
+          {
+            "icon": "pump",
+            "title": "Control the pump",
+            "text": "On below 45 % soil moisture · off at 80 %"
+          }
+        ],
+        "system_note": "Simplified system overview · Based on the published study",
+        "overview": "Field substations measure soil moisture and climate and report to a solar-powered base station, which switches the irrigation pump automatically and lets farmers monitor and control it remotely.",
+        "contribution": [
+          "System development",
+          "Hardware design",
+          "Data collection",
+          "Manuscript writing and review"
+        ],
+        "results": [
+          {
+            "icon": "monitor",
+            "title": "Remote monitoring and control",
+            "text": "Real-time readings and pump control through a web dashboard."
+          },
+          {
+            "icon": "sun",
+            "title": "Solar autonomy",
+            "text": "A 20 W panel and a 12 V, 7.5 Ah battery run the pump for at least two hours at night."
+          }
+        ],
+        "context": null
+      }
+    },
+    {
+      "id": "fish-feed-spreader",
+      "title": "Modification and Evaluation of an IoT-Based Solar Automated Fish Feed Spreader",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "System development, machine design and data collection.",
+      "tags": ["IoT", "Aquaculture", "Machine design", "Solar energy"],
+      "topic": "aquaculture",
+      "short_title": "Solar-powered fish feed spreader",
+      "short_summary": "Modification and evaluation of an IoT-based automated fish feeder."
+    },
+    {
+      "id": "potato-grading-nn",
+      "title": "Neural Network Model for Predicting Volume, Weight of Potato and Size Grading Using Two-Dimensional RGB Images",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "System development and model analysis.",
+      "tags": ["Machine vision", "Neural networks", "Post-harvest"],
+      "topic": "crop",
+      "short_title": "Potato volume & size grading",
+      "short_summary": "Neural-network prediction from two-dimensional RGB images."
+    },
+    {
+      "id": "power-tiller-ergonomics",
+      "title": "Assessment of Ergonomic Performance of Power Tiller Based on Age",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Implementation, data collection and data analysis.",
+      "tags": ["Farm machinery", "Ergonomics", "Data analysis"],
+      "topic": "machinery",
+      "short_title": "Power tiller ergonomics by age",
+      "short_summary": "Ergonomic performance of power tiller operators of different ages."
+    },
+    {
+      "id": "biofloc-winter",
+      "title": "Modification of Biofloc System for Winter Season",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Planning, system development, hardware design and data collection.",
+      "tags": ["Aquaculture", "Biofloc", "Hardware"],
+      "topic": "aquaculture",
+      "short_title": "Biofloc system for winter",
+      "short_summary": "Modifying a biofloc system for the winter season."
+    },
+    {
+      "id": "egg-incubator",
+      "title": "Development of a Low-Cost Semi-Automated Egg Incubator for Homestead Egg Hatching",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Machine design and data collection.",
+      "tags": ["Machine design", "Poultry", "Automation"],
+      "topic": "poultry",
+      "short_title": "Low-cost egg incubator",
+      "short_summary": "Semi-automated incubator for homestead egg hatching."
+    },
+    {
+      "id": "hydroponics-led",
+      "title": "Effect of Different Combinations of Coloured LED Light in a Hydroponics System for Lettuce",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Data collection and data analysis.",
+      "tags": ["Controlled environment agriculture", "Hydroponics", "Data analysis"],
+      "topic": "cea",
+      "short_title": "LED lighting for hydroponic lettuce",
+      "short_summary": "Effect of coloured LED combinations in a hydroponic system."
+    },
+    {
+      "id": "multi-nozzle-sprayer",
+      "title": "Design and Development of a Walking-Type Multi-Nozzle Sprayer",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Data analysis and manuscript writing.",
+      "tags": ["Farm machinery", "Crop protection"],
+      "topic": "machinery",
+      "short_title": "Walking-type multi-nozzle sprayer",
+      "short_summary": "Design and development of a multi-nozzle sprayer."
+    },
+    {
+      "id": "rice-germination",
+      "title": "Comparing Sustainable and Conventional Approaches Aiming for Precision Agriculture in Rice Seed Germination",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Planning, system development and data collection.",
+      "tags": ["Precision agriculture", "Rice"],
+      "topic": "crop",
+      "short_title": "Precision rice seed germination",
+      "short_summary": "Sustainable and conventional approaches compared."
+    },
+    {
+      "id": "solar-irrigation-ai",
+      "title": "IoT-Enabled Smart Irrigation System Enhanced with Solar Power and AI for Optimised Decision Making",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "System development, hardware design and data analysis.",
+      "tags": ["IoT", "AI", "Irrigation", "Solar energy"],
+      "topic": "irrigation",
+      "short_title": "Solar & AI smart irrigation",
+      "short_summary": "IoT irrigation with solar power and AI decision making."
+    },
+    {
+      "id": "ice-storage-boxes",
+      "title": "Design and Comparative Performance Analysis of Sustainable Insulated Ice Storage Boxes for Marine Fisheries",
+      "role": "Research team",
+      "period": null,
+      "status": null,
+      "featured": false,
+      "contribution": "Planning, system development and data collection.",
+      "tags": ["Fisheries", "Post-harvest", "Design"],
+      "topic": "aquaculture",
+      "short_title": "Insulated ice boxes for fisheries",
+      "short_summary": "Sustainable ice storage boxes for marine fisheries compared."
+    }
+  ],
+  "awards": [
+    {
+      "year": 2024,
+      "title": "Agricultural Machinery Talent Hunt Award — 1st prize",
+      "by": "Bangladesh Agricultural Research Institute (BARI), Gazipur"
+    },
+    {
+      "year": 2024,
+      "title": "Best Presenter Award — 1st (oral), 3rd Biennial International Conference",
+      "by": "Fisheries Society of Bangladesh (FSB)"
+    },
+    {
+      "year": 2024,
+      "title": "Masters Fellowship",
+      "by": "Bangladesh Agricultural University Research System (BAURES)"
+    },
+    {
+      "year": 2023,
+      "title": "3rd Agricultural Debate Tournament — Tab Director",
+      "by": "Bangladesh Agricultural University Debating Shongho (BAUDS)"
+    },
+    {
+      "year": 2019,
+      "title": "Inter-University Agricultural Debate Festival — Runner-up",
+      "by": "Bangladesh Agricultural Debating Society"
+    },
+    {
+      "year": 2014,
+      "title": "Merit Scholarship",
+      "by": "Khwaja Mozammel Hoque (R) Foundation"
+    }
+  ],
+  "education": [
+    {
+      "year": "2026",
+      "degree": "M.S. in Farm Power and Machinery",
+      "institution": "Bangladesh Agricultural University",
+      "thesis": "IoT-Based Monitoring and Control System with AI-Edge Computing for Poultry Farm Management"
+    },
+    {
+      "year": "2023",
+      "degree": "B.Sc. in Agricultural Engineering",
+      "institution": "Bangladesh Agricultural University",
+      "thesis": "Development of an IoT-Based Real-Time Intelligent Monitoring and Controlling System of Poultry Farm"
+    }
+  ],
+  "certifications": [
+    {
+      "title": "Google Data Analytics Professional Certificate",
+      "by": "Google (Coursera)"
+    },
+    {
+      "title": "IBM Data Science Professional Certificate",
+      "by": "IBM (Coursera)"
+    },
+    {
+      "title": "Python for Everybody Specialization",
+      "by": "University of Michigan (Coursera)"
+    },
+    {
+      "title": "Blockchain in Agriculture (training)",
+      "by": "Department of Agricultural Finance and Banking, BAU & Cardiff School of Technologies"
+    },
+    {
+      "title": "Industrial Training (2023)",
+      "by": "Farm Machinery and Postharvest Process Engineering Division, BARI, Gazipur"
+    },
+    {
+      "title": "Agricultural Extension Training (2020)",
+      "by": "Department of Agricultural Extension Education, BAU"
+    }
+  ],
+  "memberships": [
+    "Member, Institution of Engineers, Bangladesh (IEB)",
+    "Member, Krishibid Institution Bangladesh (KIB)",
+    "Fellow, Bangladesh Society of Agricultural Machinery and Bioresource Engineering (BSAMBE)"
+  ],
+  "skills": [
+    {
+      "group": "Programming",
+      "items": ["Python", "C++", "C#", "Dart / Flutter", "R", "JavaScript", "PHP", "HTML", "CSS"]
+    },
+    {
+      "group": "Embedded, IoT & AI",
+      "items": [
+        "Microcontroller programming",
+        "IoT systems",
+        "Edge AI",
+        "Robotics",
+        "Image processing",
+        "GPS–GIS"
+      ]
+    },
+    {
+      "group": "Data",
+      "items": ["R", "Tableau", "SQLite", "MySQL", "PostgreSQL"]
+    },
+    {
+      "group": "Design & tools",
+      "items": ["Fusion 360", "AutoCAD", "Proteus", "STELLA", "GraphPad Prism", "Adobe Illustrator"]
+    }
+  ],
+  "activities": [
+    "Additional General Secretary, Bangladesh Agricultural University Debating Shongho (BAUDS)",
+    "Joint Treasurer, LEO Club of Bangladesh Agricultural University (LEO District 315 A2)",
+    "Campus Ambassador, Team Matrix",
+    "Volunteer (Assistant Controller of Examinations), Bangladesh Biology Olympiad",
+    "Executive Member, English Olympiad"
+  ],
+  "blog_seed": [
+    {
+      "slug": "edge-ai-poultry-farm",
+      "category": "agricultural-engineering",
+      "title": "Edge AI on the poultry farm: why decisions belong next to the sensor",
+      "short_title": "Edge AI on the poultry farm",
+      "standfirst": "Exploring local processing for farm monitoring and control.",
+      "status": "draft"
+    },
+    {
+      "slug": "esp32-vs-raspberry-pi-farm-iot",
+      "category": "tech-review",
+      "title": "ESP32 or Raspberry Pi for farm IoT? A practical comparison",
+      "short_title": "ESP32 or Raspberry Pi for farm IoT?",
+      "standfirst": "A practical guide to choosing a controller for farm IoT.",
+      "status": "draft"
+    },
+    {
+      "slug": "thesis-to-journal-paper",
+      "category": "education",
+      "title": "From undergraduate thesis to journal paper: what publishing taught me",
+      "short_title": "From thesis to journal paper",
+      "standfirst": "Lessons from turning a research project into a journal article.",
+      "status": "draft"
+    }
+  ],
+  "blog_page": {
+    "eyebrow_draft": "Blog / Draft preview",
+    "heading": "Posts and articles",
+    "intro": "Notes on agricultural engineering, IoT and applied AI.",
+    "categories": [
+      {
+        "id": "agricultural-engineering",
+        "label": "Agricultural engineering"
+      },
+      {
+        "id": "tech-review",
+        "label": "Tech review"
+      },
+      {
+        "id": "education",
+        "label": "Education"
+      }
+    ],
+    "empty": "First posts are on their way. Meanwhile, the publications on the Portfolio show the research behind them.",
+    "empty_category": "No posts in this category yet.",
+    "count_label_draft": "{count} drafts",
+    "covers": {
+      "edge-ai-poultry-farm": {
+        "illustration": "sensor-node",
+        "alt": "Line illustration of a wireless sensor node on a farm post"
+      },
+      "esp32-vs-raspberry-pi-farm-iot": {
+        "illustration": "two-boards",
+        "alt": "Line illustration of two microcontroller boards side by side"
+      },
+      "thesis-to-journal-paper": {
+        "illustration": "notebook-journal",
+        "alt": "Line illustration of an open notebook beside a journal"
+      }
+    }
+  },
+  "post_sidebar": {
+    "toc_heading": "On this page",
+    "author_heading": "About the author",
+    "more_heading": "More posts"
+  },
+  "research_archive": {
+    "back_label": "Back to Portfolio",
+    "heading": "Research projects",
+    "intro": "IoT, automation and applied AI for agriculture.",
+    "search_label": "Search projects",
+    "search_placeholder": "Search by title or keyword…",
+    "topic_label": "Topic",
+    "topic_all": "All topics",
+    "count_label": "Showing {shown} of {total} projects",
+    "empty": "No project matches. Try another keyword or topic.",
+    "topics": [
+      {
+        "id": "poultry",
+        "label": "Poultry systems",
+        "icon": "hen"
+      },
+      {
+        "id": "aquaculture",
+        "label": "Aquaculture & fisheries",
+        "icon": "fish"
+      },
+      {
+        "id": "irrigation",
+        "label": "Irrigation",
+        "icon": "sun-water"
+      },
+      {
+        "id": "machinery",
+        "label": "Farm machinery",
+        "icon": "tractor"
+      },
+      {
+        "id": "crop",
+        "label": "Crop & post-harvest",
+        "icon": "leaf"
+      },
+      {
+        "id": "cea",
+        "label": "Controlled environment",
+        "icon": "greenhouse"
+      }
+    ]
+  },
+  "hire": {
+    "heading": "Three ways to work with me",
+    "availability": "Open to research collaborations and selected projects.",
+    "services": [
+      {
+        "n": "01",
+        "title": "Research collaboration",
+        "summary": "Agricultural and engineering research.",
+        "items": [
+          "Research design & proposals",
+          "Experiments, prototypes & data",
+          "Scientific writing"
+        ],
+        "evidence": {
+          "label": "View publications",
+          "href": "portfolio.html#publications"
+        }
+      },
+      {
+        "n": "02",
+        "title": "Software development",
+        "summary": "Web, app and embedded software.",
+        "items": [
+          "Websites & web applications",
+          "Mobile & desktop apps",
+          "Embedded & IoT software"
+        ],
+        "evidence": {
+          "label": "View code on GitHub",
+          "href": "https://github.com/Rasel-LEO"
+        }
+      },
+      {
+        "n": "03",
+        "title": "Consulting & AI engineering",
+        "summary": "Technical guidance and applied AI.",
+        "items": ["Technical consulting", "AI model development", "AI agent development"],
+        "evidence": {
+          "label": "View research projects",
+          "href": "portfolio.html#research"
+        }
+      }
+    ],
+    "process": [
+      {
+        "n": "01",
+        "title": "Brief",
+        "text": "You describe the need, the context and any deadline — the form below or an email is enough."
+      },
+      {
+        "n": "02",
+        "title": "Scoping call",
+        "text": "A short call to agree on goals, constraints and what success looks like."
+      },
+      {
+        "n": "03",
+        "title": "Proposal",
+        "text": "A written proposal with scope, milestones and timeline."
+      },
+      {
+        "n": "04",
+        "title": "Build and hand-over",
+        "text": "Work in milestones with reviews, then hand-over with documentation and agreed support."
+      }
+    ],
+    "form_kinds": [
+      "Research collaboration",
+      "Web, app or software development",
+      "Consulting or AI engineering",
+      "Something else"
+    ]
+  },
+  "contact": {
+    "heading": "Get in touch",
+    "intro": "For research collaborations, projects or questions, email me directly or use the form.",
+    "audiences": [
+      "Research collaborators and supervisors",
+      "Companies and organisations in agri-tech and IoT",
+      "Clients for web, app and software projects",
+      "Students"
+    ],
+    "subjects": [
+      "Research collaboration",
+      "Project or consulting",
+      "Speaking or teaching",
+      "Other"
+    ],
+    "privacy_note": "Your message goes only to me. I use your details only to reply and never share them."
+  },
+  "meta": {
+    "404": "This page does not exist. Continue to Rasel Al Mamun's portfolio or blog.",
+    "blog": "Articles by Rasel Al Mamun on agricultural engineering, farm IoT and AI tools, and learning through research.",
+    "hire": "Work with Rasel Al Mamun: research collaboration; web, app and software development; consulting and AI engineering.",
+    "contact": "Contact Rasel Al Mamun, Research Assistant at Bangladesh Agricultural University, by email or through the contact form.",
+    "home": "Rasel Al Mamun — agricultural engineer and researcher building intelligent systems across hardware, IoT, AI and software. Publications, projects and ways to work together."
+  },
+  "home": {
+    "hero_name_lines": ["Rasel", "Al Mamun"],
+    "ctas": [
+      {
+        "label": "Hire me",
+        "href": "hire.html",
+        "variant": "primary"
+      },
+      {
+        "label": "Portfolio",
+        "href": "portfolio.html",
+        "variant": "secondary"
+      },
+      {
+        "label": "CV",
+        "href": "cv",
+        "variant": "secondary-small"
+      }
+    ],
+    "fork": {
+      "heading": "Two sides of this site",
+      "portfolio": {
+        "title": "Portfolio",
+        "text": "Research projects, peer-reviewed publications and awards — the evidence behind the work.",
+        "tags": ["Publications", "Research", "Awards"],
+        "cta": "Open the portfolio",
+        "href": "portfolio.html"
+      },
+      "blog": {
+        "title": "Blog",
+        "text": "Notes on agricultural engineering, technology reviews and learning through research.",
+        "tags": ["Agricultural engineering", "Tech review", "Education"],
+        "cta": "Read the blog",
+        "href": "blog.html"
+      }
+    },
+    "hire_intro": "Research, software development and AI engineering. Send a short brief to discuss the scope.",
+    "selected": {
+      "eyebrow": "Portfolio",
+      "heading": "Selected work",
+      "intro": "Featured research projects.",
+      "cta": "Full portfolio",
+      "large_eyebrow": "Featured project"
+    },
+    "latest": {
+      "eyebrow": "Blog",
+      "heading": "Latest posts",
+      "intro": "Notes from research, engineering and technology.",
+      "cta": "All posts",
+      "item_cta": "Read article"
+    },
+    "contact_band": {
+      "heading": "Have a project or a research idea?",
+      "text": "Research collaborations, software projects and technical questions.",
+      "primary": "Contact"
+    },
+    "screen2": {
+      "eyebrow": "Research × Development",
+      "headline_lines": ["Hardware. Data.", "Software."],
+      "headline_highlight": "Connected.",
+      "support": "Intelligent systems for agriculture and beyond.",
+      "pillars": [
+        {
+          "label": "Research",
+          "lines": ["Peer-reviewed papers", "Working prototypes"],
+          "href": "portfolio.html#publications"
+        },
+        {
+          "label": "Development",
+          "lines": ["Dependable web, apps", "& software"],
+          "href": "portfolio.html#research"
+        }
+      ],
+      "areas_label": "Areas of work",
+      "areas_interactive": false,
+      "areas_show_index": false
+    },
+    "publications": {
+      "eyebrow": "Research",
+      "heading": "Selected publications",
+      "intro": "First-author papers",
+      "cta": "Full portfolio"
+    }
+  },
+  "footer": {
+    "role_line": "Agricultural engineer · Researcher · Developer",
+    "groups": {
+      "explore": "Explore",
+      "research": "Research profiles",
+      "connect": "Connect"
+    },
+    "research_profiles": ["orcid", "scholar", "scopus", "researchgate"],
+    "connect_profiles": ["linkedin", "github"],
+    "copyright_name": "Rasel Al Mamun"
+  },
+  "portfolio": {
+    "profile": {
+      "eyebrow": "Research Assistant · Bangladesh Agricultural University",
+      "summary_line": "Agricultural engineer and developer building IoT, edge AI and automation for agriculture and beyond.",
+      "location_line": "Farm Power and Machinery · Mymensingh, Bangladesh",
+      "counts": ["publications", "projects", "awards"],
+      "section_nav": [
+        {
+          "label": "Publications",
+          "href": "#publications"
+        },
+        {
+          "label": "Projects",
+          "href": "#research"
+        },
+        {
+          "label": "Awards",
+          "href": "#awards"
+        },
+        {
+          "label": "Experience",
+          "href": "#experience"
+        },
+        {
+          "label": "Expertise",
+          "href": "#expertise"
+        }
+      ]
+    },
+    "publications": {
+      "eyebrow": "Research",
+      "heading": "Selected publications",
+      "intro": "Selected papers in agricultural engineering.",
+      "selection": "first_author",
+      "order": ["aim-2026-poultry-aiot", "sat-2025-solar-irrigation", "sat-2024-biofloc"],
+      "cta": "View all {count} publications"
+    },
+    "projects": {
+      "eyebrow": "Portfolio",
+      "heading": "Selected research projects",
+      "intro": "IoT, automation and applied AI for agriculture.",
+      "order": ["poultry-aiot-edge", "biofloc-iot", "solar-irrigation"],
+      "role_lines": {
+        "poultry-aiot-edge": "Research Assistant · M.S. thesis",
+        "biofloc-iot": "Research team",
+        "solar-irrigation": "Research team"
+      },
+      "cta": "View all {count} research projects"
+    },
+    "awards": {
+      "eyebrow": "Recognition",
+      "heading": "Awards & honours",
+      "intro": "Selected recognition in engineering, research and academic achievement.",
+      "items": [
+        {
+          "icon": "trophy",
+          "title": "Agricultural Machinery Talent Hunt Award",
+          "kind": "Engineering competition",
+          "highlight": "1st prize",
+          "year": 2024,
+          "by": "BARI, Gazipur"
+        },
+        {
+          "icon": "medal",
+          "title": "Best Presenter Award",
+          "kind": "3rd Biennial International Conference",
+          "highlight": "1st (oral)",
+          "year": 2024,
+          "by": "Fisheries Society of Bangladesh"
+        },
+        {
+          "icon": "ribbon",
+          "title": "Master’s Fellowship",
+          "kind": "Research fellowship",
+          "highlight": null,
+          "year": 2024,
+          "by": "BAU Research System (BAURES)"
+        }
+      ],
+      "note": "Complete awards record available in my CV."
+    },
+    "experience": {
+      "eyebrow": "Background",
+      "heading": "Experience & education",
+      "intro": "Professional work and academic foundation.",
+      "roles": [
+        {
+          "title": "Research Assistant",
+          "period": "Jan 2024 – present",
+          "unit": "Farm Power and Machinery",
+          "institution": "Bangladesh Agricultural University",
+          "text": "Research on IoT, edge AI and automation for agricultural monitoring and control.",
+          "bullets": [
+            "Monitoring systems, control and working prototypes",
+            "Data analysis and scientific publications"
+          ]
+        }
+      ],
+      "education": [
+        {
+          "degree": "M.S. in Farm Power and Machinery",
+          "institution": "Bangladesh Agricultural University",
+          "year": "2026"
+        },
+        {
+          "degree": "B.Sc. in Agricultural Engineering",
+          "institution": "Bangladesh Agricultural University",
+          "year": "2023"
+        }
+      ],
+      "note": "Full academic and professional record available in my CV."
+    },
+    "expertise": {
+      "eyebrow": "Capabilities",
+      "heading": "Technical expertise",
+      "intro": "Tools and methods used across research and development.",
+      "groups": [
+        {
+          "icon": "chip",
+          "title": "Embedded & IoT",
+          "items": ["Microcontrollers", "IoT systems", "Edge computing"]
+        },
+        {
+          "icon": "network",
+          "title": "AI & data",
+          "items": ["Machine vision", "Data analysis", "R · SQL · Tableau"]
+        },
+        {
+          "icon": "code",
+          "title": "Software development",
+          "items": ["Python", "C++", "Web & embedded software"]
+        },
+        {
+          "icon": "gear",
+          "title": "Engineering tools",
+          "items": ["AutoCAD", "Proteus", "Fusion 360"]
+        }
+      ],
+      "training_heading": "Selected training",
+      "training": [
+        {
+          "title": "Google Data Analytics Professional Certificate",
+          "by": "Google · Coursera"
+        },
+        {
+          "title": "IBM Data Science Professional Certificate",
+          "by": "IBM · Coursera"
+        }
+      ],
+      "note": "Additional training is listed in my CV."
+    }
+  }
+}

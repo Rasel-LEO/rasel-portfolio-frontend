@@ -1,0 +1,477 @@
+// Author: Rasel Al Mamun
+// Buttons and links: design specification §5.1.
+// Colours go through Bootstrap's --bs-btn-* custom properties so both themes work.
+
+// Phase 4 §5.1 timings that tokens.json does not define (it has 120/200/320 ms).
+:root {
+  --d-btn: 160ms;
+  --d-press: 90ms;
+  --d-spring: 220ms; // magnetic buttons spring back
+
+  // Primary hover: fill 4 % lighter (dark) / 4 % darker (light).
+  --btn-primary-hover: color-mix(in srgb, var(--accent-strong) 96%, #fff);
+}
+
+[data-theme="light"] {
+  --btn-primary-hover: color-mix(in srgb, var(--accent-strong) 96%, #000);
+}
+
+.icon {
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.btn {
+  --bs-btn-padding-y: var(--s-3);
+  --bs-btn-padding-x: 20px;
+  --bs-btn-font-family: var(--font-sans);
+  --bs-btn-font-size: 1rem;
+  --bs-btn-font-weight: 500;
+  --bs-btn-line-height: 1;
+  --bs-btn-border-radius: var(--r-2);
+  --bs-btn-focus-box-shadow: none;
+
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  white-space: nowrap;
+  transition:
+    transform var(--d-fast) var(--e-out),
+    translate var(--d-spring) var(--e-out),
+    color var(--d-fast) var(--e-out),
+    background-color var(--d-fast) var(--e-out),
+    border-color var(--d-fast) var(--e-out);
+
+  // Bootstrap removes the outline on .btn:focus-visible; restore the shared ring.
+  &:focus-visible {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.98);
+    transition-duration: var(--d-press);
+  }
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    transition: transform var(--d-btn) var(--e-out);
+  }
+
+  &:hover .icon-arrow {
+    transform: translateX(4px);
+  }
+}
+
+.btn-sm {
+  --bs-btn-padding-y: var(--s-2);
+  --bs-btn-padding-x: var(--s-3);
+  --bs-btn-font-size: 0.9375rem;
+  --bs-btn-border-radius: var(--r-2);
+}
+
+.btn-primary {
+  --bs-btn-color: var(--accent-ink);
+  --bs-btn-bg: var(--accent-strong);
+  --bs-btn-border-color: var(--accent-strong);
+  --bs-btn-hover-color: var(--accent-ink);
+  --bs-btn-hover-bg: var(--btn-primary-hover);
+  --bs-btn-hover-border-color: var(--btn-primary-hover);
+  --bs-btn-active-color: var(--accent-ink);
+  --bs-btn-active-bg: var(--btn-primary-hover);
+  --bs-btn-active-border-color: var(--btn-primary-hover);
+  --bs-btn-disabled-color: var(--accent-ink);
+  --bs-btn-disabled-bg: var(--accent-strong);
+  --bs-btn-disabled-border-color: var(--accent-strong);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  // Same specificity as the hover lift, so it must follow it to win while pressed.
+  &:active {
+    transform: scale(0.98);
+  }
+}
+
+.btn-secondary {
+  --bs-btn-color: var(--fg-0);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--line);
+  --bs-btn-hover-color: var(--fg-0);
+  --bs-btn-hover-bg: var(--bg-1);
+  --bs-btn-hover-border-color: var(--fg-2);
+  --bs-btn-active-color: var(--fg-0);
+  --bs-btn-active-bg: var(--bg-1);
+  --bs-btn-active-border-color: var(--fg-2);
+  --bs-btn-disabled-color: var(--fg-0);
+  --bs-btn-disabled-bg: transparent;
+  --bs-btn-disabled-border-color: var(--line);
+}
+
+// Amber outline (FD-107): "Project", "View all …" on Portfolio. --accent text and border
+// (AA on bg-0 and bg-1 in both themes, FD-50); the --accent-soft fill on hover.
+.btn-accent-outline {
+  --bs-btn-color: var(--accent);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: var(--accent);
+  --bs-btn-hover-bg: var(--accent-soft);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-color: var(--accent);
+  --bs-btn-active-bg: var(--accent-soft);
+  --bs-btn-active-border-color: var(--accent);
+}
+
+.btn-icon {
+  --bs-btn-padding-y: 0;
+  --bs-btn-padding-x: 10px;
+  --bs-btn-color: var(--fg-1);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: transparent;
+  --bs-btn-hover-color: var(--fg-0);
+  --bs-btn-hover-bg: var(--bg-2);
+  --bs-btn-hover-border-color: transparent;
+  --bs-btn-active-color: var(--fg-0);
+  --bs-btn-active-bg: var(--bg-2);
+  --bs-btn-active-border-color: transparent;
+
+  min-width: 44px;
+  height: 44px;
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.btn-icon-label {
+  @include t-label;
+
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+// Theme icon: moon in the dark theme, sun in the light theme.
+.icon-sun,
+[data-theme="light"] .icon-moon {
+  display: none;
+}
+
+[data-theme="light"] .icon-sun {
+  display: inline;
+}
+
+// Text links (FD-76, site-wide FD-119): an --accent underline (1 px) at rest; on hover or
+// keyboard focus the text turns --accent on a 2 px underline.
+.link {
+  padding-block: 4px;
+  color: var(--fg-0);
+  text-decoration: none;
+  background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 100% / 100% 1px;
+  transition:
+    color var(--d-fast) var(--e-out),
+    background-size var(--d-fast) var(--e-out);
+
+  &:hover,
+  &:focus-visible,
+  // A .link inside a larger touch target (footer, cards) reacts to its link.
+  a:hover > &,
+  a:focus-visible > & {
+    color: var(--accent);
+    background-size: 100% 2px;
+  }
+}
+
+// The page you are on (footer): the 2 px underline, the text keeps its colour.
+a[aria-current] > .link,
+.link[aria-current] {
+  background-size: 100% 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .btn .icon {
+    transition-property: color, background-color, border-color;
+  }
+
+  .btn:hover,
+  .btn:active,
+  .btn:hover .icon-arrow {
+    transform: none;
+  }
+}
+
+// Chips and status (Phase 4 §5.3): label always present; colour is never the only signal.
+.chip {
+  @include t-label;
+
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+  max-width: 100%;
+  padding: 2px var(--s-2);
+  color: var(--fg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-1);
+
+  .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+// Project status (FD-110): dot or tick in the semantic colour, then the label (--fg-1).
+.status {
+  @include t-small;
+
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  color: var(--fg-1);
+
+  .icon {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+.status-progress .dot {
+  flex: none;
+  width: var(--s-2);
+  height: var(--s-2);
+  background: var(--info);
+  border-radius: var(--r-full);
+}
+
+.status-done .icon {
+  stroke: var(--success);
+}
+
+// Draft post (FD-36): dashed border like "Planned"; the label carries the meaning.
+.chip-draft {
+  border-style: dashed;
+}
+
+// Tags (FD-110, amends Phase 4 §5.3 chip): pills — sentence case, --bg-2 fill, no border,
+// --r-3 radius, body font 14 px; --fg-1 on --bg-2 (Phase 4 §1.3: never --fg-2 there).
+.pill-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+}
+
+.pill {
+  @include t-small;
+
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 6px var(--s-3);
+  color: var(--fg-1);
+  background: var(--bg-2);
+  border-radius: var(--r-3);
+}
+
+// Labelled media placeholder (FD-29): theme-aware hatch from src/images/placeholder.svg
+// used as a mask, so its colour follows the tokens. Fixed ratios, no layout shift.
+.media-ph {
+  position: relative;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg-2);
+  border-radius: var(--r-3);
+
+  &::before {
+    position: absolute;
+    inset: 0;
+    content: "";
+    background-color: var(--line);
+    mask: url("../../images/placeholder.svg") 0 0 / 16px 16px repeat;
+  }
+}
+
+.media-ph-3x2 {
+  aspect-ratio: 3 / 2;
+}
+
+// fg-1 on bg-2, not fg-2: muted text is never used on bg-2 below 14 px (Phase 4 §1.3).
+.media-ph-caption {
+  @include t-meta;
+
+  position: relative;
+  max-width: calc(100% - var(--s-5));
+  padding: var(--s-1) var(--s-2);
+  color: var(--fg-1);
+  text-align: center;
+  background: var(--bg-2);
+  border-radius: var(--r-1);
+}
+
+// Real project photographs (FD-35): same ratios and radius as the placeholders.
+.project-image {
+  display: block;
+  overflow: hidden;
+  border-radius: var(--r-3);
+}
+
+.project-image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.project-image-3x2 img {
+  aspect-ratio: 3 / 2;
+}
+
+.project-image-4x3 img {
+  aspect-ratio: 4 / 3;
+}
+
+// Work card (Phase 4 §5.2): the whole card is one link named by its title
+// (the title link is stretched over the card; Bootstrap .stretched-link).
+.card {
+  position: relative;
+  display: grid;
+  gap: var(--s-3);
+  align-content: start;
+  height: 100%;
+  padding: var(--s-5);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+  box-shadow: var(--shadow-1);
+  transition:
+    translate var(--d-base) var(--e-out),
+    rotate var(--d-base) var(--e-out),
+    border-color var(--d-base) var(--e-out),
+    box-shadow var(--d-base) var(--e-out);
+
+  .project-image img {
+    transition: transform var(--d-base) var(--e-out);
+  }
+
+  &:hover,
+  &:has(:focus-visible) {
+    border-color: var(--fg-2);
+    box-shadow: var(--shadow-2);
+  }
+
+  // The focus ring goes round the whole card, not the title text.
+  &:has(:focus-visible) {
+    outline: var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .stretched-link {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  // Without :has() support the link keeps the global focus ring.
+  @supports selector(:has(*)) {
+    .stretched-link:focus-visible {
+      outline: none;
+    }
+  }
+
+  // Lift only for fine pointers (Phase 4 §5.2); on touch it would stick after a tap. The
+  // lift is `translate`, so the tilt (`rotate`, motion.js) and reveals (`transform`) add up.
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      translate: 0 -4px;
+
+      .project-image img {
+        transform: scale(1.03);
+      }
+    }
+  }
+}
+
+.card-title {
+  color: var(--fg-0);
+}
+
+.card-status {
+  justify-self: start;
+}
+
+// Profile links (FD-22): text labels with an external-link icon.
+.profile-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-4);
+}
+
+.profile-link {
+  display: inline-flex;
+  gap: var(--s-1);
+  align-items: center;
+  min-height: 44px;
+  color: var(--fg-0);
+  text-decoration: none;
+
+  .icon {
+    width: 14px;
+    height: 14px;
+    color: var(--fg-2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .card .project-image img {
+    transition-property: border-color, box-shadow;
+  }
+
+  .card:hover {
+    translate: none;
+  }
+
+  .card:hover .project-image img {
+    transform: none;
+  }
+}
+
+// In-house line drawings (FD-113, FD-115, FD-116): post covers (illustration.hbs) and the
+// system, result and topic icons (line-icon.hbs). 1.5 px strokes at every size; currentColor
+// (set by the container) with the .la parts in --accent, so both themes work.
+.line-art {
+  flex: none;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  * {
+    vector-effect: non-scaling-stroke;
+  }
+
+  .la {
+    stroke: var(--accent);
+  }
+}

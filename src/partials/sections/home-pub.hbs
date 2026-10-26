@@ -1,0 +1,48 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- One row of Home "Selected publications" (FD-91). Context: a first-author publication from
+tools/content.mjs (the site author is its first author); `index` is its mono number. Short authors here;
+the full citation is on the Portfolio and project pages. DOI opens doi.org in a new tab. --}}
+<li class="home-pub" data-reveal>
+  <span class="t-label home-pub-index" aria-hidden="true">{{index}}</span>
+  <div class="home-pub-body">
+    <p class="t-label home-pub-type mb-0">
+      {{#if (eq type "journal")}}Journal{{else}}Conference{{/if}}
+    </p>
+    <h3 class="home-pub-title mb-0">{{title}}</h3>
+    <p class="home-pub-authors mb-0">
+      <strong>{{leadAuthor}}</strong>{{#if etAl}}, et al.{{/if}}
+    </p>
+    <p class="home-pub-venue mb-0"><em>{{venue}}</em>{{#if shownDetails}} · {{shownDetails}}{{/if}}</p>
+  </div>
+  <div class="home-pub-actions">
+    <a
+      class="home-pub-action"
+      href="{{doiUrl doi}}"
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label="DOI: {{title}} (opens in a new tab)"
+      ><span class="home-pub-label">DOI</span><svg
+        class="icon"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M7 17L17 7M9 7h8v8" /></svg
+    ></a>
+    {{#if projectFile}}
+    <a class="home-pub-action" href="/{{projectFile}}" aria-label="Project: {{projectTitle}}"
+      ><span class="home-pub-label">Project</span><svg
+        class="icon"
+        viewBox="0 0 24 24"
+        width="16"
+        height="16"
+        aria-hidden="true"
+        focusable="false"
+      >
+        <path d="M5 12h14M13 6l6 6-6 6" /></svg
+    ></a>
+    {{/if}}
+  </div>
+</li>

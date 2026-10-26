@@ -1,0 +1,152 @@
+{
+  "profile": {
+    "eyebrow": "Research Assistant · Bangladesh Agricultural University",
+    "summary_line": "Agricultural engineer and developer building IoT, edge AI and automation for agriculture and beyond.",
+    "location_line": "Farm Power and Machinery · Mymensingh, Bangladesh",
+    "counts": ["publications", "projects", "awards"],
+    "section_nav": [
+      {
+        "label": "Publications",
+        "href": "#publications"
+      },
+      {
+        "label": "Projects",
+        "href": "#research"
+      },
+      {
+        "label": "Awards",
+        "href": "#awards"
+      },
+      {
+        "label": "Experience",
+        "href": "#experience"
+      },
+      {
+        "label": "Expertise",
+        "href": "#expertise"
+      }
+    ]
+  },
+  "publications": {
+    "eyebrow": "Research",
+    "heading": "Selected publications",
+    "intro": "Selected papers in agricultural engineering.",
+    "selection": "first_author",
+    "order": ["aim-2026-poultry-aiot", "sat-2025-solar-irrigation", "sat-2024-biofloc"],
+    "cta": "View all {count} publications"
+  },
+  "projects": {
+    "eyebrow": "Portfolio",
+    "heading": "Selected research projects",
+    "intro": "IoT, automation and applied AI for agriculture.",
+    "order": ["poultry-aiot-edge", "biofloc-iot", "solar-irrigation"],
+    "role_lines": {
+      "poultry-aiot-edge": "Research Assistant · M.S. thesis",
+      "biofloc-iot": "Research team",
+      "solar-irrigation": "Research team"
+    },
+    "cta": "View all {count} research projects"
+  },
+  "awards": {
+    "eyebrow": "Recognition",
+    "heading": "Awards & honours",
+    "intro": "Selected recognition in engineering, research and academic achievement.",
+    "items": [
+      {
+        "icon": "trophy",
+        "title": "Agricultural Machinery Talent Hunt Award",
+        "kind": "Engineering competition",
+        "highlight": "1st prize",
+        "year": 2024,
+        "by": "BARI, Gazipur"
+      },
+      {
+        "icon": "medal",
+        "title": "Best Presenter Award",
+        "kind": "3rd Biennial International Conference",
+        "highlight": "1st (oral)",
+        "year": 2024,
+        "by": "Fisheries Society of Bangladesh"
+      },
+      {
+        "icon": "ribbon",
+        "title": "Master’s Fellowship",
+        "kind": "Research fellowship",
+        "highlight": null,
+        "year": 2024,
+        "by": "BAU Research System (BAURES)"
+      }
+    ],
+    "note": "Complete awards record available in my CV."
+  },
+  "experience": {
+    "eyebrow": "Background",
+    "heading": "Experience & education",
+    "intro": "Professional work and academic foundation.",
+    "roles": [
+      {
+        "title": "Research Assistant",
+        "period": "Jan 2024 – present",
+        "unit": "Farm Power and Machinery",
+        "institution": "Bangladesh Agricultural University",
+        "text": "Research on IoT, edge AI and automation for agricultural monitoring and control.",
+        "bullets": [
+          "Monitoring systems, control and working prototypes",
+          "Data analysis and scientific publications"
+        ]
+      }
+    ],
+    "education": [
+      {
+        "degree": "M.S. in Farm Power and Machinery",
+        "institution": "Bangladesh Agricultural University",
+        "year": "2026"
+      },
+      {
+        "degree": "B.Sc. in Agricultural Engineering",
+        "institution": "Bangladesh Agricultural University",
+        "year": "2023"
+      }
+    ],
+    "note": "Full academic and professional record available in my CV."
+  },
+  "expertise": {
+    "eyebrow": "Capabilities",
+    "heading": "Technical expertise",
+    "intro": "Tools and methods used across research and development.",
+    "groups": [
+      {
+        "icon": "chip",
+        "title": "Embedded & IoT",
+        "items": ["Microcontrollers", "IoT systems", "Edge computing"]
+      },
+      {
+        "icon": "network",
+        "title": "AI & data",
+        "items": ["Machine vision", "Data analysis", "R · SQL · Tableau"]
+      },
+      {
+        "icon": "code",
+        "title": "Software development",
+        "items": ["Python", "C++", "Web & embedded software"]
+      },
+      {
+        "icon": "gear",
+        "title": "Engineering tools",
+        "items": ["AutoCAD", "Proteus", "Fusion 360"]
+      }
+    ],
+    "training_heading": "Selected training",
+    "training": [
+      {
+        "title": "Google Data Analytics Professional Certificate",
+        "by": "Google · Coursera"
+      },
+      {
+        "title": "IBM Data Science Professional Certificate",
+        "by": "IBM · Coursera"
+      }
+    ],
+    "note": "Additional training is listed in my CV."
+  }
+}

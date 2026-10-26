@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Research projects" description=portfolioView.researchDescription}}
+  </head>
+  <body data-page="research">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      {{!-- FD-115: the research archive (Django /portfolio/research/, paginated at 12 there).
+      Search (titles and tags) and Topic filter the cards live (research.js); without JS the
+      controls stay hidden (.js-only, set before the first paint, so nothing shifts) and every card
+      is shown. No Status filter until statuses exist. --}}
+      <div class="container pf-page archive">
+        <header class="page-head">
+          <p class="mb-0">
+            <a class="back-link" href="/portfolio.html"
+              ><svg
+                class="icon"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M19 12H5M11 6l-6 6 6 6" /></svg
+              ><span class="link">{{archive.back_label}}</span></a
+            >
+          </p>
+          <h1 class="mb-0">{{archive.heading}}</h1>
+          <p class="t-body-l page-intro mb-0">{{archive.intro}}</p>
+        </header>
+
+        <form
+          class="archive-filter js-only"
+          role="search"
+          aria-label="Filter research projects"
+          action="/research.html"
+          method="get"
+          data-archive-filter
+        >
+          <div class="field archive-search">
+            <label class="field-label" for="archive-q">{{archive.search_label}}</label>
+            <div class="search-wrap">
+              <svg
+                class="icon search-icon"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <circle cx="11" cy="11" r="6.5" />
+                <path d="M16 16l4.5 4.5" />
+              </svg>
+              <input
+                class="field-control"
+                id="archive-q"
+                name="q"
+                type="search"
+                placeholder="{{archive.search_placeholder}}"
+                autocomplete="off"
+                data-archive-q
+              />
+            </div>
+          </div>
+          <div class="field archive-topic-field">
+            <label class="field-label" for="archive-topic">{{archive.topic_label}}</label>
+            <select class="field-control" id="archive-topic" name="topic" data-archive-topic>
+              <option value="">{{archive.topic_all}}</option>
+              {{#each archive.topics}}
+              <option value="{{id}}">{{label}}</option>
+              {{/each}}
+            </select>
+          </div>
+        </form>
+
+        <p
+          class="archive-count mb-0"
+          aria-live="polite"
+          data-archive-count
+          data-label="{{archive.count_label}}"
+        >
+          <span data-count-text>{{archive.countText}}</span
+          ><span class="visually-hidden" data-count-empty></span>
+        </p>
+
+        <ul class="list-unstyled row pf-cards archive-cards mb-0" data-archive-list>
+          {{#each archive.cards}}
+          <li
+            class="col-md-6 col-lg-4"
+            data-project-card
+            data-topic="{{topic}}"
+            data-search="{{search}}"
+          >
+            {{> sections/archive-card tag="h2"}}
+          </li>
+          {{/each}}
+        </ul>
+        <div class="empty-state" data-archive-empty hidden>
+          <p class="mb-0">{{archive.empty}}</p>
+        </div>
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

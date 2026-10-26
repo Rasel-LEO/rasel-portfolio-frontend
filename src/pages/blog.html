@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title="Blog" description=meta.blog}}
+  </head>
+  <body data-page="blog">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      <div class="container blog-page">
+        <header class="page-head">
+          {{!-- FD-112: "Blog / Draft preview" while drafts are shown (never in the release build).
+          --}}
+          <p class="eyebrow mb-0" data-blog-eyebrow>{{blogView.eyebrow}}</p>
+          <h1 class="mb-0">{{blogPage.heading}}</h1>
+          <p class="t-body-l page-intro mb-0">{{blogPage.intro}}</p>
+        </header>
+
+        {{#if postList.length}}
+        <div class="blog-bar">
+          {{!-- Without JS every post is listed and the tabs are not shown (.js-only, laid out from
+          the first paint, so nothing shifts). The amber underline slides to the pressed tab
+          (tab-ink.js). --}}
+          <div
+            class="pf-tabs blog-tabs js-only"
+            role="group"
+            aria-label="Filter posts by category"
+            data-category-filter
+          >
+            <button
+              type="button"
+              class="pf-tab"
+              data-category="all"
+              aria-pressed="true"
+              data-count-text="{{blogView.countText}}"
+            >
+              All
+            </button>
+            {{#each categories}}
+            <button
+              type="button"
+              class="pf-tab"
+              data-category="{{id}}"
+              aria-pressed="false"
+              data-count-text="{{countText}}"
+            >
+              {{label}}
+            </button>
+            {{/each}}
+            <span class="pf-tab-ink" aria-hidden="true"></span>
+          </div>
+          <p class="blog-count mb-0" aria-live="polite" data-category-count>
+            {{blogView.countText}}
+          </p>
+        </div>
+
+        <ul class="list-unstyled row blog-cards mb-0" data-post-list>
+          {{#each postList}}
+          <li class="col-md-6 col-lg-4" data-post-category="{{category}}">
+            {{> sections/blog-card tag="h2"}}
+          </li>
+          {{/each}}
+        </ul>
+        {{/if}} {{> sections/blog-empty hidden=postList.length}}
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>

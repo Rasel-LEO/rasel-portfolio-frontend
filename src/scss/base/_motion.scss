@@ -1,0 +1,379 @@
+// Author: Rasel Al Mamun
+@use "sass:math";
+
+// Site-wide motion (FD-52). Every moving state hangs off a class that a motion
+// module adds after it has initialised (or a media query for motion), so without JS or
+// under reduced motion the pages are the static documents.
+
+$fine: "(hover: hover) and (pointer: fine)";
+$motion: "(prefers-reduced-motion: no-preference)";
+
+// Seam wipe arrival (FD-81, amended 2026-10-25): FD-81 timings, no tokens.
+$wipe-delay: 60ms;
+$wipe-open: 360ms;
+$wipe-seam: 200ms;
+
+// Reveals (B1, B9): motion.js adds .reveal.is-pre to [data-reveal] elements below the fold
+// and drops .is-pre when 15 % is in view; .reveal goes once the transition has run.
+.reveal {
+  transition:
+    opacity var(--d-slow) var(--e-out) var(--reveal-delay, 0ms),
+    transform var(--d-slow) var(--e-out) var(--reveal-delay, 0ms);
+
+  // Hidden at once (no fade-out off screen); only the reveal itself is animated.
+  &.is-pre {
+    opacity: 0;
+    transform: translateY(var(--m-24));
+    transition: none;
+  }
+
+  // The Contact band photograph rises as a scene (B9).
+  &[data-reveal="scene"] {
+    transition-duration: var(--d-scene);
+
+    &.is-pre {
+      transform: translateY(var(--m-40));
+    }
+  }
+}
+
+// Card tilt (B2, Phase 4 §5.2): the lift is `translate` (hover, and focus within without
+// tilt); motion.js sets the tilt as `rotate` about an axis in the card's plane. Zero
+// specificity, so a reveal's transition (.reveal, .stage-reveal) wins while it runs.
+:where(.fork-card, .service) {
+  transition:
+    translate var(--d-base) var(--e-out),
+    rotate var(--d-base) var(--e-out);
+}
+
+@media #{$fine} and #{$motion} {
+  .fork-card,
+  .service {
+    &:hover,
+    &:has(:focus-visible) {
+      translate: 0 -4px;
+    }
+  }
+
+  .card,
+  .fork-card,
+  .service {
+    &.is-tilting {
+      rotate: var(--tilt-x) var(--tilt-y) 0 var(--tilt);
+    }
+
+    &:has(:focus-visible) {
+      translate: 0 -4px;
+    }
+  }
+
+  // The tilt's perspective (`rotate` is applied before `transform`, so it comes from the
+  // parent).
+  :has(> .is-tilting) {
+    perspective: 1000px;
+  }
+
+  // Magnetic buttons (B3): pulled by motion.js, back in --d-spring (the .btn transition).
+  .btn.is-magnetic {
+    translate: var(--magnet-x) var(--magnet-y);
+  }
+}
+
+// Cursor follower (B5, Phase 4 §4, FD-82), created by cursor.js: a 10 px ring (idle) everywhere,
+// a 56 px soft filled circle over the staged Home stage, the link ring and the button morph;
+// hidden over form fields (no card halo). Size changes are set at once and played back by
+// `transform: scale` (FLIP); only transform and opacity move.
+.cursor-ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: $zindex-offcanvas-backdrop - 1;
+  width: 10px;
+  height: 10px;
+  pointer-events: none;
+  border: 1px solid var(--fg-1);
+  border-radius: var(--r-full);
+  opacity: 0;
+  transition: opacity var(--d-fast) var(--e-out);
+
+  &[data-state="idle"].is-on {
+    opacity: 0.7;
+  }
+
+  &[data-state="stage"] {
+    background: var(--fg-0);
+    border-color: transparent;
+
+    &.is-on {
+      opacity: 0.12;
+    }
+  }
+
+  &[data-state="link"] {
+    border-color: var(--accent);
+    border-width: 1.5px;
+
+    &.is-on {
+      opacity: 1;
+    }
+  }
+
+  &[data-state="button"] {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    border-radius: var(--r-2);
+
+    &.is-on {
+      opacity: 1;
+    }
+  }
+}
+
+// Entrance (FD-67; replaces the loader of FD-55): CSS animations from the first paint, on
+// every Home load, with or without JS. The eyebrow, the name lines, the role line and the CTAs
+// rise --m-16 and fade in, one --stagger apart (240 + 320 = 560 ms in all); the hero photo
+// only rises --m-24, so the LCP image is never hidden or delayed. Other pages: main fades in.
+// `translate`, fill backwards only, so nothing is left applied once it has run. GSAP folds an
+// element's `translate` into its own transform when it first touches it, so the photo rises on
+// its column (GSAP moves the figure inside it) and the stage waits for the entrance before the
+// pointer moves the name lines. Keyboard focus on a CTA ends their entrance at once.
+// With the seam wipe (FD-81, html.js) the entrance waits until the halves have opened a third
+// (60 ms + 360 ms / 3), so it is seen; without JS it starts at the first paint.
+@media #{$motion} {
+  [data-page="home"] {
+    --entrance-lead: 0ms;
+
+    .hero-eyebrow,
+    .hero-line,
+    .hero-role,
+    .hero-ctas {
+      animation: enter-rise var(--d-slow) var(--e-out) var(--entrance-lead) backwards;
+    }
+
+    .hero-line:nth-child(1) {
+      animation-delay: calc(var(--entrance-lead) + var(--stagger));
+    }
+
+    .hero-line:nth-child(2) {
+      animation-delay: calc(var(--entrance-lead) + var(--stagger) * 2);
+    }
+
+    .hero-role {
+      animation-delay: calc(var(--entrance-lead) + var(--stagger) * 3);
+    }
+
+    .hero-ctas {
+      animation-delay: calc(var(--entrance-lead) + var(--stagger) * 4);
+    }
+
+    .hero-ctas:focus-within {
+      animation: none;
+    }
+
+    .stage-figure-col {
+      animation: enter-photo var(--d-scene) var(--e-out) var(--entrance-lead) backwards;
+    }
+  }
+
+  // Portfolio profile (FD-111), like the Home hero: eyebrow, name, portrait, summary, counts and
+  // actions rise --m-16 and fade in, 48 ms apart (0.8 × --stagger, so all is done by
+  // 5 × 48 + 320 = 560 ms ≤ 0.6 s); the portrait scales 0.96 → 1 and fades in instead.
+  [data-page="portfolio"] {
+    --entrance-lead: 0ms;
+    --pf-step: calc(var(--stagger) * 0.8);
+
+    [data-pf-enter] {
+      animation: enter-rise var(--d-slow) var(--e-out) var(--entrance-lead) backwards;
+    }
+
+    [data-pf-enter="portrait"] {
+      animation-name: enter-portrait;
+    }
+
+    // Reading order: eyebrow, name, portrait, summary, counts, actions.
+    $steps: (
+      ".pf-name": 1,
+      ".pf-avatar": 2,
+      ".pf-intro-text": 3,
+      ".pf-counts": 4,
+      ".pf-actions": 5,
+    );
+
+    @each $selector, $step in $steps {
+      #{$selector}[data-pf-enter] {
+        animation-delay: calc(var(--entrance-lead) + var(--pf-step) * #{$step});
+      }
+    }
+
+    .pf-actions:focus-within {
+      animation: none;
+    }
+  }
+
+  .js :is([data-page="home"], [data-page="portfolio"]) {
+    --entrance-lead: #{$wipe-delay + math.div($wipe-open, 3)};
+  }
+
+  body:not([data-page="home"], [data-page="portfolio"]) > main {
+    animation: enter-fade var(--d-base) var(--e-out) backwards;
+  }
+}
+
+@keyframes enter-portrait {
+  from {
+    opacity: 0.01;
+    scale: 0.96;
+  }
+}
+
+// From 0.01, not 0: Chrome does not count an element painted at opacity 0 for the LCP until
+// its compositor animation ends, which would delay a text LCP (phones) by the whole entrance.
+@keyframes enter-rise {
+  from {
+    opacity: 0.01;
+    translate: 0 var(--m-16);
+  }
+}
+
+@keyframes enter-photo {
+  from {
+    translate: 0 var(--m-24);
+  }
+}
+
+@keyframes enter-fade {
+  from {
+    opacity: 0.01;
+  }
+}
+
+// Lenis (B7): the rules of lenis/dist/lenis.css that apply here, without !important (the
+// class beats Bootstrap's `:root { scroll-behavior: smooth }`).
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto;
+
+  [data-lenis-prevent] {
+    overscroll-behavior: contain;
+  }
+
+  iframe {
+    pointer-events: none;
+  }
+}
+
+.lenis.lenis-stopped {
+  overflow: clip;
+}
+
+// Seam wipe (FD-81, revision 12; replaces the View Transitions of FD-56 / FD-68): two --bg-1
+// halves and the 2 px accent seam over the whole page. Without JS or under reduced motion it
+// is never shown. Arriving or reloading, the page paints with it closed and CSS opens it: the
+// halves slide apart (360 ms) from 60 ms after the first paint and, from the same moment, the
+// seam retracts from the bottom up (200 ms, ease-in), so it can never stay closed. Leaving,
+// page-wipe.js adds .is-leaving: the halves close from the sides in 240 ms while the seam draws
+// top to bottom, then the browser navigates. The open state is the base style, so nothing is left applied once it has run;
+// .is-restored (back/forward cache) shows it open at once. 240 ms is an FD-81 timing, no token.
+.page-wipe {
+  display: none;
+}
+
+@media #{$motion} {
+  .js .page-wipe {
+    position: fixed;
+    inset: 0;
+    z-index: $zindex-offcanvas + 1;
+    display: block;
+    pointer-events: none;
+
+    .half {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 50%;
+      background: var(--bg-1);
+      animation: page-wipe-open $wipe-open var(--e-inout) $wipe-delay backwards;
+    }
+
+    .l {
+      left: 0;
+      transform: translateX(-100%);
+    }
+
+    .r {
+      right: 0;
+      transform: translateX(100%);
+    }
+
+    .seam {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      width: 2px;
+      height: 100%;
+      margin-left: -1px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transform-origin: 50% 0;
+      animation: page-wipe-seam $wipe-seam ease-in $wipe-delay backwards;
+    }
+
+    &.is-restored {
+      .half,
+      .seam {
+        animation: none;
+      }
+    }
+
+    &.is-leaving {
+      .half,
+      .seam {
+        transform: none;
+        transition: transform 240ms var(--e-inout);
+        animation: none;
+      }
+    }
+  }
+}
+
+@media print {
+  .js .page-wipe {
+    display: none;
+  }
+}
+
+@keyframes page-wipe-open {
+  from {
+    transform: none;
+  }
+}
+
+@keyframes page-wipe-seam {
+  from {
+    transform: none;
+  }
+}
+
+// Printing, or the OS setting changing before the motion modules have undone their states,
+// never leaves an unrevealed element blank.
+@media print, (prefers-reduced-motion: reduce) {
+  .reveal.is-pre,
+  .stage-reveal.is-pre {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+// Publication tabs (FD-111): the amber underline slides to the pressed tab (200 ms) once
+// portfolio.js has placed it (.is-ready), so the first placement does not animate.
+@media #{$motion} {
+  .pf-tabs.is-ready .pf-tab-ink {
+    transition:
+      transform var(--d-base) var(--e-out),
+      width var(--d-base) var(--e-out);
+  }
+}

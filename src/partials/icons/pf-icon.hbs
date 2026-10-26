@@ -1,0 +1,55 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Portfolio icons (FD-107), decorative: the text beside each one names it. In-house line icons:
+24 px box, 1.5 px stroke in currentColor, rounded caps (.icon). The ORCID iD is ORCID's official
+monochrome iD icon (filled, currentColor), used only to link to the author's ORCID record as ORCID's
+brand guidelines allow; path data from Simple Icons (CC0-1.0), see docs/security.md. LinkedIn and
+GitHub are the footer's official marks (footer-icon.hbs).
+Usage: {{> icons/pf-icon name="pin"}} — pin, external, trophy, medal, ribbon, briefcase,
+mortarboard, chip, network, code, gear, document, orcid, scholar, scopus, researchgate, linkedin,
+github. `size` sets the box (default 24). --}}
+{{#if (or (eq name "linkedin") (eq name "github"))}}
+{{> icons/footer-icon name=name}}
+{{else if (eq name "orcid")}}
+<svg class="icon pf-icon pf-mark" viewBox="0 0 24 24" width="{{#if size}}{{size}}{{else}}24{{/if}}" height="{{#if size}}{{size}}{{else}}24{{/if}}" aria-hidden="true" focusable="false">
+  <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zM7.369 4.378c.525 0 .947.431.947.947s-.422.947-.947.947a.95.95 0 0 1-.947-.947c0-.525.422-.947.947-.947zm-.722 3.038h1.444v10.041H6.647V7.416zm3.562 0h3.9c3.712 0 5.344 2.653 5.344 5.025 0 2.578-2.016 5.025-5.325 5.025h-3.919V7.416zm1.444 1.303v7.444h2.297c3.272 0 4.022-2.484 4.022-3.722 0-2.016-1.284-3.722-4.097-3.722h-2.222z" />
+</svg>
+{{else}}
+<svg class="icon pf-icon" viewBox="0 0 24 24" width="{{#if size}}{{size}}{{else}}24{{/if}}" height="{{#if size}}{{size}}{{else}}24{{/if}}" aria-hidden="true" focusable="false">
+  {{#if (eq name "pin")}}
+  <path d="M12 21s-6.5-6-6.5-11.5a6.5 6.5 0 0 1 13 0C18.5 15 12 21 12 21z" />
+  <circle cx="12" cy="9.5" r="2.5" />
+  {{else if (eq name "external")}}
+  <path d="M7 17L17 7M9 7h8v8" />
+  {{else if (eq name "trophy")}}
+  <path d="M8 4h8v5a4 4 0 0 1-8 0zM8 6H4.5c0 2.2 1.5 4 3.7 4.2M16 6h3.5c0 2.2-1.5 4-3.7 4.2M12 13v4M10 17h4l.5 3h-5zM8.5 20h7" />
+  {{else if (eq name "medal")}}
+  <path d="M7 3h10M7 3l3 7.4M17 3l-3 7.4M12 12.7l.9 1.8 2 .3-1.45 1.4.35 2-1.8-.95-1.8.95.35-2-1.45-1.4 2-.3z" />
+  <circle cx="12" cy="15.5" r="5" />
+  {{else if (eq name "ribbon")}}
+  <circle cx="12" cy="9" r="5.5" />
+  <path d="M8.6 13.3L6 20.5l3-1.2 1.6 2.4 1.4-6.2M15.4 13.3l2.6 7.2-3-1.2-1.6 2.4-1.4-6.2" />
+  {{else if (eq name "briefcase")}}
+  <path d="M3 8h18v11H3zM8.5 8V5h7v3M3 13h18M11 12v2.5h2V12" />
+  {{else if (or (eq name "mortarboard") (eq name "scholar"))}}
+  <path d="M2 9l10-5 10 5-10 5zM6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5M22 9v6" />
+  {{else if (eq name "chip")}}
+  <path d="M7 7h10v10H7zM10 3.5V7M14 3.5V7M10 17v3.5M14 17v3.5M3.5 10H7M3.5 14H7M17 10h3.5M17 14h3.5" />
+  {{else if (eq name "network")}}
+  <path d="M10.8 7.3l-4.6 8.4M13.2 7.3l4.6 8.4M7.5 18h9" />
+  <circle cx="12" cy="5" r="2.5" />
+  <circle cx="5" cy="18" r="2.5" />
+  <circle cx="19" cy="18" r="2.5" />
+  {{else if (eq name "code")}}
+  <path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 5l-4 14" />
+  {{else if (eq name "gear")}}
+  <path d="M19.18 10.22L21.37 10.44L21.37 13.56L19.18 13.78L18.34 15.82L19.73 17.52L17.52 19.73L15.82 18.34L13.78 19.18L13.56 21.37L10.44 21.37L10.22 19.18L8.18 18.34L6.48 19.73L4.27 17.52L5.66 15.82L4.82 13.78L2.63 13.56L2.63 10.44L4.82 10.22L5.66 8.18L4.27 6.48L6.48 4.27L8.18 5.66L10.22 4.82L10.44 2.63L13.56 2.63L13.78 4.82L15.82 5.66L17.52 4.27L19.73 6.48L18.34 8.18z" />
+  <circle cx="12" cy="12" r="3" />
+  {{else if (or (eq name "document") (eq name "scopus"))}}
+  <path d="M6 3h8l4 4v14H6zM14 3v4h4M9 12h6M9 16h6" />
+  {{else if (eq name "researchgate")}}
+  <circle cx="9" cy="8" r="3.5" />
+  <circle cx="16.5" cy="8.5" r="2.5" />
+  <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M17 14c2.6.3 4.5 2.4 4.5 5.5" />
+  {{/if}}
+</svg>
+{{/if}}

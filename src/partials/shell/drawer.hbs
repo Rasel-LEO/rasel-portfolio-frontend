@@ -1,0 +1,35 @@
+{{!-- Author: Rasel Al Mamun --}}
+<div class="offcanvas offcanvas-end drawer" id="drawer" tabindex="-1" aria-labelledby="drawer-title">
+  <div class="drawer-top">
+    <p class="drawer-title mb-0">
+      <span class="brand-mark" aria-hidden="true">
+        <picture>
+          <source type="image/avif" srcset="/images/avatar/avatar-96.avif" />
+          <img src="/images/avatar/avatar-96.webp" alt="" width="28" height="28" loading="eager" decoding="async" />
+        </picture>
+      </span>
+      <span>{{profile.name}}</span>
+      <span class="visually-hidden" id="drawer-title">Menu</span>
+    </p>
+    <button type="button" class="btn btn-icon" data-bs-dismiss="offcanvas" aria-label="Close menu">
+      <svg class="icon" viewBox="0 0 24 24" width="24" height="24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+  </div>
+  <nav aria-label="Menu">
+    <ul class="list-unstyled mb-0 drawer-links">
+      <li><a href="/index.html"{{{ariaCurrent "home"}}}>Home<span class="drawer-sub" aria-hidden="true">01</span></a></li>
+      <li><a href="/portfolio.html"{{{ariaCurrent "portfolio"}}}>Portfolio<span class="drawer-sub">Publications · Projects · Awards</span></a></li>
+      <li><a href="/blog.html"{{{ariaCurrent "blog"}}}>Blog<span class="drawer-sub">Tech · Agri engineering · Education</span></a></li>
+      <li><a href="/hire.html"{{{ariaCurrent "hire"}}}>Hire me<span class="drawer-sub">Services</span></a></li>
+      <li><a href="/contact.html"{{{ariaCurrent "contact"}}}>Contact<span class="drawer-sub" aria-hidden="true">05</span></a></li>
+    </ul>
+  </nav>
+  <div class="drawer-tools">
+    <a class="btn btn-primary" href="/hire.html">
+      Hire me
+      <svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
+    </a>
+    {{> components/cv-button variant="btn-secondary"}}
+    <button type="button" class="btn btn-secondary js-only" data-theme-toggle aria-label="Theme: dark">Theme</button>
+  </div>
+</div>

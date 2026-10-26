@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    {{> shell/head title=project.title shortTitle=project.short_title
+    description=project.contribution ogType="article"}}
+  </head>
+  <body data-page="project">
+    {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
+    <main id="main" tabindex="-1">
+      {{!-- FD-116: one template for all research projects (Django /portfolio/{slug}/). Every block
+      renders only when its data exists: the detail blocks (summary line, facts, system overview,
+      overview, results, study context) only where verified from the published study. --}}
+      <div class="container project">
+        <header class="page-head project-head">
+          <nav aria-label="Breadcrumb">
+            <ol class="list-unstyled breadcrumb-list mb-0">
+              <li><a class="link" href="/portfolio.html">Portfolio</a></li>
+              <li><a class="link" href="/research.html">Research projects</a></li>
+              <li aria-current="page">{{project.short_title}}</li>
+            </ol>
+          </nav>
+          <h1 class="mb-0">{{project.title}}</h1>
+          {{#if project.detail.summary_line}}
+          <p class="t-body-l project-summary mb-0">{{project.detail.summary_line}}</p>
+          {{/if}}
+          <ul class="list-unstyled facts mb-0" aria-label="Project facts" data-facts>
+            {{#each project.facts}}
+            <li class="fact">
+              <span class="t-label fact-label">{{label}}</span>
+              <span class="fact-value"
+                >{{#if status}}{{> components/status-chip
+                status=status}}{{else}}{{value}}{{/if}}{{#if sub}}<span class="fact-sub"
+                  >{{sub}}</span
+                >{{/if}}</span
+              >
+            </li>
+            {{/each}}
+          </ul>
+        </header>
+
+        {{#if project.image}}
+        <div class="project-cover">
+          {{> components/project-image project.image ratio="3x2" loading="eager"}}
+        </div>
+        {{/if}} {{#if project.detail.system}}
+        <section class="system" aria-labelledby="system-title" data-reveal>
+          <h2 class="t-label system-title mb-0" id="system-title">Conceptual system overview</h2>
+          <ol class="list-unstyled system-steps mb-0">
+            {{#each project.detail.system}}
+            <li class="system-step">
+              <span class="system-icon">{{> icons/line-icon name=icon size=96}}</span>
+              <h3 class="system-step-title mb-0">{{title}}</h3>
+              <p class="system-step-text mb-0">{{text}}</p>
+            </li>
+            {{/each}}
+          </ol>
+          {{#if project.detail.system_note}}
+          <p class="system-note mb-0">{{project.detail.system_note}}</p>
+          {{/if}}
+        </section>
+        {{/if}}
+
+        <div class="project-cols">
+          <div class="row">
+            <section class="col-lg-6 project-col" aria-labelledby="overview-title">
+              {{#if project.detail.overview}}
+              <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
+              <p class="project-text">{{project.detail.overview}}</p>
+              <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>
+              {{else}}
+              <h2 class="project-h2" id="overview-title" data-reveal>Topics</h2>
+              {{/if}} {{> components/tag-pills tags=project.tags}}
+            </section>
+            <section
+              class="col-lg-6 project-col project-col-end"
+              aria-labelledby="contribution-title"
+            >
+              <h2 class="project-h2" id="contribution-title" data-reveal>My contribution</h2>
+              {{#if project.detail.contribution}}
+              <ul class="list-unstyled contribution-list mb-0">
+                {{#each project.detail.contribution}}
+                <li>{{this}}</li>
+                {{/each}}
+              </ul>
+              {{else}}
+              <p class="project-text detail-text mb-0">{{project.contribution}}</p>
+              {{/if}}
+            </section>
+          </div>
+        </div>
+        {{#if project.detail.results}}
+        <section class="project-section" aria-labelledby="results-title">
+          <h2 class="project-h2" id="results-title" data-reveal>System and results</h2>
+          <ul class="list-unstyled results mb-0">
+            {{#each project.detail.results}}
+            <li class="result" data-reveal>
+              <span class="result-icon">{{> icons/line-icon name=icon size=28}}</span>
+              <div>
+                <h3 class="result-title mb-0">{{title}}</h3>
+                <p class="result-text mb-0">{{text}}</p>
+              </div>
+            </li>
+            {{/each}}
+          </ul>
+          {{#if project.detail.context}}
+          <p class="study-context mb-0">{{project.detail.context}}</p>
+          {{/if}}
+        </section>
+        {{/if}} {{#if project.publications.length}}
+        <section class="project-section" aria-labelledby="publication-title">
+          <h2 class="project-h2" id="publication-title" data-reveal>
+            {{#if (eq (count project.publications) 1)}}Related publication{{else}}Related
+            publications{{/if}}
+          </h2>
+          <ul class="list-unstyled related-pubs mb-0">
+            {{#each project.publications}}
+            <li>{{> sections/related-pub}}</li>
+            {{/each}}
+          </ul>
+        </section>
+        {{/if}} {{#if project.gallery}}
+        <section class="project-section" aria-labelledby="gallery-title">
+          <h2 class="project-h2" id="gallery-title" data-reveal>Gallery</h2>
+          <ul class="list-unstyled row gallery mb-0">
+            {{#each project.gallery}}
+            <li class="col-md-4">
+              <figure class="gallery-item mb-0">
+                {{> components/project-image this ratio="4x3"}} {{#if caption}}
+                <figcaption class="t-meta gallery-caption">{{caption}}</figcaption>
+                {{/if}}
+              </figure>
+            </li>
+            {{/each}}
+          </ul>
+        </section>
+        {{/if}}
+
+        <div class="project-end">
+          <p class="mb-0">
+            <a class="back-link" href="/research.html"
+              ><svg
+                class="icon"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M19 12H5M11 6l-6 6 6 6" /></svg
+              ><span class="link">Back to Projects</span></a
+            >
+          </p>
+          {{#if (or project.prev project.next)}}
+          <nav class="project-pager" aria-label="More research projects">
+            {{#if project.prev}}
+            <a class="card project-pager-link" href="/{{project.prev.file}}" rel="prev">
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M19 12H5M11 6l-6 6 6 6" />
+              </svg>
+              <span class="project-pager-text">
+                <span class="t-label">Previous project</span>
+                <span class="project-pager-title">{{project.prev.shortTitle}}</span>
+              </span>
+            </a>
+            {{/if}} {{#if project.next}}
+            <a
+              class="card project-pager-link project-pager-next"
+              href="/{{project.next.file}}"
+              rel="next"
+            >
+              <span class="project-pager-text">
+                <span class="t-label">Next project</span>
+                <span class="project-pager-title">{{project.next.shortTitle}}</span>
+              </span>
+              <svg
+                class="icon"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
+            {{/if}}
+          </nav>
+          {{/if}}
+        </div>
+      </div>
+    </main>
+    {{> shell/footer}} {{> shell/back-to-top}}
+  </body>
+</html>
