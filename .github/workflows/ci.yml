@@ -39,6 +39,9 @@ jobs:
       - name: Audit (production dependencies)
         run: npm audit --omit=dev --audit-level=high
 
+      - name: Audit (development tooling, allow-list, FD-134)
+        run: npm run check:audit
+
       - name: Lint
         run: npm run lint
 

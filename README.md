@@ -83,6 +83,7 @@ npm run test:widths     # screenshots at the seven widths in both themes
 npm run test:linux      # the full suite inside the Playwright Linux image (needs Docker)
 npm run validate:html   # html-validate over the built pages (part of npm test)
 npm run lhci            # Lighthouse budgets on five pages (build, mobile preset, FD-129)
+npm run check:audit     # npm audit gate with the allow-list tools/audit-allowlist.json (FD-134)
 ```
 
 Test widths: 320, 390, 768, 1024, 1280, 1440 and 1920 px.
