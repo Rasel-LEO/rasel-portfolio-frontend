@@ -2,7 +2,7 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { defineConfig } from 'vite';
+import { defineConfig, normalizePath } from 'vite';
 import handlebars from 'vite-plugin-handlebars';
 import { buildSite, contentDir, doiUrl, loadContent, postsDir } from './tools/content.mjs';
 import { escapeHtml, isBracketed } from './tools/markdown.mjs';
@@ -159,7 +159,8 @@ function generatedPages() {
 // Pages live in src/pages/ but are served and built at the site root
 // (/index.html, /blog.html, …) so the URLs match the future Django routes.
 // Only exact page file names are mapped; /blog/ or /blog are not (Django owns routing).
-// Moving the HTML up one folder is safe because base is '/', so asset URLs are absolute.
+// Moving the HTML up one folder is safe because the base is absolute ('/', or
+// '/static/frontend/' for the Django target), so asset URLs are absolute.
 function flatPages() {
   return {
     name: 'flat-pages',
@@ -229,12 +230,57 @@ function sitemap() {
   };
 }
 
+// FD-133: `vite build --mode django` (npm run build:django) is the Django build target: the same
+// pages and bundles under the static URL /static/frontend/, with a Vite manifest, in dist-django/.
+// The manifest keys fonts, images and lazy modules by source path, but the module script every
+// page loads is a shared chunk under a hashed key, and public/ files are not in it. The asset
+// map .vite/asset-map.json (source path → built path) adds those: js/main.js, its stylesheet
+// scss/main.scss, and js/theme-init.js (public/).
+function djangoTarget() {
+  const entry = normalizePath(resolve(root, 'src/js/main.js'));
+  let active = false;
+  return {
+    name: 'django-target',
+    apply: 'build',
+    enforce: 'post',
+    config(_config, { mode }) {
+      active = mode === 'django';
+      if (!active) return null;
+      return {
+        base: '/static/frontend/',
+        build: { outDir: resolve(root, 'dist-django'), manifest: true },
+      };
+    },
+    generateBundle(_options, bundle) {
+      if (!active) return;
+      const main = Object.values(bundle).find(
+        (chunk) => chunk.type === 'chunk' && chunk.moduleIds.map(normalizePath).includes(entry),
+      );
+      const css = [...(main?.viteMetadata?.importedCss ?? [])];
+      if (!main || css.length !== 1) {
+        throw new Error('django-target: expected one chunk for js/main.js with one stylesheet.');
+      }
+      const map = {
+        'js/main.js': main.fileName,
+        'scss/main.scss': css[0],
+        'js/theme-init.js': 'js/theme-init.js',
+      };
+      this.emitFile({
+        type: 'asset',
+        fileName: '.vite/asset-map.json',
+        source: `${JSON.stringify(map, null, 2)}\n`,
+      });
+    },
+  };
+}
+
 export default defineConfig({
   root: resolve(root, 'src'),
   publicDir: resolve(root, 'public'),
   // Multi-page: unknown URLs get a real 404 instead of the SPA index.html fallback.
   appType: 'mpa',
   plugins: [
+    djangoTarget(),
     generatedPages(),
     handlebars({
       partialDirectory: resolve(root, 'src/partials'),

@@ -25,7 +25,7 @@ const run = args.length
 const script = [
   'set -e',
   'mkdir -p /work',
-  'tar -C /src --exclude=./node_modules --exclude=./dist --exclude=./.git' +
+  'tar -C /src --exclude=./node_modules --exclude=./dist --exclude=./dist-django --exclude=./.git' +
     ' --exclude=./test-results --exclude=./playwright-report -cf - . | tar -C /work -xf -',
   'cd /work',
   'npm ci --no-audit --no-fund',
