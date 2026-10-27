@@ -1,0 +1,7 @@
+{
+  "GHSA-mrhx-c7xc-m3w5": {
+    "package": "zod",
+    "reason": "zod 3 via chromium-bidi 14 <- puppeteer-core <- lighthouse 12.6.1 <- @lhci/cli 0.15.1 (dev only). chromium-bidi 14 breaks under zod 4, so no override; the BiDi mapper is never started (Lighthouse uses CDP) and Lighthouse runs only against the local build. See docs/security.md.",
+    "expires": "2027-01-25"
+  }
+}

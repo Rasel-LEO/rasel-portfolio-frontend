@@ -5,6 +5,13 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.0.2 — 2026-10-27
+
+- Security: development tooling updated; audit gate for development dependencies. No change
+  to the static site or the Django build output. `html-validate` 11.17.0, `marked` 18.1.2;
+  `overrides` for `tmp`, `uuid`, `basic-ftp` and `@puppeteer/browsers`; `npm run check:audit`
+  with `tools/audit-allowlist.json` in CI (FD-134).
+
 ## 1.0.1 — 2026-10-27
 
 - Added: Django build target with Vite manifest. No change to the static site.
