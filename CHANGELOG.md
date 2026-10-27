@@ -5,6 +5,13 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.0.1 — 2026-10-27
+
+- Added: Django build target with Vite manifest. No change to the static site.
+  `npm run build:django` writes `dist-django/` under the base `/static/frontend/`, with
+  `.vite/manifest.json` and the supplementary `.vite/asset-map.json`; checked in `npm test`
+  and CI (FD-133).
+
 ## 1.0.0 — 2026-10-27 · First public release
 
 - Design tokens in `src/design/tokens.json`, the single source of `_tokens.scss` (FD-128).

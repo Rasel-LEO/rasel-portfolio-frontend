@@ -20,6 +20,8 @@ export default [
   {
     ignores: ['dist/', 'node_modules/', 'playwright-report/', 'test-results/'],
   },
+  // FD-133: the Django build target's output.
+  { ignores: ['dist-django/'] },
   js.configs.recommended,
   {
     files: ['src/js/**/*.js'],

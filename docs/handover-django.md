@@ -2,7 +2,7 @@
 
 Author: Rasel Al Mamun
 
-This document describes how the static frontend (v1.0.0) becomes the templates and static
+This document describes how the static frontend (v1.0.1) becomes the templates and static
 files of the Django site. The frontend stays the reference: the Django pages should render
 the same HTML as `dist/` for the same content, apart from the template tags listed here.
 Decision ids (FD-xx) refer to `docs/decisions.md`.
@@ -24,10 +24,24 @@ Decision ids (FD-xx) refer to `docs/decisions.md`.
   contents, prev/next projects, JSON-LD) are computed in `tools/content.mjs`; each needs a
   Django equivalent (model method, template tag or view context).
 
-Recommended route: keep this repository as the source of the CSS and JS bundles (run
-`npm run build`, copy `dist/assets/` into the Django app's `static/`), and translate the
-Handlebars pages and partials into Django templates once. A Vite manifest
-(`build.manifest: true`) can map entry names to hashed files if the copy is automated.
+Recommended route: keep this repository as the source of the CSS and JS bundles, and
+translate the Handlebars pages and partials into Django templates once.
+
+Two build targets (FD-133, since 1.0.1):
+
+| Command                | Output         | Base                | Manifest | Use                                     |
+| ---------------------- | -------------- | ------------------- | -------- | --------------------------------------- |
+| `npm run build`        | `dist/`        | `/`                 | no       | the static site (unchanged since 1.0.0) |
+| `npm run build:django` | `dist-django/` | `/static/frontend/` | yes      | the files Django serves                 |
+
+`npm run build:django` runs `vite build --mode django` (after the same token and content
+steps as `npm run build`) with the same pages, content mode (default, non-RELEASE), chunking
+and CSP rules; only the base differs, plus `.vite/manifest.json` and `.vite/asset-map.json`.
+Its HTML is the markup reference for the Django parity tests: each page equals the
+`dist/` page once `/static/frontend/` is replaced by `/` (the five chunks that embed the base
+— `main`, `motion`, `stage`, `stage-desktop`, `home-motion` — get different hashes).
+`tools/check-django-build.mjs` (part of `npm test` and CI) proves it, and that every asset
+URL in the HTML and CSS exists and resolves from the manifest or the asset map.
 
 ## 2. Pages, templates and URLs
 
@@ -134,11 +148,47 @@ paragraphs as labelled placeholders. Port the same rules (for example `markdown-
 
 ## 5. Static files
 
-- Copy `dist/assets/*` (hashed CSS, JS chunks, fonts, images) to the app's `static/`, and
-  `dist/js/theme-init.js` as-is. In templates, every `/assets/…` and `/js/…` URL becomes
-  `{% static '…' %}`; run `collectstatic` on deploy.
-- Use `ManifestStaticFilesStorage` (or keep Vite's hashes and serve with long cache
-  headers: `Cache-Control: public, max-age=31536000, immutable` for hashed files).
+- Run `npm run build:django` and copy from `dist-django/` into the app's
+  `static/frontend/` (FD-133):
+  - `assets/` (hashed CSS, JS chunks, fonts, images);
+  - `.vite/manifest.json` (Vite manifest: source path → hashed file);
+  - `.vite/asset-map.json` (the supplementary map below);
+  - `js/theme-init.js` (classic script, as-is).
+
+  The HTML files are not copied; they are the reference for the templates.
+
+- Resolve URLs by source key (paths relative to `src/`; `public/` for `js/theme-init.js`),
+  never by hashed name: `{% static 'frontend/' %}` + the built path. Manifest keys that start
+  with `_` name shared chunks by their hashed file and change with every build; templates do
+  not use them (the lazy chunks are loaded by `main.js` itself).
+- Asset map (`.vite/asset-map.json`, written by the `django-target` plugin in
+  `vite.config.js`): the files Vite's manifest does not key by source path.
+
+  | Key                | Built file               | Why not in the manifest                                  |
+  | ------------------ | ------------------------ | -------------------------------------------------------- |
+  | `js/main.js`       | `assets/main-<hash>.js`  | shared by every page, so a chunk with a hashed key       |
+  | `scss/main.scss`   | `assets/main-<hash>.css` | the stylesheet of that chunk (its `css` in the manifest) |
+  | `js/theme-init.js` | `js/theme-init.js`       | a `public/` file, copied unhashed                        |
+
+- Keys per page (`shell/head` and the page bodies):
+
+  | Page       | In `<head>`                                                                                                                                                                                      | In the body (manifest)                                                                                                |
+  | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+  | every page | `js/theme-init.js` (first, classic), `js/main.js` (`type="module" crossorigin`), `scss/main.scss` (`rel="stylesheet" crossorigin`), `og:image` / `twitter:image` `images/avatar/avatar-512.webp` | `images/avatar/avatar-96.{avif,webp}` (header, drawer), `images/figure/P5-desktop-720x1300.{avif,webp}` (back to top) |
+  | Home, 404  | as above                                                                                                                                                                                         | also `images/figure/P6-desktop-720x1300.{avif,webp}`                                                                  |
+  | Portfolio  | as above                                                                                                                                                                                         | also `images/avatar/avatar-512.avif`                                                                                  |
+
+  Preload keys: every page `fonts/bricolage-grotesque-latin-standard-normal.woff2`
+  (`as="font" type="font/woff2" crossorigin`) and `images/avatar/avatar-96.avif`
+  (`as="image"`); Home also `images/figure/P5-desktop-720x1300.avif` (`as="image"`, with
+  `imagesrcset`, `media="(min-width: 768px)"`, `fetchpriority="high"`).
+  The stylesheet refers to `fonts/jetbrains-mono-latin-{400,500}-normal.woff2`,
+  `images/arrow.svg` and `images/placeholder.svg` by URL under `/static/frontend/assets/`, so
+  the `assets/` folder must keep its layout.
+
+- Run `collectstatic` on deploy. Vite's hashes already make the files immutable: serve
+  `static/frontend/assets/` with `Cache-Control: public, max-age=31536000, immutable`
+  (`ManifestStaticFilesStorage` is not needed for them).
 - Fonts are subset woff2 files (FD-130); keep the `<link rel="preload" as="font" … crossorigin>`
   for the Bricolage file and the avatar / Home hero image preloads from `shell/head`.
 - Images: `<picture>` with AVIF + WebP, explicit `width` / `height`, `loading="lazy"` below

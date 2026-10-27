@@ -45,6 +45,12 @@ jobs:
       - name: Build
         run: npm run build
 
+      - name: Build (Django target, FD-133)
+        run: npm run build:django
+
+      - name: Check the Django build
+        run: node tools/check-django-build.mjs
+
       - name: Install Playwright browser
         run: npx playwright install --with-deps chromium
 
