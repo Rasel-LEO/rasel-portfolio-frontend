@@ -3,8 +3,11 @@
 // elements that work without JS (native validation, FD-40). Here they validate on submit
 // (required, email pattern),
 // mark invalid fields with aria-invalid and an inline error, move focus to the first one,
-// and, because nothing is sent yet, show a status message with a prefilled mailto: link.
-// The Django templates add the action, CSRF and sending. Also: the email Copy button.
+// and, in static mode, show a status message with a prefilled mailto: link.
+// A form with a non-empty action is live (FD-135): a valid submit is posted by the browser,
+// with the button disabled against a double submit, and the server-rendered errors and
+// status are kept on load. The Django templates add the action, CSRF and sending.
+// Also: the email Copy button.
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,15 +68,29 @@ function showSent(form) {
   );
 }
 
+function setBusy(button, busy) {
+  if (!button) return;
+  button.disabled = busy;
+  if (busy) button.setAttribute('aria-disabled', 'true');
+  else button.removeAttribute('aria-disabled');
+}
+
+// Server-rendered state (live mode): the errors and the status stay as rendered; the first
+// invalid field gets focus when the status reports the errors.
+function restore(controls, status) {
+  const first = controls.find((control) => control.getAttribute('aria-invalid') === 'true');
+  if (first && status?.textContent.trim()) first.focus();
+}
+
 function initForm(form) {
   const controls = [...form.querySelectorAll('.field-control')];
   const status = form.querySelector('[data-form-status]');
+  const button = form.querySelector('[type="submit"]');
+  const live = Boolean(form.getAttribute('action')?.trim());
   // Without JS the browser's own required/email checks run; with JS the inline errors do.
   form.noValidate = true;
 
   form.addEventListener('submit', (event) => {
-    // Nothing is sent from the static build; the values stay in the fields.
-    event.preventDefault();
     let first = null;
     for (const control of controls) {
       const message = problem(control);
@@ -81,12 +98,26 @@ function initForm(form) {
       if (message && !first) first = control;
     }
     if (first) {
+      event.preventDefault();
       status?.replaceChildren();
       first.focus();
+    } else if (live) {
+      // The browser posts the form; the button stays disabled until the response arrives.
+      setBusy(button, true);
     } else {
+      // Nothing is sent from the static build; the values stay in the fields.
+      event.preventDefault();
       showSent(form);
     }
   });
+
+  if (live) {
+    restore(controls, status);
+    // Back/forward cache: a page restored after the post gets a usable button again.
+    window.addEventListener('pageshow', (event) => {
+      if (event.persisted) setBusy(button, false);
+    });
+  }
 
   // An error clears as soon as its field is fixed; new errors wait for the next submit.
   const recheck = (event) => {

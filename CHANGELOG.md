@@ -5,6 +5,13 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.1.0 — 2026-10-28
+
+- Added: live form mode (forms with an action submit to the server). Static site unchanged.
+  A Hire me or Contact form with a non-empty `action` posts after the client-side checks
+  pass, with the submit button disabled against a double submit; server-rendered errors and
+  status are kept on load (FD-135).
+
 ## 1.0.2 — 2026-10-27
 
 - Security: development tooling updated; audit gate for development dependencies. No change

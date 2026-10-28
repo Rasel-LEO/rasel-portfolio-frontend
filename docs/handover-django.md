@@ -224,16 +224,33 @@ and when both are set, `localStorage` wins over the cookie.
 | Hire me | `name`: required; `email`: required, email; `kind`: one of `hire.form_kinds`; `organisation`: optional; `brief`: required       |
 | Contact | `name`: required; `email`: required, email; `subject`: one of `contact.subjects`; `organisation`: optional; `message`: required |
 
-- Today the forms are `<form method="post">` without sending: `src/js/pages/forms.js`
-  validates (messages in that file), marks fields with `aria-invalid` and
-  `aria-describedby`, moves focus to the first error and shows a status message with a
-  prefilled `mailto:` link (FD-38, FD-40). Without JavaScript the browser's native checks run.
-- Django: set `action` to the view URL, add `{% csrf_token %}`, validate server-side with
-  the same rules and messages, render errors into the existing error regions
-  (`#<id>-error`, `[data-error-text]`, `hidden` removed) with `aria-invalid="true"`, and the
-  result into the `role="status"` region (`[data-form-status]`). Send by email (SMTP) and
-  add spam protection without third-party scripts (honeypot field, rate limit). Redirect
-  after a successful POST (PRG) and keep the entered values on errors.
+- The forms are `<form method="post">`. `src/js/pages/forms.js` validates on submit
+  (messages in that file), marks fields with `aria-invalid` and `aria-describedby` and moves
+  focus to the first error (FD-38). Without JavaScript the browser's native checks run
+  (FD-40). The mode depends on the `action` attribute (FD-135):
+  - **Static** (no `action`, the static site): a valid submit is stopped and the status shows
+    a prefilled `mailto:` link.
+  - **Live** (non-empty `action`): a submit with errors is stopped and shows the inline
+    errors; a valid submit is **not** stopped, the browser posts the form, and the submit
+    button gets `disabled` and `aria-disabled="true"` against a double submit (re-enabled
+    when the page comes back from the back/forward cache). No `mailto:` status.
+- Django: set `action` to the view URL (`{% url … %}`); live mode then posts. Add
+  `{% csrf_token %}`, validate server-side with the same rules and messages, send by email
+  (SMTP) and add spam protection without third-party scripts (honeypot field, rate limit).
+  Redirect after a successful POST (PRG).
+- **Server-rendered state** (re-render after an invalid POST, or the page after the
+  redirect). On load, `forms.js` changes none of it:
+  - Invalid field: `aria-invalid="true"` on the control, `aria-describedby` listing
+    `<id>-error` (then `<id>-hint` where the field has a hint), and the error region
+    `#<id>-error` without `hidden`, the message in its `[data-error-text]`. Keep the entered
+    values. The message clears when the visitor fixes the field, as for a client-side error.
+  - Status: text rendered inside `[data-form-status]` (`role="status"`) is never cleared on
+    load. After an invalid POST render an error summary there (for example "Please correct
+    the errors below."); the first invalid field then gets focus. Invalid fields without a
+    status keep their messages but take no focus. After the redirect render the success
+    message there with no invalid fields.
+  - Tests: `tests/forms-live.spec.js` (live mode on the built pages with an action added)
+    and `tests/forms.spec.js` (static mode).
 
 ## 9. Drafts and the release build
 
@@ -289,7 +306,7 @@ Templates must keep, unchanged:
 
 `npm test` runs: `tools/check-csp.mjs` (CSP-safe markup), `tools/check-privacy.mjs`,
 `html-validate` over the built HTML, and the Playwright suite (`tests/*.spec.js`: content,
-pages, accessibility with axe, shell, Portfolio, Blog, forms, Home, stage, motion, inner
+pages, accessibility with axe, shell, Portfolio, Blog, forms (static and live), Home, stage, motion, inner
 pages, release: noindex, sitemap, 400 % zoom), plus `npm run test:widths` (seven widths, both themes) and `npm run lhci`
 (Lighthouse budgets, FD-129). The Playwright specs drive the browser through URLs and
 selectors, so most of them run against the Django server after two changes: the
