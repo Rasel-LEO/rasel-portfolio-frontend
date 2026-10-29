@@ -5,8 +5,8 @@
 import { readFileSync } from 'node:fs';
 import { gzipSync } from 'node:zlib';
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
-import { entranceDone, templatePages } from './pages.js';
+import { expect, test } from './fixtures.js';
+import { buildDir, entranceDone, pagePath, staticBase, templatePages } from './pages.js';
 
 const desktop = { width: 1440, height: 900 };
 const shots = 'tests/screenshots/motion';
@@ -535,7 +535,7 @@ test.describe('entrance (FD-67)', () => {
         for (let i = 0; i < 3; i += 1) {
           const context = await browser.newContext({ viewport: { width, height } });
           const page = await context.newPage();
-          results.push(await largestPaint(page, '/index.html', { entrance }));
+          results.push(await largestPaint(page, pagePath('index.html'), { entrance }));
           await context.close();
         }
         results.sort((x, y) => x[1] - y[1]);
@@ -800,17 +800,17 @@ test.describe('seam wipe (FD-81)', () => {
     await record(page);
     await page.goto('/index.html');
     await entranceDone(page);
-    await page.locator('.site-header nav a[href="/portfolio.html"]').click();
-    await page.waitForURL('**/portfolio.html');
+    await page.locator(`.site-header nav a[href="${pagePath('portfolio.html')}"]`).click();
+    await page.waitForURL(`**${pagePath('portfolio.html')}`);
     const left = JSON.parse(await page.evaluate(() => sessionStorage.getItem('wipe-left')));
     expect(left.leaving).toBe(true);
     expect(left.after).toBeLessThanOrEqual(350);
     // Keyboard: Enter on a link takes the same path.
     await entranceDone(page);
     await page.evaluate(() => sessionStorage.removeItem('wipe-left'));
-    await page.locator('.site-header nav a[href="/blog.html"]').focus();
+    await page.locator(`.site-header nav a[href="${pagePath('blog.html')}"]`).focus();
     await page.keyboard.press('Enter');
-    await page.waitForURL('**/blog.html');
+    await page.waitForURL(`**${pagePath('blog.html')}`);
     const keyed = JSON.parse(await page.evaluate(() => sessionStorage.getItem('wipe-left')));
     expect(keyed.leaving).toBe(true);
     expect(keyed.after).toBeLessThanOrEqual(350);
@@ -822,50 +822,54 @@ test.describe('seam wipe (FD-81)', () => {
   }) => {
     await page.goto('/portfolio.html');
     await entranceDone(page);
-    const results = await page.evaluate(() => {
-      const cases = [
-        ['https://example.com/', {}],
-        ['mailto:someone@example.com', {}],
-        ['tel:+10000000000', {}],
-        ['#cv', {}],
-        ['/portfolio.html#cv', {}],
-        ['/blog.html', { target: '_blank' }],
-        ['/blog.html', { download: '' }],
-        ['/blog.html', {}, { ctrlKey: true }],
-        ['/blog.html', {}, { metaKey: true }],
-        ['/blog.html', {}, { shiftKey: true }],
-        ['/blog.html', {}, { altKey: true }],
-        ['/blog.html', { 'data-handled': '' }],
-        ['/blog.html', {}, { button: 1 }],
-      ];
-      const wipe = document.querySelector('.page-wipe');
-      // A page module that handles a link itself (it prevents the default before window).
-      const handled = (event) => {
-        if (event.target.closest('[data-handled]')) event.preventDefault();
-      };
-      document.addEventListener('click', handled);
-      const results = cases.map(([href, attrs, init = {}]) => {
-        const link = document.createElement('a');
-        link.href = href;
-        link.textContent = 'test';
-        for (const [name, value] of Object.entries(attrs)) link.setAttribute(name, value);
-        document.querySelector('main').append(link);
-        let prevented = null;
-        // Runs after the wipe's window listener; stops the navigation itself.
-        const after = (event) => {
-          prevented = event.defaultPrevented;
-          event.preventDefault();
+    const [cv, blog] = [pagePath('portfolio.html#cv'), pagePath('blog.html')];
+    const results = await page.evaluate(
+      ([cv, blog]) => {
+        const cases = [
+          ['https://example.com/', {}],
+          ['mailto:someone@example.com', {}],
+          ['tel:+10000000000', {}],
+          ['#cv', {}],
+          [cv, {}],
+          [blog, { target: '_blank' }],
+          [blog, { download: '' }],
+          [blog, {}, { ctrlKey: true }],
+          [blog, {}, { metaKey: true }],
+          [blog, {}, { shiftKey: true }],
+          [blog, {}, { altKey: true }],
+          [blog, { 'data-handled': '' }],
+          [blog, {}, { button: 1 }],
+        ];
+        const wipe = document.querySelector('.page-wipe');
+        // A page module that handles a link itself (it prevents the default before window).
+        const handled = (event) => {
+          if (event.target.closest('[data-handled]')) event.preventDefault();
         };
-        window.addEventListener('click', after);
-        link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...init }));
-        window.removeEventListener('click', after);
-        link.remove();
-        const key = JSON.stringify({ ...attrs, ...init });
-        return [href, key, prevented, wipe.classList.contains('is-leaving')];
-      });
-      document.removeEventListener('click', handled);
-      return results;
-    });
+        document.addEventListener('click', handled);
+        const results = cases.map(([href, attrs, init = {}]) => {
+          const link = document.createElement('a');
+          link.href = href;
+          link.textContent = 'test';
+          for (const [name, value] of Object.entries(attrs)) link.setAttribute(name, value);
+          document.querySelector('main').append(link);
+          let prevented = null;
+          // Runs after the wipe's window listener; stops the navigation itself.
+          const after = (event) => {
+            prevented = event.defaultPrevented;
+            event.preventDefault();
+          };
+          window.addEventListener('click', after);
+          link.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, ...init }));
+          window.removeEventListener('click', after);
+          link.remove();
+          const key = JSON.stringify({ ...attrs, ...init });
+          return [href, key, prevented, wipe.classList.contains('is-leaving')];
+        });
+        document.removeEventListener('click', handled);
+        return results;
+      },
+      [cv, blog],
+    );
     // Never the wipe; and the browser keeps the link (a same-page hash is Lenis's to scroll).
     for (const [href, init, prevented, leaving] of results) {
       expect([href, init, leaving]).toEqual([href, init, false]);
@@ -877,11 +881,11 @@ test.describe('seam wipe (FD-81)', () => {
   test('back and forward restore the page without a closed overlay', async ({ page }) => {
     await page.goto('/index.html');
     await entranceDone(page);
-    await page.locator('.site-header nav a[href="/portfolio.html"]').click();
-    await page.waitForURL('**/portfolio.html');
+    await page.locator(`.site-header nav a[href="${pagePath('portfolio.html')}"]`).click();
+    await page.waitForURL(`**${pagePath('portfolio.html')}`);
     for (const [move, url] of [
-      [() => page.goBack(), '**/index.html'],
-      [() => page.goForward(), '**/portfolio.html'],
+      [() => page.goBack(), `**${pagePath('index.html')}`],
+      [() => page.goForward(), `**${pagePath('portfolio.html')}`],
     ]) {
       await move();
       await page.waitForURL(url);
@@ -944,17 +948,17 @@ test.describe('seam wipe off (FD-81)', () => {
     const page = await context.newPage();
     await page.goto('/index.html');
     await expect(page.locator('.page-wipe')).toHaveCSS('display', 'none');
-    const prevented = await page.evaluate(() => {
+    const prevented = await page.evaluate((href) => {
       let value = null;
       const after = (event) => {
         value = event.defaultPrevented;
         event.preventDefault();
       };
       window.addEventListener('click', after);
-      document.querySelector('.site-header nav a[href="/portfolio.html"]').click();
+      document.querySelector(`.site-header nav a[href="${href}"]`).click();
       window.removeEventListener('click', after);
       return value;
-    });
+    }, pagePath('portfolio.html'));
     expect(prevented).toBe(false);
     await context.close();
   });
@@ -1037,7 +1041,7 @@ test('JS budget: Home at 390 px loads at most 70 KB of compressed JS (FD-73)', a
   await page.waitForLoadState('networkidle');
   const sizes = [...scripts].map((path) => ({
     path,
-    gzip: gzipSync(readFileSync(`dist${path}`)).length,
+    gzip: gzipSync(readFileSync(`${buildDir}${path.slice(staticBase.length)}`)).length,
   }));
   const total = sizes.reduce((sum, { gzip }) => sum + gzip, 0);
   expect(
@@ -1069,7 +1073,7 @@ test('JS budget: Home at 1440 px loads at most 120 KB of compressed JS (handoff 
   // Sizes from the built files (dist/ mirrors the served paths), gzip level 6 as served.
   const sizes = [...scripts].map((path) => ({
     path,
-    gzip: gzipSync(readFileSync(`dist${path}`)).length,
+    gzip: gzipSync(readFileSync(`${buildDir}${path.slice(staticBase.length)}`)).length,
   }));
   const total = sizes.reduce((sum, { gzip }) => sum + gzip, 0);
   // Every motion part is in: stage, GSAP, Lenis, the ring.

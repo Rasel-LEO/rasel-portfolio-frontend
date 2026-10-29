@@ -1,6 +1,6 @@
 // Author: Rasel Al Mamun
-import { expect, test } from '@playwright/test';
-import { revealAll, templatePages, themes, useTheme, widths } from './pages.js';
+import { expect, test } from './fixtures.js';
+import { isDjango, revealAll, templatePages, themes, useTheme, widths } from './pages.js';
 
 const shots = 'tests/screenshots/widths';
 // The full project page (Biofloc, Solar irrigation) and a reduced one (egg incubator).
@@ -9,7 +9,8 @@ const pages = [
   'project-biofloc-iot.html',
   'project-solar-irrigation.html',
   'project-egg-incubator.html',
-  'post-edge-ai-poultry-farm.html',
+  // Django publishes no post (FD-137).
+  ...(isDjango ? [] : ['post-edge-ai-poultry-farm.html']),
 ];
 
 async function expectNoOverflow(page) {

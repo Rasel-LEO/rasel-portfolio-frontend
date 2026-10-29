@@ -5,10 +5,10 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
 import { buildSite, loadContent } from '../tools/content.mjs';
 import { readingMinutes, renderMarkdown } from '../tools/markdown.mjs';
-import { postPages } from './pages.js';
+import { isDjango, pagePath, postPages } from './pages.js';
 
 const site = buildSite(loadContent(), { showDrafts: true });
 const posts = site.postList;
@@ -19,6 +19,10 @@ test.describe('Blog list', () => {
   });
 
   test('lists the three posts as image cards with category and Draft labels', async ({ page }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     const items = page.locator('[data-post-category]');
     await expect(items).toHaveCount(3);
     for (const [i, post] of posts.entries()) {
@@ -26,13 +30,17 @@ test.describe('Blog list', () => {
       await expect(item.locator('.blog-card-category')).toHaveText(post.categoryLabel);
       await expect(item.locator('[data-draft-label]')).toHaveText('Draft');
       const link = item.getByRole('link', { name: post.title });
-      await expect(link).toHaveAttribute('href', `/${post.file}`);
+      await expect(link).toHaveAttribute('href', pagePath(post.file));
       await expect(item.locator('.blog-card-excerpt')).toHaveText(post.standfirst);
     }
     await expect(page.locator('[data-blog-empty]')).toBeHidden();
   });
 
   test('the category filter shows one category and announces the count', async ({ page }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     const group = page.getByRole('group', { name: 'Filter posts by category' });
     await expect(group).toBeVisible();
     const count = page.locator('[data-category-count]');
@@ -58,6 +66,10 @@ test.describe('Blog list', () => {
   });
 
   test('a category without posts shows the empty state', async ({ page }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     // The data has one post per category, so take one out of the page for this check.
     await page.locator('[data-post-category="education"]').evaluate((el) => el.remove());
     await page.getByRole('button', { name: 'Education' }).click();
@@ -73,6 +85,10 @@ test.describe('Blog without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
   test('every post is listed with its category label; no filter buttons', async ({ page }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     await page.goto('/blog.html');
     await expect(page.locator('[data-category-filter]')).toBeHidden();
     await expect(page.locator('[data-post-category]:visible')).toHaveCount(3);
@@ -84,11 +100,13 @@ test.describe('Blog without JavaScript', () => {
 
 test.describe('Post pages', () => {
   test('one page per post', () => {
+    test.skip(isDjango, 'Django: no post page exists, the posts are drafts (FD-137)');
     expect(postPages).toEqual(posts.map((post) => post.file).sort());
   });
 
   for (const post of posts) {
     test(`${post.file} shows the post`, async ({ page }) => {
+      test.skip(isDjango, 'Django: no post page exists, the posts are drafts (FD-137)');
       const response = await page.goto(`/${post.file}`);
       expect(response.status()).toBe(200);
       await expect(page.locator('h1')).toHaveCount(1);
@@ -97,7 +115,7 @@ test.describe('Post pages', () => {
       const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
       await expect(crumbs.getByRole('link', { name: 'Blog' })).toHaveAttribute(
         'href',
-        '/blog.html',
+        pagePath('blog.html'),
       );
       await expect(crumbs).toContainText(post.categoryLabel);
       await expect(page.locator('.entry-meta')).toHaveText(`${post.minutes} min read`);
@@ -108,7 +126,7 @@ test.describe('Post pages', () => {
       await expect(page.locator('.prose figure .media-ph-caption')).toHaveText(/^\[Figure: .+\]$/);
       await expect(page.getByRole('link', { name: 'Back to the blog' })).toHaveAttribute(
         'href',
-        '/blog.html',
+        pagePath('blog.html'),
       );
 
       // FD-114: the sidebar's More posts replaces the previous / next pager.
@@ -139,6 +157,7 @@ test.describe('Post pages', () => {
   }
 
   test('code scrolls inside the measure at 320 px', async ({ page }) => {
+    test.skip(isDjango, 'Django: no post page exists, the posts are drafts (FD-137)');
     await page.setViewportSize({ width: 320, height: 800 });
     await page.goto(`/${posts[0].file}`);
     const { page: pageOverflow, code } = await page.evaluate(() => {

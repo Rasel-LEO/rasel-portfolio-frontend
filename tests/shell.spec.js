@@ -1,8 +1,8 @@
 // Author: Rasel Al Mamun
 // Shared shell: skip link, header, drawer, theme, back-to-top, aria-current.
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
 import { loadContent } from '../tools/content.mjs';
-import { templatePages as pages, widths } from './pages.js';
+import { pagePath, staticBase, templatePages as pages, widths } from './pages.js';
 
 const content = loadContent();
 
@@ -11,15 +11,15 @@ const PHONE = { width: 390, height: 844 };
 
 // Which link each page marks as current (vite.config.js pageNav).
 const current = {
-  'index.html': ['/index.html', 'page'],
-  'portfolio.html': ['/portfolio.html', 'page'],
-  'portfolio-entry.html': ['/portfolio.html', 'true'],
-  'publications.html': ['/portfolio.html', 'true'],
-  'research.html': ['/portfolio.html', 'true'],
-  'blog.html': ['/blog.html', 'page'],
-  'blog-post.html': ['/blog.html', 'true'],
-  'hire.html': ['/hire.html', 'page'],
-  'contact.html': ['/contact.html', 'page'],
+  'index.html': [pagePath('index.html'), 'page'],
+  'portfolio.html': [pagePath('portfolio.html'), 'page'],
+  'portfolio-entry.html': [pagePath('portfolio.html'), 'true'],
+  'publications.html': [pagePath('portfolio.html'), 'true'],
+  'research.html': [pagePath('portfolio.html'), 'true'],
+  'blog.html': [pagePath('blog.html'), 'page'],
+  'blog-post.html': [pagePath('blog.html'), 'true'],
+  'hire.html': [pagePath('hire.html'), 'page'],
+  'contact.html': [pagePath('contact.html'), 'page'],
   '404.html': [null, null],
 };
 
@@ -173,7 +173,7 @@ test('theme-init.js is the first element in <head>', async ({ page }) => {
     const el = document.head.firstElementChild;
     return { tag: el.tagName, src: el.getAttribute('src'), type: el.getAttribute('type') };
   });
-  expect(first).toEqual({ tag: 'SCRIPT', src: '/js/theme-init.js', type: null });
+  expect(first).toEqual({ tag: 'SCRIPT', src: `${staticBase}/js/theme-init.js`, type: null });
 });
 
 test('a stored light theme applies before the bundle runs (no flash)', async ({ page }) => {
@@ -405,7 +405,12 @@ test.describe('footer (FD-94)', () => {
         'Hire me',
         'Contact',
       ]);
-      const hrefs = ['/portfolio.html', '/blog.html', '/hire.html', '/contact.html'];
+      const hrefs = [
+        pagePath('portfolio.html'),
+        pagePath('blog.html'),
+        pagePath('hire.html'),
+        pagePath('contact.html'),
+      ];
       for (const [i, href] of hrefs.entries()) {
         await expect(explore.getByRole('link').nth(i)).toHaveAttribute('href', href);
       }
