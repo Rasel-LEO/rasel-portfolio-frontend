@@ -230,14 +230,46 @@ and when both are set, `localStorage` wins over the cookie.
   (FD-40). The mode depends on the `action` attribute (FD-135):
   - **Static** (no `action`, the static site): a valid submit is stopped and the status shows
     a prefilled `mailto:` link.
-  - **Live** (non-empty `action`): a submit with errors is stopped and shows the inline
-    errors; a valid submit is **not** stopped, the browser posts the form, and the submit
-    button gets `disabled` and `aria-disabled="true"` against a double submit (re-enabled
-    when the page comes back from the back/forward cache). No `mailto:` status.
+  - **Live** (non-empty `action`, FD-135, FD-136): a submit with errors is stopped and shows
+    the inline errors; a valid submit is sent in the background with `fetch` (below) and the
+    JSON answer is shown in place, with no page reload. No `mailto:` status.
 - Django: set `action` to the view URL (`{% url … %}`); live mode then posts. Add
   `{% csrf_token %}`, validate server-side with the same rules and messages, send by email
   (SMTP) and add spam protection without third-party scripts (honeypot field, rate limit).
   Redirect after a successful POST (PRG).
+- **Background send (live mode, FD-136).** The view answers one URL, the form's `action`,
+  in two ways: JSON when the request has `Accept: application/json`, the normal HTML or
+  redirect otherwise (the fallback below).
+  - **Request.** `POST` to `form.action`, `credentials: 'same-origin'`, header
+    `Accept: application/json`, body `new FormData(form)` (`multipart/form-data`). It
+    carries every field of the form: the visible fields, `csrfmiddlewaretoken`, the
+    hidden start-time input and the honeypot. The start-time input is
+    `<input type="hidden" name="started">`; the client writes the `started` value of an
+    answer into the input with that name.
+  - **Response body** (JSON, `Content-Type: application/json`):
+    `{ "ok": bool, "status": string, "errors": { fieldName: message }, "started": string? }`.
+    `errors` keys are the field `name`s (`name`, `email`, `kind` / `subject`,
+    `organisation`, `brief` / `message`); keys that match no field are ignored. `started`
+    is a fresh start-time value, optional.
+
+    | Status                                                                                                                                       | Body                                  | Client behaviour                                                                                                                                                                                                                                                                                                                                        |
+    | -------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+    | `200`                                                                                                                                        | `ok: true`                            | Resets the form (values, errors). Writes `started` into the hidden start-time input when present. Shows `status` in `[data-form-status]` and moves focus there (`tabindex="-1"`). Re-enables the button.                                                                                                                                                |
+    | `422`                                                                                                                                        | `ok: false`, `errors`                 | Renders each `errors` entry into its field's error region exactly like a client-side error (`aria-invalid="true"`, `aria-describedby`, the region without `hidden`); fields not in `errors` are cleared. Shows `status`. Updates `started` when present. Focuses the first invalid field, otherwise the status. Re-enables the button. Values are kept. |
+    | `429`                                                                                                                                        | `ok: false`, `errors` (usually empty) | Same as `422`: shows `status` (for example "Too many messages. Please try again later."), keeps the values, re-enables the button.                                                                                                                                                                                                                      |
+    | `403`                                                                                                                                        | any (not parsed)                      | Shows the fixed client text "The form expired. Please reload the page and send it again." Keeps the values and re-enables the button. Django's CSRF failure answers `403`; the client does not read its body.                                                                                                                                           |
+    | a network error, or any other status or a body that is not this JSON (for example `500` HTML, `200` with `ok: false`, `422` with `ok: true`) | —                                     | The client calls `HTMLFormElement.submit()`: a normal post with `Accept: text/html`, so the server's full-page answer (redirect with `?sent=` or the re-render with errors) is shown and no message is lost.                                                                                                                                            |
+
+  - While the request runs the button has `disabled` and `aria-disabled="true"`, the form
+    has `aria-busy="true"`, and a second submit is ignored. Both are removed when the
+    answer arrives (and when a page returns from the back/forward cache).
+  - The server must therefore validate and answer **both** ways from the same view, with
+    the same rules and messages, and must keep the honeypot and rate limit for both.
+- **After a normal reload** (the fallback, or no JavaScript): the status rendered in
+  `[data-form-status]` is brought into view and receives focus when no field is invalid.
+  The client does it after the page load, the font swap and two frames, through Lenis's
+  `scrollTo` when it runs, without smooth scrolling under `prefers-reduced-motion: reduce`.
+  Nothing is needed from the server beyond the rendered status text.
 - **Server-rendered state** (re-render after an invalid POST, or the page after the
   redirect). On load, `forms.js` changes none of it:
   - Invalid field: `aria-invalid="true"` on the control, `aria-describedby` listing
@@ -249,7 +281,8 @@ and when both are set, `localStorage` wins over the cookie.
     the errors below."); the first invalid field then gets focus. Invalid fields without a
     status keep their messages but take no focus. After the redirect render the success
     message there with no invalid fields.
-  - Tests: `tests/forms-live.spec.js` (live mode on the built pages with an action added)
+  - Tests: `tests/forms-live.spec.js` (live mode on the built pages with an action added: the
+    background send, every response in the table, the fallbacks, the status after reload)
     and `tests/forms.spec.js` (static mode).
 
 ## 9. Drafts and the release build
