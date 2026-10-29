@@ -138,7 +138,7 @@ async function send(form, controls, status, button) {
       return;
     }
     const data = await response.json();
-    const expected = response.status === 200 ? true : [422, 429].includes(response.status);
+    const expected = response.status === 200 ? true : [413, 422, 429].includes(response.status);
     if (!expected || typeof data?.ok !== 'boolean' || data.ok !== (response.status === 200)) {
       throw new Error('Unexpected reply');
     }

@@ -218,6 +218,38 @@ for (const form of forms) {
       expect(navigations).toHaveLength(0);
     });
 
+    test('a 413 shows its status in place and keeps the values', async ({ page }) => {
+      const tooLarge = 'The message is too large. Please shorten it.';
+      const { sends, navigations } = await openLive(
+        page,
+        json(413, { ok: false, status: tooLarge, errors: {} }),
+      );
+      await fillValid(page);
+      await submit(page);
+      await expect(status(page)).toHaveText(tooLarge);
+      await expect(status(page)).toBeFocused();
+      await expect(page.locator('[aria-invalid]')).toHaveCount(0);
+      await expect(page.locator(id('name'))).toHaveValue('Test Person');
+      await expect(page.locator(id('email'))).toHaveValue('name@example.com');
+      await expect(page.locator(id(form.text))).toHaveValue('Hello there');
+      await expect(page.locator('form[data-form]')).not.toHaveAttribute('aria-busy', /.*/);
+      await expect(page.getByRole('button', { name: form.submit })).toBeEnabled();
+      await expect(page).toHaveURL(new RegExp(`/${form.page}$`));
+      expect(sends).toHaveLength(1);
+      expect(navigations).toHaveLength(0);
+    });
+
+    test('a non-JSON 413 falls back to a normal post', async ({ page }) => {
+      const { sends, navigations } = await openLive(page, (route) =>
+        route.fulfill({ status: 413, contentType: 'text/html', body: '<p>Too large</p>' }),
+      );
+      await fillValid(page);
+      await Promise.all([page.waitForURL(`**${form.action}`), submit(page)]);
+      expect(sends).toHaveLength(1);
+      expect(navigations).toHaveLength(1);
+      expect(navigations[0].method()).toBe('POST');
+    });
+
     test('a 403 shows the fixed message and keeps the values', async ({ page }) => {
       const { navigations } = await openLive(page, (route) =>
         route.fulfill({ status: 403, contentType: 'text/html', body: '<p>Forbidden</p>' }),

@@ -5,6 +5,10 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.2.1 — 2026-10-29
+
+- Fixed: a too-large form answer is shown in place.
+
 ## 1.2.0 — 2026-10-29
 
 - Added: live forms send in the background and show the result in place; status visible after
