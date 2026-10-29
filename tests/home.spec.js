@@ -5,9 +5,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
 import { buildSite, loadContent } from '../tools/content.mjs';
-import { phonePortrait, venueLine } from './pages.js';
+import { isDjango, pagePath, phonePortrait, venueLine } from './pages.js';
 
 const content = loadContent();
 const site = buildSite(content, { showDrafts: true });
@@ -52,6 +52,7 @@ test.describe('Home document', () => {
             : Object.keys(el.dataset).find((key) => key.startsWith('stage')),
         ),
       );
+    // Latest posts shows only published posts; Django publishes none (FD-137).
     expect(order).toEqual([
       'stage',
       'stageHero',
@@ -60,7 +61,7 @@ test.describe('Home document', () => {
       'hire',
       'selected',
       'publications',
-      'latest',
+      ...(isDjango ? [] : ['latest']),
       'contact',
     ]);
     await expect(page.locator('[data-stage] [data-stage-figure]')).toHaveCount(1);
@@ -101,9 +102,9 @@ test.describe('Home document', () => {
   test('hero CTAs: Hire me, Portfolio and the shared CV action', async ({ page }) => {
     const ctas = page.locator('.hero-ctas a');
     await expect(ctas).toHaveCount(3);
-    await expect(ctas.nth(0)).toHaveAttribute('href', '/hire.html');
+    await expect(ctas.nth(0)).toHaveAttribute('href', pagePath('hire.html'));
     await expect(ctas.nth(0)).toHaveClass(/btn-primary/);
-    await expect(ctas.nth(1)).toHaveAttribute('href', '/portfolio.html');
+    await expect(ctas.nth(1)).toHaveAttribute('href', pagePath('portfolio.html'));
     await expect(ctas.nth(1)).toHaveClass(/btn-secondary/);
     // FD-34: Request CV by email while profile.cv is null.
     expect(content.profile.cv).toBeNull();
@@ -157,7 +158,7 @@ test.describe('Home document', () => {
     await expect(pillars).toHaveCount(screen2.pillars.length);
     for (const [i, pillar] of screen2.pillars.entries()) {
       const link = pillars.nth(i);
-      await expect(link).toHaveAttribute('href', `/${pillar.href}`);
+      await expect(link).toHaveAttribute('href', pagePath(pillar.href));
       await expect(link.locator('.pillar-label')).toHaveText(pillar.label);
       await expect(link.locator('.pillar-line')).toHaveText(pillar.lines);
       await expect(link.locator('svg')).toHaveAttribute('aria-hidden', 'true');
@@ -176,8 +177,8 @@ test.describe('Home document', () => {
     );
     // FD-87: Research → the publications, Development → the research projects, both with the
     // same → arrow (real section ids on the Portfolio page).
-    await expect(pillars.first()).toHaveAttribute('href', '/portfolio.html#publications');
-    await expect(pillars.nth(1)).toHaveAttribute('href', '/portfolio.html#research');
+    await expect(pillars.first()).toHaveAttribute('href', pagePath('portfolio.html#publications'));
+    await expect(pillars.nth(1)).toHaveAttribute('href', pagePath('portfolio.html#research'));
     const arrows = await pillars
       .locator('svg.pillar-arrow')
       .evaluateAll((els) => els.map((el) => el.innerHTML.replace(/\s+/g, ' ').trim()));
@@ -302,9 +303,9 @@ test.describe('Home document', () => {
       const link = card.getByRole('link');
       await expect(link).toHaveCount(1);
       await expect(link).toHaveAccessibleName(`View project: ${project.short_title}`);
-      await expect(link).toHaveAttribute('href', `/project-${project.id}.html`);
+      await expect(link).toHaveAttribute('href', pagePath(`project-${project.id}.html`));
       // The project page exists.
-      const response = await page.request.get(`/project-${project.id}.html`);
+      const response = await page.request.get(pagePath(`project-${project.id}.html`));
       expect(response.status(), project.id).toBe(200);
     }
     expect(Object.fromEntries([large, ...small].map((p) => [p.id, p.featured_tags]))).toEqual({
@@ -322,7 +323,7 @@ test.describe('Home document', () => {
     const more = section.locator('.home-more a');
     await expect(more).toHaveCount(2);
     for (const href of await more.evaluateAll((els) => els.map((el) => el.getAttribute('href'))))
-      expect(href).toBe('/portfolio.html');
+      expect(href).toBe(pagePath('portfolio.html'));
     await expect(section.getByRole('link', { name: content.home.selected.cta })).toHaveCount(1);
     // No papers here any more (FD-91: their own section).
     await expect(section.locator('.pub, [data-first-author]')).toHaveCount(0);
@@ -331,6 +332,10 @@ test.describe('Home document', () => {
   test('FD-103: Latest posts shows the three seed posts now, with their standfirsts, no Draft chip', async ({
     page,
   }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     expect(content.blog.every((post) => post.status === 'draft')).toBe(true);
     const section = page.locator('[data-home="latest"]');
     await expect(section).toHaveCount(1);
@@ -351,12 +356,14 @@ test.describe('Home document', () => {
       expect(post.standfirst).not.toMatch(/^\[/);
       const link = card.getByRole('link');
       await expect(link).toHaveAccessibleName(`${content.home.latest.item_cta}: ${post.title}`);
-      await expect(link).toHaveAttribute('href', `/post-${post.slug}.html`);
-      expect((await page.request.get(`/post-${post.slug}.html`)).status(), post.slug).toBe(200);
+      await expect(link).toHaveAttribute('href', pagePath(`post-${post.slug}.html`));
+      expect((await page.request.get(pagePath(`post-${post.slug}.html`))).status(), post.slug).toBe(
+        200,
+      );
     }
     await expect(section.locator('.chip-draft, .draft-chip')).toHaveCount(0);
     await expect(section.getByText('Draft', { exact: true })).toHaveCount(0);
-    await expect(section.locator('.home-more a')).toHaveAttribute('href', '/blog.html');
+    await expect(section.locator('.home-more a')).toHaveAttribute('href', pagePath('blog.html'));
   });
 
   test('Contact band: heading, text, email link and the one Contact action (FD-93)', async ({
@@ -376,7 +383,7 @@ test.describe('Home document', () => {
     );
     await expect(
       band.getByRole('link', { name: content.home.contact_band.primary }),
-    ).toHaveAttribute('href', '/contact.html');
+    ).toHaveAttribute('href', pagePath('contact.html'));
     // Only Contact: no Hire me here (the header and the services section have it).
     await expect(band.locator('.band-actions a')).toHaveCount(1);
     await expect(band.getByRole('link', { name: /Hire me/ })).toHaveCount(0);
@@ -796,6 +803,10 @@ test.describe('Home link styles (FD-105)', () => {
   }
 
   test('FD-105: Read article — no underline, accent on hover (1440px)', async ({ page }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/index.html');
     const a = page.locator('[data-home="latest"] .work-link').first();
@@ -854,13 +865,13 @@ test.describe('Selected publications (FD-91)', () => {
       await expect(doi).toHaveAttribute('rel', 'noopener noreferrer');
       await expect(doi).toHaveAccessibleName(`DOI: ${pub.title} (opens in a new tab)`);
       const project = row.getByRole('link', { name: /^Project/ });
-      await expect(project).toHaveAttribute('href', `/project-${pub.project}.html`);
+      await expect(project).toHaveAttribute('href', pagePath(`project-${pub.project}.html`));
     }
     // The full author lists stay on Portfolio, not here.
     await expect(section.getByText(papers[0].authors[1].name)).toHaveCount(0);
     await expect(
       section.getByRole('link', { name: content.home.publications.cta }),
-    ).toHaveAttribute('href', '/portfolio.html');
+    ).toHaveAttribute('href', pagePath('portfolio.html'));
   });
 
   for (const width of [992, 1440, 1920]) {
@@ -952,7 +963,7 @@ test.describe('Services (FD-89)', () => {
         );
         await expect(links).toHaveAttribute(
           'href',
-          external ? service.evidence.href : `/${service.evidence.href}`,
+          external ? service.evidence.href : pagePath(service.evidence.href),
         );
         // → for this site, ↗ for another.
         await expect(links.locator('svg path')).toHaveAttribute(
@@ -1178,6 +1189,10 @@ test.describe('Latest posts layout (FD-103)', () => {
   test.use({ reducedMotion: 'reduce' });
 
   test('FD-103: three equal cards in a row, "All posts" top right (1440px)', async ({ page }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/index.html');
     await page.evaluate(() => document.fonts.ready);
@@ -1204,6 +1219,10 @@ test.describe('Latest posts layout (FD-103)', () => {
   test('FD-103: phones — stacked cards, then a full-width "All posts" (390px)', async ({
     page,
   }) => {
+    test.skip(
+      isDjango,
+      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
+    );
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/index.html');
     const cards = await rects(page, '[data-home="latest"] .latest-card');
@@ -1411,7 +1430,7 @@ test.describe('Home keyboard walk', () => {
         'services',
         'selected',
         'publications',
-        'latest',
+        ...(isDjango ? [] : ['latest']),
         'contact',
         'footer',
         'back-to-top',
@@ -1475,6 +1494,10 @@ test.describe('section spacing (FD-101)', () => {
       test(`FD-101: no gap above ${limit} px between content on ${file} (${width}px)`, async ({
         page,
       }) => {
+        test.skip(
+          isDjango && file === 'blog.html' && width === 390,
+          'Django: the Blog shows its empty state, 160 px above the footer at 390 px (FD-137)',
+        );
         await page.setViewportSize({ width, height: 900 });
         await page.goto(`/${file}`);
         await page.evaluate(() => document.fonts.ready);

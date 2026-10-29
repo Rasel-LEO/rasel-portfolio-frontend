@@ -2,7 +2,8 @@
 // Live form mode (FD-135, FD-136): the built pages with an action added, as the Django templates
 // render them. The variant is made in the browser by request interception, so nothing
 // test-only is built into dist/ or served by the preview server.
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
+import { pageEnd, pagePath } from './pages.js';
 
 const forms = [
   {
@@ -28,7 +29,7 @@ const emailError = 'Enter a valid email address.';
 
 // The page with its form given an action, optionally with server-rendered state.
 async function serveLive(page, form, edit = (html) => html) {
-  await page.route(`**/${form.page}`, async (route) => {
+  await page.route(`**${pagePath(form.page)}`, async (route) => {
     const response = await route.fetch();
     const html = (await response.text()).replace(/<form\b/, `<form action="${form.action}"`);
     await route.fulfill({ response, body: edit(html) });
@@ -73,7 +74,7 @@ for (const form of forms) {
 
       await page.locator(id('email')).fill('name@example');
       await page.getByRole('button', { name: form.submit }).click();
-      await expect(page).toHaveURL(new RegExp(`/${form.page}$`));
+      await expect(page).toHaveURL(pageEnd(form.page));
       await expect(page.locator(id('name'))).toBeFocused();
       for (const name of ['name', 'email', form.text]) {
         await expect(page.locator(id(name))).toHaveAttribute('aria-invalid', 'true');
@@ -131,7 +132,7 @@ for (const form of forms) {
       await expect(status(page)).toHaveText(sentText);
       await expect(status(page)).toBeFocused();
       await expect(status(page)).toHaveAttribute('tabindex', '-1');
-      await expect(page).toHaveURL(new RegExp(`/${form.page}$`));
+      await expect(page).toHaveURL(pageEnd(form.page));
       expect(navigations).toHaveLength(0);
       expect(sends).toHaveLength(1);
       await expect(page.locator(id('name'))).toHaveValue('');
@@ -234,7 +235,7 @@ for (const form of forms) {
       await expect(page.locator(id(form.text))).toHaveValue('Hello there');
       await expect(page.locator('form[data-form]')).not.toHaveAttribute('aria-busy', /.*/);
       await expect(page.getByRole('button', { name: form.submit })).toBeEnabled();
-      await expect(page).toHaveURL(new RegExp(`/${form.page}$`));
+      await expect(page).toHaveURL(pageEnd(form.page));
       expect(sends).toHaveLength(1);
       expect(navigations).toHaveLength(0);
     });

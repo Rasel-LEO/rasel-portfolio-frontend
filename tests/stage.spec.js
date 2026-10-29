@@ -3,8 +3,8 @@
 // stage accessibility (FD-53), the back-to-top hand-off (FD-54), the mobile variant, reduced
 // motion and clean reverts. Production build (npm test builds first).
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
-import { entranceDone, phonePortrait, themes, useTheme } from './pages.js';
+import { expect, test } from './fixtures.js';
+import { entranceDone, pageEnd, phonePortrait, staticBase, themes, useTheme } from './pages.js';
 
 const shots = 'tests/screenshots/stage';
 
@@ -1134,7 +1134,9 @@ test.describe('Home stage, reduced motion', () => {
     const requested = [];
     page.on('request', (request) => {
       const path = new URL(request.url()).pathname;
-      const allowed = /^\/assets\/main-[\w-]+\.js$/.test(path) || path === '/js/theme-init.js';
+      const allowed =
+        /^\/assets\/main-[\w-]+\.js$/.test(path.slice(staticBase.length)) ||
+        path === `${staticBase}/js/theme-init.js`;
       if (path.endsWith('.js') && !allowed) requested.push(path);
     });
     await page.setViewportSize({ width: 1440, height: 900 });
@@ -1439,7 +1441,7 @@ test.describe('Fork clickable when visible (FD-96)', () => {
     // A click navigates, through the seam wipe (FD-81).
     await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
     await expect(page.locator('.page-wipe')).toHaveClass(/is-leaving/);
-    await page.waitForURL(/\/portfolio\.html$/);
+    await page.waitForURL(pageEnd('portfolio.html'));
   });
 });
 

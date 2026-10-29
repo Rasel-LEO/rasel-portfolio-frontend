@@ -1,8 +1,8 @@
 // Author: Rasel Al Mamun
-import { readdirSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 
 // The ten template pages of docs/architecture.md (src/pages/), as served from dist/.
-export const templatePages = [
+const allTemplatePages = [
   'index.html',
   'portfolio.html',
   'publications.html',
@@ -15,12 +15,67 @@ export const templatePages = [
   '404.html',
 ];
 
-// Every page in dist/: the templates plus the generated project-<id>.html and
-// post-<slug>.html pages.
-// `npm test` builds first; `npm run test:widths` expects a build too.
-export const pages = readdirSync('dist')
-  .filter((file) => file.endsWith('.html'))
-  .sort();
+// The test target (FD-137): the static build served by `vite preview` (default), or a running
+// Django site (TEST_TARGET=django with DJANGO_BASE_URL; playwright.config.js starts no server then).
+export const isDjango = process.env.TEST_TARGET === 'django';
+
+// Where the built assets are served: the site root, or Django's static URL (FD-133).
+export const staticBase = isDjango ? '/static/frontend' : '';
+
+// The build whose files the tests read from disk (sizes, hashes): the one the target serves.
+export const buildDir = isDjango ? 'dist-django' : 'dist';
+
+// Django URL of each page type (FD-137); the same table as the Django parity test.
+const djangoPaths = {
+  'index.html': '/',
+  'portfolio.html': '/portfolio/',
+  'publications.html': '/portfolio/publications/',
+  'research.html': '/portfolio/research/',
+  'blog.html': '/blog/',
+  'hire.html': '/hire/',
+  'contact.html': '/contact/',
+  // Any unknown path answers with the 404 page.
+  '404.html': '/no-such-page/',
+};
+
+// The template pages the target serves: all ten, or the eight that have a Django URL.
+export const templatePages = isDjango
+  ? allTemplatePages.filter((file) => file in djangoPaths)
+  : allTemplatePages;
+
+// The path of a page file on the current target: `/<file>` for the static build, its Django URL
+// otherwise. A query or hash after the file name is kept. The two template pages have no Django
+// URL (Django renders the project and post pages from its own data).
+export function pagePath(file) {
+  if (!isDjango) return `/${file}`;
+  const [, name, rest = ''] = /^([^?#]+)([?#].*)?$/.exec(file);
+  let path = djangoPaths[name];
+  if (name.startsWith('project-')) path = `/portfolio/${name.slice(8, -5)}/`;
+  if (name.startsWith('post-')) path = `/blog/${name.slice(5, -5)}/`;
+  if (!path) throw new Error(`${name} has no Django URL (FD-137)`);
+  return path + rest;
+}
+
+// The same for a relative URL given to page.goto(): `/<file>` becomes the target's path; the
+// site root and anything already a Django path stay as they are.
+export const pageUrl = (url) =>
+  isDjango && /^\/[^/?#]+\.html(?:[?#]|$)/.test(url) ? pagePath(url.slice(1)) : url;
+
+// Every page of the site. Static: the files in dist/ (the templates plus the generated
+// project-<id>.html and post-<slug>.html pages; `npm test` builds first, `npm run test:widths`
+// expects a build too). Django: a fixed list, not dist/ — the templates with a Django URL,
+// one page per project in src/content/projects.json, and no post page: the posts are drafts and
+// Django does not publish drafts (FD-137).
+export const pages = isDjango
+  ? [
+      ...templatePages,
+      ...JSON.parse(readFileSync('src/content/projects.json', 'utf8')).map(
+        (project) => `project-${project.id}.html`,
+      ),
+    ].sort()
+  : readdirSync('dist')
+      .filter((file) => file.endsWith('.html'))
+      .sort();
 
 export const projectPages = pages.filter((file) => file.startsWith('project-'));
 
@@ -110,3 +165,7 @@ export async function revealAll(page) {
   // Back at the top, the Home stage's scrub smoothing (0.8 s, FD-69) catches up.
   if (await page.locator('[data-stage].is-staged').count()) await page.waitForTimeout(1000);
 }
+
+// A pattern for a URL that ends with the page's path on the current target.
+export const pageEnd = (file) =>
+  new RegExp(`${[...pagePath(file)].map((c) => (/\w/.test(c) ? c : `\\${c}`)).join('')}$`);

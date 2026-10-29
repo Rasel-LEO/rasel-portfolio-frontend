@@ -1,10 +1,10 @@
 // Author: Rasel Al Mamun
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
-import { revealAll, templatePages, themes, useTheme } from './pages.js';
+import { expect, test } from './fixtures.js';
+import { isDjango, revealAll, templatePages, themes, useTheme } from './pages.js';
 
 // The template pages plus two generated project pages (one with a publication, one without)
-// and one generated post page.
+// and one generated post page (none on Django, which publishes no post).
 const scanned = [
   ...templatePages,
   'project-biofloc-iot.html',
@@ -12,7 +12,8 @@ const scanned = [
   // The other full detail page and a reduced one.
   'project-solar-irrigation.html',
   'project-egg-incubator.html',
-  'post-edge-ai-poultry-farm.html',
+  // Django publishes no post (FD-137).
+  ...(isDjango ? [] : ['post-edge-ai-poultry-farm.html']),
 ];
 
 // Scanned with every reveal run: axe skips the contrast of hidden elements and

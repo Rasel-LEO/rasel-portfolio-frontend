@@ -1,9 +1,9 @@
 // Author: Rasel Al Mamun
 // Portfolio (FD-107 … FD-111): the six profile sections, content from src/content/
 // (portfolio.json and the shared records), layouts per the design specification; project pages.
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures.js';
 import { buildSite } from '../tools/content.mjs';
-import { revealAll, useTheme, venueLine } from './pages.js';
+import { isDjango, pagePath, revealAll, useTheme, venueLine } from './pages.js';
 
 const site = buildSite();
 const pf = site.portfolio;
@@ -67,7 +67,7 @@ test.describe('item 2: Profile', () => {
     const hire = page.locator('.pf-actions a').nth(1);
     await expect(hire).toHaveText('Hire me');
     await expect(hire).toHaveClass(/btn-secondary/);
-    await expect(hire).toHaveAttribute('href', '/hire.html');
+    await expect(hire).toHaveAttribute('href', pagePath('hire.html'));
     await expect(hire.locator('.icon-arrow')).toHaveCount(1);
   });
 
@@ -169,12 +169,12 @@ test.describe('item 3: Selected publications', () => {
       await expect(doi).toHaveAccessibleName(`DOI: ${pub.title} (opens in a new tab)`);
       await expect(doi).toHaveClass(/btn-secondary/);
       const project = row.getByRole('link', { name: /^Project/ });
-      await expect(project).toHaveAttribute('href', `/project-${pub.project}.html`);
+      await expect(project).toHaveAttribute('href', pagePath(`project-${pub.project}.html`));
       await expect(project).toHaveAccessibleName(`Project: ${site.projectById[pub.project].title}`);
       await expect(project).toHaveClass(/btn-accent-outline/);
     }
     const more = section.getByRole('link', { name: 'View all 8 publications' });
-    await expect(more).toHaveAttribute('href', '/publications.html');
+    await expect(more).toHaveAttribute('href', pagePath('publications.html'));
     await expect(more).toHaveClass(/btn-accent-outline/);
   });
 
@@ -285,13 +285,13 @@ test.describe('item 4: Selected research projects', () => {
       await expect(card.locator('.pf-card-status')).toHaveCount(project.status ? 1 : 0);
       const link = card.getByRole('link');
       await expect(link).toHaveAccessibleName(`View project: ${project.short_title}`);
-      await expect(link).toHaveAttribute('href', `/${project.file}`);
-      expect((await request.get(`/${project.file}`)).status()).toBe(200);
+      await expect(link).toHaveAttribute('href', pagePath(project.file));
+      expect((await request.get(pagePath(project.file))).status()).toBe(200);
     }
     // The poultry project is in progress (FD-110: shown with the --info dot).
     await expect(cards.first().locator('.pf-card-status')).toContainText('In progress');
     const more = section.getByRole('link', { name: 'View all 15 research projects' });
-    await expect(more).toHaveAttribute('href', '/research.html');
+    await expect(more).toHaveAttribute('href', pagePath('research.html'));
     await expect(more).toHaveClass(/btn-accent-outline/);
   });
 
@@ -582,13 +582,12 @@ test.describe('item 8: View-all pages', () => {
     const crumb = page.getByRole('navigation', { name: 'Breadcrumb' });
     await expect(crumb.getByRole('link', { name: 'Portfolio' })).toHaveAttribute(
       'href',
-      '/portfolio.html',
+      pagePath('portfolio.html'),
     );
     await expect(crumb).toContainText(/Portfolio\s*\/?\s*Publications/);
-    await expect(page.locator('.site-header nav a[href="/portfolio.html"]')).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    await expect(
+      page.locator(`.site-header nav a[href="${pagePath('portfolio.html')}"]`),
+    ).toHaveAttribute('aria-current', 'true');
     // Year groups newest first; every publication once, in the data's order within a year.
     const years = (await page.locator('.pf-year-title').allTextContents()).map(Number);
     expect(years).toEqual(site.publicationYears.map((g) => g.year));
@@ -636,12 +635,11 @@ test.describe('item 8: View-all pages', () => {
     // FD-115: a back link instead of the breadcrumb.
     await expect(page.getByRole('link', { name: 'Back to Portfolio' })).toHaveAttribute(
       'href',
-      '/portfolio.html',
+      pagePath('portfolio.html'),
     );
-    await expect(page.locator('.site-header nav a[href="/portfolio.html"]')).toHaveAttribute(
-      'aria-current',
-      'true',
-    );
+    await expect(
+      page.locator(`.site-header nav a[href="${pagePath('portfolio.html')}"]`),
+    ).toHaveAttribute('aria-current', 'true');
     const cards = page.locator('[data-project-card]');
     await expect(cards).toHaveCount(15);
     for (const [i, project] of site.projectList.entries()) {
@@ -652,7 +650,7 @@ test.describe('item 8: View-all pages', () => {
         (project.featured_tags ?? project.tags).slice(0, 2),
       );
       await expect(card.locator('.archive-status')).toHaveCount(project.status ? 1 : 0);
-      await expect(card.getByRole('link')).toHaveAttribute('href', `/${project.file}`);
+      await expect(card.getByRole('link')).toHaveAttribute('href', pagePath(project.file));
     }
     for (const [width, columns] of [
       [1440, 3],
@@ -667,14 +665,14 @@ test.describe('item 8: View-all pages', () => {
 
   test('flat dist output and links from Portfolio', async ({ page, request }) => {
     for (const file of ['publications.html', 'research.html']) {
-      expect((await request.get(`/${file}`)).status()).toBe(200);
+      expect((await request.get(pagePath(file))).status()).toBe(200);
     }
     await page.goto('/portfolio.html');
     await page.getByRole('link', { name: 'View all 8 publications' }).click();
-    await page.waitForURL('**/publications.html');
+    await page.waitForURL(`**${pagePath('publications.html')}`);
     await page.goto('/portfolio.html');
     await page.getByRole('link', { name: 'View all 15 research projects' }).click();
-    await page.waitForURL('**/research.html');
+    await page.waitForURL(`**${pagePath('research.html')}`);
   });
 });
 
@@ -994,6 +992,7 @@ test.describe('Portfolio screenshots', () => {
 
 test.describe('project pages', () => {
   test('the template shows the featured poultry project', async ({ page }) => {
+    test.skip(isDjango, 'Django: there is no portfolio-entry.html template page (FD-137)');
     await page.goto('/portfolio-entry.html');
     await expect(page.locator('h1')).toHaveText(site.projectById['poultry-aiot-edge'].title);
   });
@@ -1032,12 +1031,12 @@ test.describe('project pages', () => {
       const prev = page.locator('a[rel="prev"]');
       const next = page.locator('a[rel="next"]');
       if (i === 0) await expect(prev).toHaveCount(0);
-      else await expect(prev).toHaveAttribute('href', `/${site.projectList[i - 1].file}`);
+      else await expect(prev).toHaveAttribute('href', pagePath(site.projectList[i - 1].file));
       if (i === site.projectList.length - 1) await expect(next).toHaveCount(0);
-      else await expect(next).toHaveAttribute('href', `/${site.projectList[i + 1].file}`);
+      else await expect(next).toHaveAttribute('href', pagePath(site.projectList[i + 1].file));
       await expect(page.getByRole('link', { name: 'Hire me' }).last()).toHaveAttribute(
         'href',
-        '/hire.html',
+        pagePath('hire.html'),
       );
     }
     expect(titles.size).toBe(site.projectList.length);
