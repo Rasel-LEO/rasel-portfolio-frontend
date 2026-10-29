@@ -33,6 +33,14 @@ const djangoLinks = (html) =>
       return link;
     }
   });
+// The Django form templates render the hidden `started` field the server later checks; the
+// build has none, so the stand-in adds one to the Hire and Contact forms. Tests that set it must
+// handle a page that already has one.
+const withStarted = (html) =>
+  html.replace(
+    /(<form\b[^>]*\bdata-form\b[^>]*>)/,
+    '$1<input type="hidden" name="started" value="">',
+  );
 const types = {
   '.html': 'text/html; charset=utf-8',
   '.js': 'text/javascript',
@@ -47,13 +55,21 @@ const types = {
   '.txt': 'text/plain',
 };
 
+// The public Content-Security-Policy of the Django site (docs/handover-django.md, section 6), sent
+// on every response so a test that needs an inline style or script fails here as it would there.
+const csp =
+  "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; " +
+  "font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'self'; " +
+  "form-action 'self'; frame-ancestors 'none'";
+
 function send(response, status, file, headers = {}) {
   response.writeHead(status, {
     'Content-Type': types[extname(file)] ?? 'application/octet-stream',
+    'Content-Security-Policy': csp,
     ...headers,
   });
   const body = readFileSync(file);
-  response.end(extname(file) === '.html' ? djangoLinks(body.toString('utf8')) : body);
+  response.end(extname(file) === '.html' ? withStarted(djangoLinks(body.toString('utf8'))) : body);
 }
 
 createServer((request, response) => {

@@ -955,7 +955,10 @@ test.describe('Portfolio screenshots', () => {
   const ready = async (page) => {
     await page.evaluate(() => document.fonts.ready);
     await revealAll(page);
-    await page.addStyleTag({ content: '.site-header { position: static; }' });
+    // Through the CSSOM: an injected <style> element is blocked by `style-src 'self'`.
+    await page.evaluate(() => {
+      document.querySelector('.site-header').style.position = 'static';
+    });
   };
   const sections = ['profile', 'publications', 'research', 'awards', 'experience', 'expertise'];
 
