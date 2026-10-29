@@ -53,6 +53,23 @@ need no server) and `forms` (the static-mode `mailto:` behaviour; the Django for
 `forms-live` keeps its request interception. It fulfils the page document with an action added and
 answers the form's POST itself, so no real POST reaches Django.
 
+## Harness fixes found on the real site (release 1.3.1)
+
+The first run against the real Django site found three faults in the suite itself (test-only; no
+shipped file changed):
+
+- `forms-live` made its own hidden `started` field, and the Django form already has one. The
+  test now sets the value of the existing field and adds one only when the page has none.
+- The `portfolio` screenshot tests injected a `<style>` element, which the site's
+  `style-src 'self'` blocks. They now set the header position through the CSSOM, which the
+  policy allows.
+- A click before the form script had initialised the form, under load, was a plain submit. Every
+  live-form test now waits for the form's `noValidate` flag before it acts.
+
+The stand-in server now also sends the public Content-Security-Policy of the Django site on every
+page and asset, and writes the hidden `started` field into the Hire and Contact forms, so these
+faults show up here too.
+
 ## Skipped on Django, with the reason
 
 Draft posts are not public in Django: the Blog shows its empty state, Latest posts on Home is

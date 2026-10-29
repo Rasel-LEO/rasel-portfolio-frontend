@@ -5,6 +5,10 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.3.1 — 2026-10-29
+
+- Fixed: browser-suite harness on the Django target (test-only).
+
 ## 1.3.0 — 2026-10-29
 
 - Added: Django test target for the browser suite (test-only).

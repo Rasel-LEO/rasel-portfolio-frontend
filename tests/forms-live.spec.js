@@ -36,6 +36,20 @@ async function serveLive(page, form, edit = (html) => html) {
   });
 }
 
+// The form's `started` field with a known value: the one the page already renders (the Django
+// template has it) is set, otherwise one is added, so the form never has two.
+function withStarted(html, value) {
+  const existing = /<input\b[^>]*\bname="started"[^>]*>/;
+  if (existing.test(html)) {
+    return html.replace(existing, (tag) =>
+      /\bvalue="[^"]*"/.test(tag)
+        ? tag.replace(/\bvalue="[^"]*"/, `value="${value}"`)
+        : tag.replace(/\s*\/?>$/, ` value="${value}">`),
+    );
+  }
+  return html.replace(/(<form\b[^>]*>)/, `$1<input type="hidden" name="started" value="${value}">`);
+}
+
 // The server's re-render after an invalid post: email marked invalid, error status.
 function serverErrors(form, status = errorStatus) {
   const email = `${form.prefix}-email`;
@@ -55,6 +69,11 @@ function serverErrors(form, status = errorStatus) {
 for (const form of forms) {
   const id = (name) => `#${form.prefix}-${name}`;
 
+  // The form script has initialised the form (it turns off the browser's own checks): a click
+  // before that, under load, would be a plain submit.
+  const formReady = (page) =>
+    expect.poll(() => page.locator('form[data-form]').evaluate((f) => f.noValidate)).toBe(true);
+
   async function fillValid(page) {
     await page.locator(id('name')).fill('Test Person');
     await page.locator(id('email')).fill('name@example.com');
@@ -70,6 +89,7 @@ for (const form of forms) {
         if (request.method() === 'POST') posted = true;
       });
       await page.goto(`/${form.page}`);
+      await formReady(page);
       await expect(page.locator('form[data-form]')).toHaveAttribute('action', form.action);
 
       await page.locator(id('email')).fill('name@example');
@@ -105,11 +125,10 @@ for (const form of forms) {
       route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
 
     async function openLive(page, answer) {
-      await serveLive(page, form, (html) =>
-        html.replace(/(<form\b[^>]*>)/, '$1<input type="hidden" name="started" value="old-start">'),
-      );
+      await serveLive(page, form, (html) => withStarted(html, 'old-start'));
       const seen = await serveSend(page, answer);
       await page.goto(`/${form.page}`);
+      await formReady(page);
       return seen;
     }
     const submit = (page) => page.getByRole('button', { name: form.submit }).click();
@@ -315,6 +334,7 @@ for (const form of forms) {
     }) => {
       await serveLive(page, form, serverErrors(form));
       await page.goto(`/${form.page}`);
+      await formReady(page);
       const email = page.locator(id('email'));
       await expect(email).toBeFocused();
       await expect(email).toHaveAttribute('aria-invalid', 'true');
@@ -336,6 +356,7 @@ for (const form of forms) {
     }) => {
       await serveLive(page, form, serverErrors(form, ''));
       await page.goto(`/${form.page}`);
+      await formReady(page);
       await expect(page.locator(`${id('email')}-error`)).toHaveText(emailError);
       await page.waitForLoadState('networkidle');
       await expect(page.locator(id('email'))).not.toBeFocused();
@@ -347,6 +368,7 @@ for (const form of forms) {
         html.replace('data-form-status></p>', `data-form-status>${sent}</p>`),
       );
       await page.goto(`/${form.page}`);
+      await formReady(page);
       await page.waitForLoadState('networkidle');
       await expect(page.locator('[data-form-status]')).toHaveText(sent);
       await expect(page.locator('[aria-invalid]')).toHaveCount(0);
@@ -365,6 +387,7 @@ for (const form of forms) {
             html.replace('data-form-status></p>', `data-form-status>${sent}</p>`),
           );
           await page.goto(`/${form.page}`);
+          await formReady(page);
           const status = page.locator('[data-form-status]');
           await expect(status).toBeFocused();
           // Smooth scrolling and Lenis take a moment; the status ends inside the viewport.
