@@ -1,5 +1,5 @@
 // Author: Rasel Al Mamun
-// Live form mode (FD-135): the built pages with an action added, as the Django templates
+// Live form mode (FD-135, FD-136): the built pages with an action added, as the Django templates
 // render them. The variant is made in the browser by request interception, so nothing
 // test-only is built into dist/ or served by the preview server.
 import { expect, test } from '@playwright/test';
@@ -84,60 +84,197 @@ for (const form of forms) {
       expect(posted).toBe(false);
     });
 
-    test('a valid submit posts the form once and disables the button', async ({ page }) => {
-      await serveLive(page, form);
-      const posts = [];
-      // 204 No Content: the browser stays on the page, as it was when the post left.
+    // The background send: a fetch with the JSON header. Anything else is a real navigation.
+    async function serveSend(page, answer) {
+      const sends = [];
+      const navigations = [];
       await page.route(`**${form.action}`, async (route) => {
-        posts.push(route.request());
-        await route.fulfill({ status: 204 });
+        const request = route.request();
+        if (!(request.headers().accept ?? '').includes('application/json')) {
+          navigations.push(request);
+          await route.fulfill({ status: 200, contentType: 'text/html', body: '<p>Posted</p>' });
+          return;
+        }
+        sends.push(request);
+        await answer(route, sends.length);
       });
+      return { sends, navigations };
+    }
+    const json = (status, body) => (route) =>
+      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
+
+    async function openLive(page, answer) {
+      await serveLive(page, form, (html) =>
+        html.replace(/(<form\b[^>]*>)/, '$1<input type="hidden" name="started" value="old-start">'),
+      );
+      const seen = await serveSend(page, answer);
       await page.goto(`/${form.page}`);
+      return seen;
+    }
+    const submit = (page) => page.getByRole('button', { name: form.submit }).click();
+    const status = (page) => page.locator('[data-form-status]');
+    const sentText = 'Thank you — your message has been sent.';
+
+    test('a valid submit is sent in the background and reset with the status shown', async ({
+      page,
+    }) => {
+      const { sends, navigations } = await openLive(
+        page,
+        json(200, { ok: true, status: sentText, errors: {}, started: 'new-start' }),
+      );
       const options = await page.locator(`${id(form.select)} option`).allTextContents();
       const choice = options.at(-1);
       await fillValid(page);
       await page.locator(id(form.select)).selectOption(choice);
+      await submit(page);
 
-      // Clicked in the page: after a 204 the cancelled navigation keeps Playwright's
-      // locators waiting, so the state after the post is read with page.evaluate.
-      await page.getByRole('button', { name: form.submit }).evaluate((button) => button.click());
-      await expect.poll(() => posts.length).toBe(1);
-      const state = () =>
-        page.evaluate(() => {
-          const button = document.querySelector('form[data-form] [type="submit"]');
-          return {
-            url: location.pathname,
-            disabled: button.disabled,
-            ariaDisabled: button.getAttribute('aria-disabled'),
-            status: document.querySelector('[data-form-status]').textContent,
-            mailto: document.querySelectorAll('a[href^="mailto:"][href*="body="]').length,
-          };
-        });
-      expect(await state()).toEqual({
-        url: `/${form.page}`,
-        disabled: true,
-        ariaDisabled: 'true',
-        status: '',
-        mailto: 0,
-      });
-      // A second activation (Enter in a field) sends nothing more.
-      await page.evaluate((selector) => document.querySelector(selector).focus(), id('name'));
-      await page.keyboard.press('Enter');
-      await page.waitForTimeout(300);
-      expect(posts).toHaveLength(1);
+      await expect(status(page)).toHaveText(sentText);
+      await expect(status(page)).toBeFocused();
+      await expect(status(page)).toHaveAttribute('tabindex', '-1');
+      await expect(page).toHaveURL(new RegExp(`/${form.page}$`));
+      expect(navigations).toHaveLength(0);
+      expect(sends).toHaveLength(1);
+      await expect(page.locator(id('name'))).toHaveValue('');
+      await expect(page.locator(id('email'))).toHaveValue('');
+      await expect(page.locator(id(form.text))).toHaveValue('');
+      await expect(page.locator(id(form.select))).toHaveValue(options[0] ?? '');
+      await expect(page.locator('input[name="started"]')).toHaveValue('new-start');
+      await expect(page.locator('form[data-form]')).not.toHaveAttribute('aria-busy', /.*/);
+      const button = page.getByRole('button', { name: form.submit });
+      await expect(button).toBeEnabled();
+      await expect(button).not.toHaveAttribute('aria-disabled', /.*/);
+      await expect(page.locator('a[href^="mailto:"][href*="body="]')).toHaveCount(0);
 
-      const request = posts[0];
+      const request = sends[0];
       expect(request.method()).toBe('POST');
       expect(new URL(request.url()).pathname).toBe(form.action);
-      expect(request.headers()['content-type']).toBe('application/x-www-form-urlencoded');
-      const fields = Object.fromEntries(new URLSearchParams(request.postData()));
-      expect(fields).toEqual({
-        name: 'Test Person',
-        email: 'name@example.com',
-        [form.select]: choice,
-        organisation: 'Example Lab',
-        [form.text]: 'Hello there',
+      expect(request.headers().accept).toBe('application/json');
+      expect(request.headers()['content-type']).toMatch(/^multipart\/form-data; boundary=/);
+      const body = request.postData();
+      for (const [name, value] of [
+        ['name', 'Test Person'],
+        ['email', 'name@example.com'],
+        [form.select, choice],
+        ['organisation', 'Example Lab'],
+        [form.text, 'Hello there'],
+        ['started', 'old-start'],
+      ]) {
+        expect(body).toContain(`name="${name}"\r\n\r\n${value}\r\n`);
+      }
+    });
+
+    test('field errors from the server use the client-side markup and take focus', async ({
+      page,
+    }) => {
+      const { navigations } = await openLive(
+        page,
+        json(422, {
+          ok: false,
+          status: errorStatus,
+          errors: { email: emailError, [form.text]: 'Too short.' },
+          started: 'again',
+        }),
+      );
+      await fillValid(page);
+      await submit(page);
+
+      await expect(status(page)).toHaveText(errorStatus);
+      await expect(page.locator(id('email'))).toBeFocused();
+      for (const [name, message] of [
+        ['email', emailError],
+        [form.text, 'Too short.'],
+      ]) {
+        await expect(page.locator(id(name))).toHaveAttribute('aria-invalid', 'true');
+        await expect(page.locator(`${id(name)}-error`)).toBeVisible();
+        await expect(page.locator(`${id(name)}-error`)).toHaveText(message);
+        await expect(page.locator(id(name))).toHaveAccessibleDescription(
+          new RegExp(message.replace('.', '\\.')),
+        );
+      }
+      await expect(page.locator(id('name'))).not.toHaveAttribute('aria-invalid', /.*/);
+      await expect(page.locator(id('email'))).toHaveValue('name@example.com');
+      await expect(page.locator('input[name="started"]')).toHaveValue('again');
+      await expect(page.getByRole('button', { name: form.submit })).toBeEnabled();
+      expect(navigations).toHaveLength(0);
+      // Fixing a field clears its server error as usual.
+      await page.locator(id(form.text)).fill('A longer message');
+      await expect(page.locator(`${id(form.text)}-error`)).toBeHidden();
+    });
+
+    test('a 429 shows its status and keeps the values', async ({ page }) => {
+      const wait = 'Too many messages. Please try again later.';
+      const { navigations } = await openLive(
+        page,
+        json(429, { ok: false, status: wait, errors: {} }),
+      );
+      await fillValid(page);
+      await submit(page);
+      await expect(status(page)).toHaveText(wait);
+      await expect(status(page)).toBeFocused();
+      await expect(page.locator('[aria-invalid]')).toHaveCount(0);
+      await expect(page.locator(id('name'))).toHaveValue('Test Person');
+      await expect(page.locator('input[name="started"]')).toHaveValue('old-start');
+      await expect(page.getByRole('button', { name: form.submit })).toBeEnabled();
+      expect(navigations).toHaveLength(0);
+    });
+
+    test('a 403 shows the fixed message and keeps the values', async ({ page }) => {
+      const { navigations } = await openLive(page, (route) =>
+        route.fulfill({ status: 403, contentType: 'text/html', body: '<p>Forbidden</p>' }),
+      );
+      await fillValid(page);
+      await submit(page);
+      await expect(status(page)).toHaveText(
+        'The form expired. Please reload the page and send it again.',
+      );
+      await expect(page.locator(id('name'))).toHaveValue('Test Person');
+      await expect(page.locator(id(form.text))).toHaveValue('Hello there');
+      await expect(page.getByRole('button', { name: form.submit })).toBeEnabled();
+      await expect(page.locator('form[data-form]')).not.toHaveAttribute('aria-busy', /.*/);
+      expect(navigations).toHaveLength(0);
+    });
+
+    test('a network failure falls back to a normal post', async ({ page }) => {
+      const { sends, navigations } = await openLive(page, (route) => route.abort('failed'));
+      await fillValid(page);
+      await Promise.all([page.waitForURL(`**${form.action}`), submit(page)]);
+      expect(sends).toHaveLength(1);
+      expect(navigations).toHaveLength(1);
+      expect(navigations[0].method()).toBe('POST');
+      expect(navigations[0].headers()['content-type']).toBe('application/x-www-form-urlencoded');
+      const fields = Object.fromEntries(new URLSearchParams(navigations[0].postData()));
+      expect(fields).toMatchObject({ name: 'Test Person', started: 'old-start' });
+    });
+
+    test('a non-JSON 500 falls back to a normal post', async ({ page }) => {
+      const { sends, navigations } = await openLive(page, (route) =>
+        route.fulfill({ status: 500, contentType: 'text/html', body: '<p>Server error</p>' }),
+      );
+      await fillValid(page);
+      await Promise.all([page.waitForURL(`**${form.action}`), submit(page)]);
+      expect(sends).toHaveLength(1);
+      expect(navigations).toHaveLength(1);
+      expect(navigations[0].method()).toBe('POST');
+    });
+
+    test('a double submit sends one request', async ({ page }) => {
+      const { sends } = await openLive(page, async (route) => {
+        await new Promise((resolve) => setTimeout(resolve, 600));
+        await json(200, { ok: true, status: sentText, errors: {} })(route);
       });
+      await fillValid(page);
+      const button = page.getByRole('button', { name: form.submit });
+      await button.evaluate((element) => {
+        element.click();
+        element.form.requestSubmit();
+      });
+      await expect(button).toBeDisabled();
+      await expect(button).toHaveAttribute('aria-disabled', 'true');
+      await expect(page.locator('form[data-form]')).toHaveAttribute('aria-busy', 'true');
+      await page.locator(id('name')).focus();
+      await page.keyboard.press('Enter');
+      await expect(status(page)).toHaveText(sentText);
+      expect(sends).toHaveLength(1);
     });
 
     test('server-rendered errors and status survive load; focus on the first invalid field', async ({
@@ -182,5 +319,35 @@ for (const form of forms) {
       await expect(page.locator('[aria-invalid]')).toHaveCount(0);
       await expect(page.locator('.field-control:focus')).toHaveCount(0);
     });
+
+    for (const motion of ['no-preference', 'reduce']) {
+      for (const width of [390, 1440]) {
+        test(`a server-rendered status is in view and focused (${motion}, ${width} px)`, async ({
+          page,
+        }) => {
+          const sent = 'Thank you — your message has been sent.';
+          await page.emulateMedia({ reducedMotion: motion });
+          await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
+          await serveLive(page, form, (html) =>
+            html.replace('data-form-status></p>', `data-form-status>${sent}</p>`),
+          );
+          await page.goto(`/${form.page}`);
+          const status = page.locator('[data-form-status]');
+          await expect(status).toBeFocused();
+          // Smooth scrolling and Lenis take a moment; the status ends inside the viewport.
+          await expect
+            .poll(() =>
+              status.evaluate((element) => {
+                const box = element.getBoundingClientRect();
+                const header =
+                  document.querySelector('header')?.getBoundingClientRect().bottom ?? 0;
+                return box.top >= header && box.bottom <= window.innerHeight;
+              }),
+            )
+            .toBe(true);
+          await expect(page.locator('[aria-invalid]')).toHaveCount(0);
+        });
+      }
+    }
   });
 }

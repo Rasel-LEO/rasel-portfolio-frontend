@@ -5,6 +5,11 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.2.0 — 2026-10-29
+
+- Added: live forms send in the background and show the result in place; status visible after
+  reload. Static site unchanged.
+
 ## 1.1.0 — 2026-10-28
 
 - Added: live form mode (forms with an action submit to the server). Static site unchanged.
