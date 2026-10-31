@@ -112,10 +112,63 @@ test.describe('header at 320px', () => {
     expect(box.height).toBeLessThanOrEqual(44);
     const right = await hire.evaluate((el) => el.getBoundingClientRect().right);
     expect(right).toBeLessThanOrEqual(320);
-    // Brand text and theme button live in the drawer below 380 px; the link keeps its name.
+    // Below 380 px the mark replaces the full logo (FD-139) and the theme button lives in the
+    // drawer; the link keeps its name.
     await expect(page.locator('.site-header [data-theme-toggle]')).toBeHidden();
-    await expect(page.getByRole('link', { name: 'Rasel Al Mamun' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Ideatrium, home' })).toBeVisible();
+    await expect(page.locator('.site-header .brand-logo-mark')).toBeVisible();
+    await expect(page.locator('.site-header .brand-logo')).toBeHidden();
   });
+});
+
+// FD-139: the header shows the Ideatrium logo, never the personal name; the link is named
+// "Ideatrium, home" and the logo inside it is hidden from assistive technology.
+for (const size of [PHONE, DESKTOP]) {
+  test(`header logo has an accessible name and no personal name (${size.width}px)`, async ({
+    page,
+  }) => {
+    await page.setViewportSize(size);
+    await page.goto('/blog.html');
+    const brand = page.locator('.site-header [data-brand]');
+    await expect(brand).toHaveAccessibleName('Ideatrium, home');
+    await expect(brand).toHaveAttribute('href', pagePath('index.html'));
+    for (const svg of await brand.locator('svg').all()) {
+      await expect(svg).toHaveAttribute('aria-hidden', 'true');
+      await expect(svg).toHaveAttribute('focusable', 'false');
+    }
+    await expect(page.locator('.site-header')).not.toContainText(content.profile.name);
+    // 24 px tall, the brackets in the ink, the idea squares in the logo amber.
+    const logo = brand.locator('.brand-logo');
+    expect((await logo.boundingBox()).height).toBe(24);
+    const box = await brand.boundingBox();
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    // Drawn from the page's one symbol sheet: four ink shapes, two idea squares.
+    await expect(logo.locator('use')).toHaveAttribute('href', '#ideatrium-logo');
+    await expect(brand.locator('.brand-logo-mark use')).toHaveAttribute('href', '#ideatrium-mark');
+    await expect(page.locator('symbol#ideatrium-logo')).toHaveCount(1);
+    const colours = await logo.evaluate((svg) => {
+      const symbol = document.getElementById('ideatrium-logo');
+      return {
+        ink: getComputedStyle(svg).color,
+        accent: [...symbol.querySelectorAll('.logo-accent')].map((el) => getComputedStyle(el).fill),
+        inkFills: symbol.querySelectorAll('[fill="currentColor"]').length,
+      };
+    });
+    expect(colours.ink).toBe('rgb(236, 234, 228)');
+    expect(colours.accent).toEqual(['rgb(240, 178, 62)', 'rgb(240, 178, 62)']);
+    expect(colours.inkFills).toBe(4);
+  });
+}
+
+test('light theme: the logo in ink and the logo amber', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('theme', 'light'));
+  await page.goto('/blog.html');
+  const logo = page.locator('.site-header .brand-logo');
+  await expect(logo).toHaveCSS('color', 'rgb(21, 23, 27)');
+  await expect(page.locator('#ideatrium-logo .logo-accent').first()).toHaveCSS(
+    'fill',
+    'rgb(154, 97, 0)',
+  );
 });
 
 test.describe('drawer at 390px', () => {
@@ -359,12 +412,16 @@ test.describe('focus is never dropped to <body>', () => {
     await expect(page).toHaveURL(/#research$/);
   });
 
-  test('the drawer shows the wordmark and the CV action', async ({ page }) => {
+  test('the drawer shows the logo and the CV action', async ({ page }) => {
     await page.setViewportSize(PHONE);
     await page.goto('/blog.html');
     await page.locator('[data-menu-button]').click();
     const drawer = page.getByRole('dialog', { name: 'Menu' });
-    await expect(drawer.locator('.drawer-title')).toContainText('Rasel Al Mamun');
+    // FD-139: the logo, decorative; the dialog keeps its name "Menu".
+    const logo = drawer.locator('.drawer-title svg.logo');
+    await expect(logo).toBeVisible();
+    await expect(logo).toHaveAttribute('aria-hidden', 'true');
+    await expect(drawer.locator('.drawer-title')).not.toContainText(content.profile.name);
     await expect(drawer.getByRole('link', { name: 'Request CV' })).toHaveAttribute(
       'href',
       'mailto:mr.raselalmamun@gmail.com?subject=CV%20request',
@@ -387,7 +444,12 @@ test.describe('footer (FD-94)', () => {
     test(`${name}: brand, three groups, external links, copyright and Theme`, async ({ page }) => {
       await page.goto(`/${name}`);
       const footer = page.getByRole('contentinfo');
-      await expect(footer.locator('.footer-name')).toHaveText(content.profile.name);
+      // FD-139: the signature form — the logo, then "by Rasel Al Mamun" as real text, one link Home.
+      const signature = footer.locator('.footer-signature');
+      await expect(signature).toHaveAccessibleName(`Ideatrium ${content.footer.signature_by}`);
+      await expect(signature).toHaveAttribute('href', pagePath('index.html'));
+      await expect(signature.locator('.footer-by')).toHaveText(content.footer.signature_by);
+      await expect(signature.locator('svg.logo')).toHaveAttribute('aria-hidden', 'true');
       await expect(footer.locator('.footer-role')).toHaveText(content.footer.role_line);
       await expect(footer.locator('.footer-affiliation span')).toHaveText([
         'Farm Power and Machinery',
@@ -443,6 +505,13 @@ test.describe('footer (FD-94)', () => {
       await expect(footer.locator('.footer-copyright')).toHaveText(
         `© ${new Date().getFullYear()} ${content.footer.copyright_name}`,
       );
+      // FD-141: the AI-portrait disclosure, small text, visible on every page.
+      const note = footer.locator('.footer-ai-note');
+      await expect(note).toHaveText(content.footer.ai_portrait_note);
+      await expect(note).toBeVisible();
+      expect(parseFloat(await note.evaluate((el) => getComputedStyle(el).fontSize))).toBeLessThan(
+        16,
+      );
       // The Theme button works.
       const before = await page.evaluate(() => document.documentElement.dataset.theme ?? 'dark');
       await footer.getByRole('button', { name: /^Theme/ }).click();
@@ -457,7 +526,7 @@ test.describe('footer (FD-94)', () => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/blog.html');
     const tops = await page
-      .locator('.footer-name, #footer-explore, #footer-research, #footer-connect')
+      .locator('.footer-signature, #footer-explore, #footer-research, #footer-connect')
       .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().toJSON()));
     for (let i = 1; i < tops.length; i += 1) {
       expect(tops[i].left).toBeGreaterThan(tops[i - 1].left);
@@ -569,7 +638,7 @@ test.describe('back-to-top portrait (FD-104)', () => {
         await page.evaluate(() =>
           window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }),
         );
-        // "After the first screen" (DD-17): a page that scrolls less than one screen never
+        // "After the first screen" (FD-05): a page that scrolls less than one screen never
         // shows it.
         const short = await page.evaluate(
           () => document.documentElement.scrollHeight - window.innerHeight < window.innerHeight,

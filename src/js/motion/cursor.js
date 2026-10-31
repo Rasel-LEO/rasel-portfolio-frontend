@@ -1,5 +1,5 @@
 // Author: Rasel Al Mamun
-// Cursor follower (design specification §4, FD-82): a companion to the system cursor, which
+// Cursor follower (FD-82): a companion to the system cursor, which
 // always stays visible. One fixed, aria-hidden element; created only on fine pointers with
 // motion allowed (motion.js). States: idle (a 10 px ring) everywhere by default; stage (a
 // 56 px soft filled circle) over the staged Home stage at 992 px and up; link (a 28 px ring);

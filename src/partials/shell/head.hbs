@@ -2,9 +2,10 @@
 <script src="/js/theme-init.js"></script>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-{{!-- FD-128: the tab title is the short title (at most 60 characters with the name); the formal
-title stays in the h1 and the social cards. --}}
-<title>{{#if shortTitle}}{{shortTitle}}{{else}}{{title}}{{/if}} — {{profile.name}}</title>
+{{!-- FD-128, FD-139: the tab title is the short title and the site name, Ideatrium (at most 60
+characters); Home is "Rasel Al Mamun — Ideatrium". The formal title stays in the h1 and the
+social cards. --}}
+<title>{{#if isHome}}{{profile.name}}{{else if shortTitle}}{{shortTitle}}{{else}}{{title}}{{/if}} — Ideatrium</title>
 <meta name="description" content="{{description}}" />
 <meta name="author" content="Rasel Al Mamun" />
 {{#if @root.noindex}}
@@ -15,21 +16,33 @@ title stays in the h1 and the social cards. --}}
 <link rel="canonical" href="{{siteUrl}}/{{pageFile}}" />
 <meta property="og:url" content="{{siteUrl}}/{{pageFile}}" />
 {{/if}}
-<meta property="og:site_name" content="{{profile.name}}" />
-<meta property="og:title" content="{{title}} — {{profile.name}}" />
+{{!-- FD-139: the site is Ideatrium; the author stays Rasel Al Mamun (meta author, Person). --}}
+<meta property="og:site_name" content="Ideatrium" />
+<meta property="og:title" content="{{#if isHome}}{{profile.name}}{{else}}{{title}}{{/if}} — Ideatrium" />
 <meta property="og:description" content="{{description}}" />
 <meta property="og:type" content="{{#if ogType}}{{ogType}}{{else}}website{{/if}}" />
-<meta property="og:image" content="/images/avatar/avatar-512.webp" />
-<meta property="og:image:alt" content="Portrait of {{profile.name}}" />
-<meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="{{title}} — {{profile.name}}" />
+{{!-- FD-139: the share image (public/, unhashed); absolute once SITE_URL is set (flat-pages). --}}
+<meta property="og:image" content="/images/brand/share-image-1200x630.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:type" content="image/png" />
+<meta property="og:image:alt" content="Ideatrium — by Rasel Al Mamun" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="{{#if isHome}}{{profile.name}}{{else}}{{title}}{{/if}} — Ideatrium" />
 <meta name="twitter:description" content="{{description}}" />
-<meta name="twitter:image" content="/images/avatar/avatar-512.webp" />
-<link rel="icon" href="data:," />
+<meta name="twitter:image" content="/images/brand/share-image-1200x630.png" />
+<meta name="twitter:image:alt" content="Ideatrium — by Rasel Al Mamun" />
+{{!-- FD-139: the icons and the manifest are root files (public/), served at the site root. --}}
+<link rel="icon" href="/favicon.ico" sizes="32x32" />
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+<link rel="manifest" href="/site.webmanifest" />
+{{!-- FD-139: the browser UI colour, the page background (bg-0) of each theme. --}}
+<meta name="theme-color" content="{{@root.pageBackground.light}}" media="(prefers-color-scheme: light)" />
+<meta name="theme-color" content="{{@root.pageBackground.dark}}" media="(prefers-color-scheme: dark)" />
 {{!-- FD-65: the display and text font first, before the stylesheet asks for it (the hashed
-URL is written by the build); the header avatar (E3) too. --}}
+URL is written by the build). The header logo is inline SVG and needs no preload (FD-139). --}}
 <link rel="preload" as="font" type="font/woff2" href="/fonts/bricolage-grotesque-latin-standard-normal.woff2" crossorigin />
-<link rel="preload" as="image" type="image/avif" href="/images/avatar/avatar-96.avif" />
 {{#if isHome}}
 {{!-- Home only, from 768 px: the hero figure (LCP). Phones preload no image: the name comes
 first and is the LCP there (FD-73). --}}

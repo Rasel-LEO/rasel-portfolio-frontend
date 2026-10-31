@@ -18,7 +18,7 @@ async function motionReady(page) {
   await page.waitForTimeout(150);
 }
 
-test.describe('reveals (B1, B9)', () => {
+test.describe('reveals (FD-63)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(desktop);
   });
@@ -160,7 +160,7 @@ test.describe('reveals (B1, B9)', () => {
   });
 });
 
-test.describe('fine pointer (B2–B5)', () => {
+test.describe('fine pointer (FD-62, FD-63)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(desktop);
   });
@@ -211,7 +211,7 @@ test.describe('fine pointer (B2–B5)', () => {
     await expect(icon).not.toHaveClass(/is-magnetic/);
   });
 
-  test('Home hero tilts with the pointer at the stage start only (B4)', async ({ page }) => {
+  test('Home hero tilts with the pointer at the stage start only (FD-69)', async ({ page }) => {
     await page.goto('/index.html');
     await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'desktop');
     // The pointer moves the name only once the entrance is over (FD-67).
@@ -548,7 +548,7 @@ test.describe('entrance (FD-67)', () => {
   }
 });
 
-test.describe('smooth scrolling (B7)', () => {
+test.describe('smooth scrolling (FD-64)', () => {
   test('Lenis runs on a fine-pointer desktop and pauses while the drawer is open', async ({
     page,
   }) => {
@@ -580,7 +580,7 @@ test.describe('smooth scrolling (B7)', () => {
   });
 });
 
-test.describe('same-page links with Lenis (B7)', () => {
+test.describe('same-page links with Lenis (FD-64)', () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize(desktop);
   });
@@ -1056,7 +1056,7 @@ test('JS budget: Home at 390 px loads at most 70 KB of compressed JS (FD-73)', a
   await context.close();
 });
 
-test('JS budget: Home at 1440 px loads at most 120 KB of compressed JS (handoff §5)', async ({
+test('JS budget: Home at 1440 px loads at most 120 KB of compressed JS (FD-52)', async ({
   page,
 }) => {
   const scripts = new Set();

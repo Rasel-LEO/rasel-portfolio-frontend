@@ -267,7 +267,13 @@ export function buildSite(
       profile.institution,
     ],
     person,
-    website: { '@context': 'https://schema.org', '@type': 'WebSite', name: profile.name },
+    // FD-139: the site is Ideatrium, by the Person; vite.config.js adds its url once SITE_URL is set.
+    website: {
+      '@context': 'https://schema.org',
+      '@type': 'WebSite',
+      name: 'Ideatrium',
+      author: { '@type': 'Person', name: person.name, sameAs: person.sameAs },
+    },
     articles: pubs.map(articleLd),
   };
 }

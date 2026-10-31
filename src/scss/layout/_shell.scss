@@ -1,18 +1,5 @@
 // Author: Rasel Al Mamun
-// Shared shell: skip link, header, drawer, footer, back-to-top (DD-08, DD-17, FD-11, FD-13).
-// Visual reference: design prototype, revision 12.
-
-@mixin sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
-}
+// Shared shell: skip link, header, drawer, footer, back-to-top (FD-05, FD-11, FD-13).
 
 :root {
   // Back-to-top box (FD-13): 76 × 96 px below md, 110 × 140 px from md.
@@ -71,46 +58,40 @@
   min-height: var(--header-h);
 }
 
+// FD-139: the Ideatrium logo, 24 px tall (brand rule: 22–28 px), with a fixed width and height
+// from its viewBox, so it never moves when the fonts swap (FD-65). Clear space: the bar's gap
+// (at least 8 px) and the bar's height keep one bracket arm (8 px at 24 px) free around it. The
+// link keeps the 44 px tap target.
 .brand {
   display: inline-flex;
-  gap: 10px;
+  flex: none;
   align-items: center;
-  min-width: 0;
+  min-width: 44px;
   min-height: 44px;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  color: var(--fg-0);
-  letter-spacing: -0.01em;
-  white-space: nowrap;
+  color: var(--logo-ink);
   text-decoration: none;
 }
 
-// The name shortens before it can touch "Hire me" on narrow phones.
-// The header's text boxes have a fixed width in em (FD-65): font-size does not change when the
-// web fonts swap in, so the nav and the tools never move, whatever the fallback's widths. Each is
-// the text's width in the web fonts (measured in Chromium), rounded up to 0.01em.
-.brand-name {
-  width: 7.55em;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
+// Brackets and lettering in currentColor; the two idea squares in the logo amber.
+.logo {
+  display: block;
+  flex: none;
 }
 
-.brand-mark {
-  flex: none;
-  width: 28px;
-  height: 28px;
-  overflow: hidden;
-  background: var(--bg-2);
-  border: 1px solid var(--line);
-  border-radius: var(--r-full);
+.logo-accent {
+  fill: var(--logo-accent);
+}
 
-  img {
-    display: block;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
+.brand-logo-mark {
+  display: none;
+}
+
+// The symbol sheet takes no space (not display: none, so <use> always renders).
+.logo-symbols {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
 }
 
 .site-nav {
@@ -141,7 +122,7 @@
   }
 }
 
-// The nav labels have fixed widths in em, like the brand name (FD-65, FD-121): the web-font
+// The nav labels have fixed widths in em (FD-65, FD-121): the web-font
 // widths measured in Chromium at 17 px, rounded up to 0.01em, centred in their links.
 .site-nav li {
   --nav-text: 4.08em; // Portfolio
@@ -167,7 +148,7 @@
   margin-left: auto;
 }
 
-// Prototype rev 12: Hire me stands a little apart from the nav at lg and up.
+// Hire me stands a little apart from the nav at lg and up.
 .hire-cta {
   @include media-breakpoint-up(lg) {
     margin-left: var(--s-3);
@@ -190,16 +171,11 @@
   width: 3.21em;
 }
 
-// Narrow phones (380–429 px): the full wordmark (FD-24) fits beside the tools when the
+// Narrow phones (380–429 px): the full logo (FD-139) fits beside the tools when the
 // "Hire me" arrow is dropped and the bar is a little tighter.
 @media (width < 430px) {
   .site-header-bar {
     gap: var(--s-2);
-  }
-
-  .brand {
-    gap: var(--s-2);
-    font-size: 1rem;
   }
 
   .hire-cta {
@@ -211,10 +187,15 @@
   }
 }
 
-// Very narrow phones: the brand text and the theme button move to the drawer only.
+// Very narrow phones: the mark replaces the full logo (FD-139), and the theme button moves to
+// the drawer only.
 @media (width < 380px) {
-  .brand-name {
-    @include sr-only;
+  .brand-logo {
+    display: none;
+  }
+
+  .brand-logo-mark {
+    display: block;
   }
 
   .site-header .theme-toggle {
@@ -249,15 +230,12 @@
   min-height: calc(var(--header-h) - var(--s-3));
 }
 
-// FD-24: the wordmark beside the avatar mark; "Menu" stays the dialog's name.
+// FD-139: the logo, as in the header; "Menu" stays the dialog's name.
 .drawer-title {
   display: inline-flex;
-  gap: 10px;
   align-items: center;
   margin: 0;
-  font-size: 1.0625rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
+  color: var(--logo-ink);
 }
 
 .drawer-links a {
@@ -319,10 +297,25 @@
   align-content: start;
 }
 
-.footer-name {
-  @include t-h2;
+// FD-139: the signature form — the logo (32 px), and under it "by Rasel Al Mamun" in the
+// signature's small capitals, indented to the lettering (105.67 of the logo's 495 units).
+.footer-signature {
+  display: inline-grid;
+  gap: var(--s-2);
+  justify-self: start;
+  color: var(--logo-ink);
+  text-decoration: none;
+}
 
-  color: var(--fg-0);
+.footer-by {
+  @include t-label;
+
+  padding-left: calc(220px * 105.67 / 495);
+  color: var(--fg-1);
+}
+
+.footer-signature:hover .footer-by {
+  color: var(--accent);
 }
 
 .footer-role {
@@ -422,13 +415,25 @@
   }
 }
 
+// FD-141: the AI-portrait disclosure under the copyright, small text.
+.footer-legal {
+  display: grid;
+  gap: var(--s-1);
+}
+
+.footer-ai-note {
+  @include t-small;
+
+  color: var(--fg-2);
+}
+
 .footer-theme {
   display: inline-flex;
   gap: var(--s-2);
   align-items: center;
 }
 
-// Back to top (DD-17): the seated P5 photograph, shown after the first screen. The sentinel
+// Back to top (FD-05): the seated P5 photograph, shown after the first screen. The sentinel
 // runs from the top of the page to the threshold, so even a jump across it changes its
 // intersection; the Home stage sets its height to the hand-off point (FD-54).
 .back-to-top-sentinel {
@@ -448,7 +453,7 @@
   display: grid;
 
   // One track the size of the box, so the photo's 100 % height is the box's height (an auto
-  // track grew to the image's natural 1300 px; prototype .mini-figure).
+  // track grew to the image's natural 1300 px).
   grid-template: minmax(0, 1fr) / minmax(0, 1fr);
   place-items: end end;
   width: var(--btt-w);
@@ -461,7 +466,7 @@
   opacity: 0;
   transition: opacity var(--d-slow) var(--e-out);
 
-  // FD-18: 0.7 at rest (DD-17 had 40 %) so the control stays legible; 1 on hover/focus.
+  // FD-18: 0.7 at rest (was 40 %) so the control stays legible; 1 on hover/focus.
   &.is-on {
     opacity: var(--btt-rest);
   }

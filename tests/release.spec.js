@@ -1,7 +1,7 @@
 // Author: Rasel Al Mamun
 // Search and the release build (FD-131): noindex on the template pages, the SITE_URL-gated
 // sitemap and robots line, the RELEASE=true build with the current (all-draft) content, and
-// the reveal elements at 400 % zoom.
+// the reveal elements at 400 % zoom; no shipped image carries provenance metadata (FD-139).
 import { spawnSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -26,6 +26,93 @@ function buildInto(env) {
   expect(result.status, result.stderr).toBe(0);
   return outDir;
 }
+
+// FD-139: every shipped image (public/, src/images/ and both builds) is free of metadata that
+// names the generating tool or its vendor: neither name appears in plain text, and there is no
+// C2PA / JUMBF block, XMP packet or EXIF block. PNGs keep only the chunks that draw the image,
+// WebPs only their image chunks, AVIFs no uuid box; SVGs have no <metadata>. The names are
+// stored base64-encoded so this file does not itself contain them.
+const toolNames = ['Y2xhdWRl', 'YW50aHJvcGlj'].map((name) =>
+  Buffer.from(name, 'base64').toString(),
+);
+const metadataMarker = new RegExp(
+  [
+    ...toolNames,
+    'c2pa',
+    'caBX',
+    'jumb',
+    'jumd',
+    'xmpmeta',
+    'ns\\.adobe\\.com/xap',
+    'Exif\\0\\0',
+  ].join('|'),
+  'i',
+);
+const imageFile = /\.(png|ico|svg|webp|avif|jpe?g|gif)$/i;
+const shippedImages = () =>
+  ['public', 'src/images', 'dist', 'dist-django']
+    .filter((dir) => existsSync(dir))
+    .flatMap((dir) =>
+      readdirSync(dir, { recursive: true })
+        .filter((file) => imageFile.test(file))
+        .map((file) => join(dir, file)),
+    );
+const pngChunks = (buffer) => {
+  const types = [];
+  for (let p = 8; p < buffer.length;) {
+    const length = buffer.readUInt32BE(p);
+    types.push(buffer.toString('latin1', p + 4, p + 8));
+    p += 12 + length;
+  }
+  return types;
+};
+const webpChunks = (buffer) => {
+  const types = [];
+  for (let p = 12; p < buffer.length;) {
+    const length = buffer.readUInt32LE(p + 4);
+    types.push(buffer.toString('latin1', p, p + 4));
+    p += 8 + length + (length & 1);
+  }
+  return types;
+};
+const avifBoxes = (buffer) => {
+  const types = [];
+  for (let p = 0; p < buffer.length;) {
+    const size = buffer.readUInt32BE(p);
+    types.push(buffer.toString('latin1', p + 4, p + 8));
+    if (size < 8) break;
+    p += size;
+  }
+  return types;
+};
+
+test('FD-139: no shipped image carries tool names or provenance metadata', () => {
+  const files = shippedImages();
+  expect(files.length).toBeGreaterThan(20);
+  const problems = [];
+  for (const file of files) {
+    const buffer = readFileSync(file);
+    const match = buffer.toString('latin1').match(metadataMarker);
+    if (match) problems.push(`${file}: "${match[0]}"`);
+    if (/\.png$/i.test(file)) {
+      const extra = pngChunks(buffer).filter(
+        (type) => !['IHDR', 'PLTE', 'tRNS', 'IDAT', 'IEND'].includes(type),
+      );
+      if (extra.length) problems.push(`${file}: PNG chunks ${extra.join(', ')}`);
+    }
+    if (/\.webp$/i.test(file)) {
+      const extra = webpChunks(buffer).filter(
+        (type) => !['VP8X', 'VP8 ', 'VP8L', 'ALPH', 'ICCP', 'ANIM', 'ANMF'].includes(type),
+      );
+      if (extra.length) problems.push(`${file}: WebP chunks ${extra.join(', ')}`);
+    }
+    if (/\.avif$/i.test(file) && avifBoxes(buffer).includes('uuid'))
+      problems.push(`${file}: uuid box`);
+    if (/\.svg$/i.test(file) && /<metadata|xmlns:(?!svg\b)\w+=/.test(buffer.toString('utf8')))
+      problems.push(`${file}: SVG metadata or a foreign namespace`);
+  }
+  expect(problems).toEqual([]);
+});
 
 test('noindex on the two template pages only', () => {
   for (const file of pages) {
@@ -68,6 +155,22 @@ test.describe('release build', () => {
     const template = html('blog-post.html');
     for (const post of blog) expect(template).not.toContain(post.title);
     expect(template).toContain('<meta name="robots" content="noindex" />');
+  });
+
+  test('SITE_URL: absolute share image and the WebSite url (FD-139)', () => {
+    const home = html('index.html');
+    for (const key of ['property="og:image"', 'name="twitter:image"']) {
+      expect(home).toContain(
+        `<meta ${key} content="${siteUrl}/images/brand/share-image-1200x630.png" />`,
+      );
+    }
+    const website = [...home.matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/g)]
+      .map(([, json]) => JSON.parse(json))
+      .find((item) => item['@type'] === 'WebSite');
+    expect(website).toMatchObject({ name: 'Ideatrium', url: `${siteUrl}/` });
+    expect(website.author).toMatchObject({ '@type': 'Person', name: 'Rasel Al Mamun' });
+    // The icons stay root paths.
+    expect(home).toContain('<link rel="icon" href="/favicon.ico" sizes="32x32" />');
   });
 
   test('SITE_URL: sitemap of the indexable pages, robots Sitemap line, canonical links', () => {

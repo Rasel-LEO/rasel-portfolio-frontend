@@ -252,13 +252,14 @@ const shapes = {
     ),
     process: isListOf((v) => isStep(v) && isText(v.text)),
     form_kinds: isTextList,
+    privacy_notice: isText,
   },
   contact: {
     heading: isText,
     intro: isText,
     audiences: isTextList,
     subjects: isTextList,
-    privacy_note: isText,
+    privacy_notice: isText,
   },
   meta: { 404: isText, blog: isText, hire: isText, contact: isText, home: isText },
   home: {
@@ -300,11 +301,13 @@ const shapes = {
   },
   // Footer (FD-94): the brand line, three group names, which profile links each group shows.
   footer: {
+    signature_by: isText,
     role_line: isText,
     groups: (v) => isText(v?.explore) && isText(v.research) && isText(v.connect),
     research_profiles: isTextList,
     connect_profiles: isTextList,
     copyright_name: isText,
+    ai_portrait_note: isText,
   },
   portfolio: {
     profile: (v) =>

@@ -1,5 +1,5 @@
 // Author: Rasel Al Mamun
-// Back to top (DD-17, FD-13): the button appears once a sentinel reaching from the top of the
+// Back to top (FD-05, FD-13): the button appears once a sentinel reaching from the top of the
 // page to 100svh has scrolled above the viewport (on Home with the desktop stage: to the
 // stage's start, and the stage's timeline swaps the figure for it, FD-97). No scroll handler; an
 // IntersectionObserver does the work.

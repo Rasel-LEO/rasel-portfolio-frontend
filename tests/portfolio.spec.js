@@ -573,7 +573,7 @@ test.describe('item 8: View-all pages', () => {
     page,
   }) => {
     await page.goto('/publications.html');
-    await expect(page).toHaveTitle('Publications — Rasel Al Mamun');
+    await expect(page).toHaveTitle('Publications — Ideatrium');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       site.portfolioView.publicationsDescription,
@@ -626,7 +626,7 @@ test.describe('item 8: View-all pages', () => {
   }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/research.html');
-    await expect(page).toHaveTitle('Research projects — Rasel Al Mamun');
+    await expect(page).toHaveTitle('Research projects — Ideatrium');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       site.portfolioView.researchDescription,
@@ -1005,7 +1005,7 @@ test.describe('project pages', () => {
     for (const [i, project] of site.projectList.entries()) {
       await page.goto(`/${project.file}`);
       await expect(page.locator('h1')).toHaveText(project.title);
-      await expect(page).toHaveTitle(`${project.short_title} — Rasel Al Mamun`);
+      await expect(page).toHaveTitle(`${project.short_title} — Ideatrium`);
       titles.add(await page.title());
       await expect(page.locator('meta[name="description"]')).toHaveAttribute(
         'content',

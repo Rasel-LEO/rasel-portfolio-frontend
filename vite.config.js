@@ -26,6 +26,14 @@ const buildYear = new Date().getFullYear();
 // FD-22: no domain yet. With SITE_URL empty, no canonical and no absolute OG URLs.
 const siteUrl = (process.env.SITE_URL ?? '').trim().replace(/\/+$/, '');
 
+// FD-139: the WebSite JSON-LD gets its url once a domain exists.
+if (siteUrl) site.website = { ...site.website, url: `${siteUrl}/` };
+
+// FD-139: <meta name="theme-color"> per colour scheme, the page background (bg-0) of each theme
+// from the design tokens.
+const tokens = JSON.parse(readFileSync(resolve(root, 'src/design/tokens.json'), 'utf8'));
+const pageBackground = tokens.color.tokens.find((token) => token.name === 'bg-0').value;
+
 // One page per research project, rendered from the portfolio-entry.html template and
 // emitted at the dist/ root as project-<id>.html (Django: /portfolio/<slug>/).
 const entryTemplate = resolve(pagesDir, 'portfolio-entry.html');
@@ -68,7 +76,7 @@ function pageContext(pagePath) {
   const project = projectPages.get(file);
   const post = postPages.get(file);
   const noindex = templateOnly.has(file);
-  const context = { ...site, siteUrl, buildYear, pageFile: file, noindex };
+  const context = { ...site, siteUrl, buildYear, pageFile: file, noindex, pageBackground };
   if (project) return { ...context, ...pageNav['portfolio-entry.html'], project };
   if (file === 'portfolio-entry.html')
     return { ...context, ...pageNav[file], project: templateProject };
@@ -236,6 +244,20 @@ function sitemap() {
 // page loads is a shared chunk under a hashed key, and public/ files are not in it. The asset
 // map .vite/asset-map.json (source path → built path) adds those: js/main.js, its stylesheet
 // scss/main.scss, and js/theme-init.js (public/).
+// FD-139: the brand files in public/ are in the asset map too (the pages link them under the
+// static URL), and .vite/root-files.json lists the files Django must also serve at the site root:
+// browsers ask for /favicon.ico and /apple-touch-icon.png there, and the manifest names its icons
+// by root path.
+const rootFiles = [
+  'favicon.ico',
+  'favicon.svg',
+  'apple-touch-icon.png',
+  'icon-192.png',
+  'icon-512.png',
+  'site.webmanifest',
+];
+const brandFiles = [...rootFiles, 'images/brand/share-image-1200x630.png'];
+
 function djangoTarget() {
   const entry = normalizePath(resolve(root, 'src/js/main.js'));
   let active = false;
@@ -264,11 +286,17 @@ function djangoTarget() {
         'js/main.js': main.fileName,
         'scss/main.scss': css[0],
         'js/theme-init.js': 'js/theme-init.js',
+        ...Object.fromEntries(brandFiles.map((file) => [file, file])),
       };
       this.emitFile({
         type: 'asset',
         fileName: '.vite/asset-map.json',
         source: `${JSON.stringify(map, null, 2)}\n`,
+      });
+      this.emitFile({
+        type: 'asset',
+        fileName: '.vite/root-files.json',
+        source: `${JSON.stringify(rootFiles, null, 2)}\n`,
       });
     },
   };

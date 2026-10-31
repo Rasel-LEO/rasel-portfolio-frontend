@@ -8,7 +8,7 @@ Author: Rasel Al Mamun
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | Build    | `vite` 8.3.5 (Rolldown)                                                                                                                              | multi-page dev server and build, hashing, Sass                                                                  | MIT                                   |
 | Includes | `vite-plugin-handlebars` 2.0.3 (FD-03)                                                                                                               | partials and data at build time; no runtime templating                                                          | MIT                                   |
-| Markdown | `marked` 18.1.1 (FD-37)                                                                                                                              | post bodies rendered at build time; raw HTML escaped; dev only                                                  | MIT                                   |
+| Markdown | `marked` 18.1.2 (FD-37)                                                                                                                              | post bodies rendered at build time; raw HTML escaped; dev only                                                  | MIT                                   |
 | Styles   | `sass` 1.106.1 (dart-sass), `bootstrap` 5.3.8 (Sass source)                                                                                          | grid, utilities, offcanvas; overridden by the design tokens (form fields use their own `.field-control` styles) | MIT                                   |
 | Motion   | `gsap` 3.15.0 incl. ScrollTrigger                                                                                                                    | Home stage timeline, Home motion, `matchMedia` for reduced motion                                               | GSAP standard licence (free, not OSI) |
 | Scroll   | `lenis` 1.3.27                                                                                                                                       | smooth scrolling on fine-pointer desktops only                                                                  | MIT                                   |
@@ -21,6 +21,9 @@ No React, Vue or Next: the site is content pages plus one animated stage, and th
 destination is Django templates. No jQuery. No icon font: icons are inline SVG partials.
 
 ## Folder layout (FD-125)
+
+The complete tree, with the purpose of every folder and file, is in `docs/structure.md`. The
+module layout:
 
 ```
 src/
@@ -38,7 +41,8 @@ src/
                   tag-pills
     sections/     archive-card articles-ld blog-card blog-empty home-pub latest-card pf-card
                   pf-pub profile-links related-pub service work-card
-    icons/        area-icon footer-icon illustration line-icon pf-icon
+    icons/        area-icon footer-icon illustration line-icon pf-icon; logo, logo-mark
+                  and logo-symbols (the Ideatrium logo, FD-139)
   scss/
     base/         _tokens (generated from src/design/tokens.json by tools/tokens.mjs),
                   _bootstrap (variable overrides + selective imports), _base (theme-aware
@@ -64,12 +68,42 @@ src/
   design/       tokens.json (colour, type, spacing, radius, motion; read by tools/tokens.mjs)
   images/       avatar/ figure/ arrow.svg placeholder.svg
   fonts/
-public/         robots.txt, js/theme-init.js (classic script, first in <head>, FD-12)
-tools/          tokens.mjs, content.mjs (loads src/content, derives counts, order, pages),
-                markdown.mjs (post bodies, FD-37), validate-content.mjs (prebuild),
-                check-csp.mjs, check-privacy.mjs (FD-23), test-linux.mjs
-tests/          Playwright specs; pages.js holds the shared page list and helpers
+public/         robots.txt, js/theme-init.js (classic script, first in <head>, FD-12);
+                the brand root files favicon.ico, favicon.svg, apple-touch-icon.png,
+                icon-192.png, icon-512.png, site.webmanifest and the share image
+                images/brand/share-image-1200x630.png (FD-139), copied as supplied
+tools/          build: tokens.mjs, content.mjs (loads src/content, derives counts, order,
+                pages), markdown.mjs (post bodies, FD-37), validate-content.mjs (prebuild),
+                subset-fonts.mjs (one-time, FD-130)
+                checks: check-csp.mjs, check-privacy.mjs (FD-23), check-django-build.mjs
+                (FD-133), check-audit.mjs + audit-allowlist.json (FD-134), check-links.mjs
+                (FD-131)
+                runners: test-linux.mjs, test-django.mjs and serve-django-paths.mjs
+                (FD-137), lhci.mjs (FD-129); the public export (FD-132, FD-138)
+tests/          Playwright specs; pages.js holds the page list, the Django URL table and
+                helpers; fixtures.js maps page URLs on the Django target (FD-137)
 ```
+
+## Build targets (FD-133)
+
+| Command                | Output         | Base                | Manifest | Use                     |
+| ---------------------- | -------------- | ------------------- | -------- | ----------------------- |
+| `npm run build`        | `dist/`        | `/`                 | no       | the static site         |
+| `npm run build:django` | `dist-django/` | `/static/frontend/` | yes      | the files Django serves |
+
+Both run `npm run tokens` and `npm run content:check` first and share the pages, content
+mode, chunking and CSP rules. The `django-target` plugin in `vite.config.js` adds
+`.vite/asset-map.json` for the files the manifest does not key by source path.
+`tools/check-django-build.mjs` compares the two outputs and resolves every asset URL.
+
+## Test targets (FD-137)
+
+| Target           | Started by                                | Server                                        |
+| ---------------- | ----------------------------------------- | --------------------------------------------- |
+| static (default) | `npm test`, `npm run test:widths`         | `vite preview` on port 4173 (Playwright)      |
+| Django           | `npm run test:django` + `DJANGO_BASE_URL` | a running Django site, or the stand-in server |
+
+`playwright.config.js` switches on `TEST_TARGET=django`; details in `docs/testing-django.md`.
 
 Partials are called with their group: `{{> shell/header}}`, `{{> icons/pf-icon name="pin"}}`.
 
@@ -95,8 +129,8 @@ header applies unchanged.
 ## Breakpoints (Bootstrap)
 
 xs < 576 · sm ≥ 576 · md ≥ 768 · lg ≥ 992 · xl ≥ 1200 · xxl ≥ 1400.
-Header nav, Hire me and theme label from `lg` (FD-11), drawer below; brand text and header
-theme button hidden below 380 px. Pinned stage layout from `lg`; screen 2's Areas grid has
+Header nav, Hire me and theme label from `lg` (FD-11), drawer below; below 380 px the
+Ideatrium mark replaces the full logo and the header theme button is hidden (FD-139). Pinned stage layout from `lg`; screen 2's Areas grid has
 3 columns from `lg`, 2 below, 1 under 360 px; back-to-top at all sizes (76 × 96 px below `md`,
 110 × 140 px from `md`, FD-13).
 

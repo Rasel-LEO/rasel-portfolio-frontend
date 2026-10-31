@@ -1,9 +1,9 @@
 // Author: Rasel Al Mamun
 // Site-wide motion (FD-52): loaded on every page once the OS allows motion.
-// - Reveals (B1, B9): [data-reveal] elements below the fold rise in once at 15 % in view;
+// - Reveals (FD-63): [data-reveal] elements below the fold rise in once at 15 % in view;
 //   nothing on screen at load is ever hidden. IntersectionObserver only.
-// - Fine pointers: card tilt (B2), magnetic buttons (B3), the cursor ring (B5, cursor.js).
-// - Fine-pointer desktops: Lenis smooth wheel scrolling (B7).
+// - Fine pointers: card tilt and magnetic buttons (FD-62), the cursor ring (FD-82, cursor.js).
+// - Fine-pointer desktops: Lenis smooth wheel scrolling (FD-64).
 // Every part is undone when its condition stops matching (window size, pointer, the OS
 // motion setting), so no hidden state or inline style is left behind.
 import { clearSmoothScroll, setSmoothScroll } from '../core/scroll.js';
@@ -114,7 +114,7 @@ function hoverBox() {
   };
 }
 
-// Card tilt (B2, Phase 4 §5.2): toward the pointer, at most --rot-card, on an axis in the
+// Card tilt (FD-62): toward the pointer, at most --rot-card, on an axis in the
 // card's plane; the lift itself is CSS (hover, and focus-within without tilt).
 function initTilt() {
   const selector = '.card, .fork-card, .service';
@@ -167,7 +167,7 @@ function initTilt() {
   };
 }
 
-// Magnetic buttons (B3, Phase 4 §5.1): primary and secondary buttons follow the pointer by at
+// Magnetic buttons (FD-62): primary and secondary buttons follow the pointer by at
 // most --magnet and spring back on leave (CSS). Never icon buttons or text links.
 function initMagnetic() {
   const selector = '.btn-primary, .btn-secondary';
@@ -245,7 +245,7 @@ function anchorHandler(lenis) {
   };
 }
 
-// Lenis (B7): smooth wheel scrolling on fine-pointer desktops. Keyboard and touch scrolling
+// Lenis (FD-64): smooth wheel scrolling on fine-pointer desktops. Keyboard and touch scrolling
 // stay native; same-page links and back-to-top go through Lenis (above, scroll.js); it
 // pauses while the drawer is open. Its frame loop is ours until the Home stage hands it to
 // the GSAP ticker (stage-desktop.js).

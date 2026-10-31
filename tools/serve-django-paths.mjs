@@ -3,7 +3,8 @@
 // (FD-137, docs/testing-django.md): it serves a Django build (default dist-django/) under the
 // Django URLs of tests/pages.js, its assets under /static/frontend/, and the 404 page with status
 // 404 for any other path, with the page links rewritten to the Django URLs as the Django templates
-// write them. It is not Django: it has no forms backend, and it serves no post page.
+// write them; the root files of .vite/root-files.json (icons, manifest; FD-139) also at the site
+// root. It is not Django: it has no forms backend, and it serves no post page.
 //
 //   node tools/serve-django-paths.mjs [dir] [port]      (default: dist-django 8001)
 import { existsSync, readFileSync } from 'node:fs';
@@ -16,6 +17,12 @@ const { pagePath, pages } = await import('../tests/pages.js');
 const dir = resolve(process.argv[2] ?? 'dist-django');
 const port = Number(process.argv[3] ?? 8001);
 const base = '/static/frontend/';
+
+// FD-139: the files Django serves at the site root as well (favicon.ico, the manifest, …).
+const rootListFile = join(dir, '.vite', 'root-files.json');
+const rootFiles = new Set(
+  existsSync(rootListFile) ? JSON.parse(readFileSync(rootListFile, 'utf8')) : [],
+);
 
 // Django URL → the built page. The 404 page is not a URL, and neither are the post pages (the
 // posts are drafts, which Django does not publish).
@@ -53,6 +60,8 @@ const types = {
   '.png': 'image/png',
   '.pdf': 'application/pdf',
   '.txt': 'text/plain',
+  '.ico': 'image/x-icon',
+  '.webmanifest': 'application/manifest+json',
 };
 
 // The public Content-Security-Policy of the Django site (docs/handover-django.md, section 6), sent
@@ -78,6 +87,9 @@ createServer((request, response) => {
     const file = normalize(join(dir, url.pathname.slice(base.length)));
     if (file.startsWith(dir) && existsSync(file)) return send(response, 200, file);
     return send(response, 404, join(dir, '404.html'));
+  }
+  if (request.method === 'GET' && rootFiles.has(url.pathname.slice(1))) {
+    return send(response, 200, join(dir, url.pathname.slice(1)));
   }
   const withSlash = url.pathname.endsWith('/') ? url.pathname : `${url.pathname}/`;
   if (request.method === 'GET' && withSlash !== url.pathname && byPath.has(withSlash)) {

@@ -13,7 +13,7 @@ $wipe-delay: 60ms;
 $wipe-open: 360ms;
 $wipe-seam: 200ms;
 
-// Reveals (B1, B9): motion.js adds .reveal.is-pre to [data-reveal] elements below the fold
+// Reveals (FD-63): motion.js adds .reveal.is-pre to [data-reveal] elements below the fold
 // and drops .is-pre when 15 % is in view; .reveal goes once the transition has run.
 .reveal {
   transition:
@@ -27,7 +27,7 @@ $wipe-seam: 200ms;
     transition: none;
   }
 
-  // The Contact band photograph rises as a scene (B9).
+  // The Contact band photograph rises as a scene (FD-63).
   &[data-reveal="scene"] {
     transition-duration: var(--d-scene);
 
@@ -37,7 +37,7 @@ $wipe-seam: 200ms;
   }
 }
 
-// Card tilt (B2, Phase 4 §5.2): the lift is `translate` (hover, and focus within without
+// Card tilt (FD-62): the lift is `translate` (hover, and focus within without
 // tilt); motion.js sets the tilt as `rotate` about an axis in the card's plane. Zero
 // specificity, so a reveal's transition (.reveal, .stage-reveal) wins while it runs.
 :where(.fork-card, .service) {
@@ -73,13 +73,13 @@ $wipe-seam: 200ms;
     perspective: 1000px;
   }
 
-  // Magnetic buttons (B3): pulled by motion.js, back in --d-spring (the .btn transition).
+  // Magnetic buttons (FD-62): pulled by motion.js, back in --d-spring (the .btn transition).
   .btn.is-magnetic {
     translate: var(--magnet-x) var(--magnet-y);
   }
 }
 
-// Cursor follower (B5, Phase 4 §4, FD-82), created by cursor.js: a 10 px ring (idle) everywhere,
+// Cursor follower (FD-82), created by cursor.js: a 10 px ring (idle) everywhere,
 // a 56 px soft filled circle over the staged Home stage, the link ring and the button morph;
 // hidden over form fields (no card halo). Size changes are set at once and played back by
 // `transform: scale` (FLIP); only transform and opacity move.
@@ -247,7 +247,7 @@ $wipe-seam: 200ms;
   }
 }
 
-// Lenis (B7): the rules of lenis/dist/lenis.css that apply here, without !important (the
+// Lenis (FD-64): the rules of lenis/dist/lenis.css that apply here, without !important (the
 // class beats Bootstrap's `:root { scroll-behavior: smooth }`).
 html.lenis,
 html.lenis body {
@@ -270,7 +270,7 @@ html.lenis body {
   overflow: clip;
 }
 
-// Seam wipe (FD-81, revision 12; replaces the View Transitions of FD-56 / FD-68): two --bg-1
+// Seam wipe (FD-81; replaces the View Transitions of FD-56 / FD-68): two --bg-1
 // halves and the 2 px accent seam over the whole page. Without JS or under reduced motion it
 // is never shown. Arriving or reloading, the page paints with it closed and CSS opens it: the
 // halves slide apart (360 ms) from 60 ms after the first paint and, from the same moment, the

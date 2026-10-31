@@ -935,7 +935,8 @@
       "Web, app or software development",
       "Consulting or AI engineering",
       "Something else"
-    ]
+    ],
+    "privacy_notice": "I use what you send only to reply to you. Your message is stored on this site's server and sent to my inbox; it is deleted from the site after 12 months. Your IP address is not stored, only a one-way code used to limit spam. To have your message deleted sooner, email me."
   },
   "contact": {
     "heading": "Get in touch",
@@ -952,7 +953,7 @@
       "Speaking or teaching",
       "Other"
     ],
-    "privacy_note": "Your message goes only to me. I use your details only to reply and never share them."
+    "privacy_notice": "I use what you send only to reply to you. Your message is stored on this site's server and sent to my inbox; it is deleted from the site after 12 months. Your IP address is not stored, only a one-way code used to limit spam. To have your message deleted sooner, email me."
   },
   "meta": {
     "404": "This page does not exist. Continue to Rasel Al Mamun's portfolio or blog.",
@@ -1046,6 +1047,7 @@
     }
   },
   "footer": {
+    "signature_by": "by Rasel Al Mamun",
     "role_line": "Agricultural engineer · Researcher · Developer",
     "groups": {
       "explore": "Explore",
@@ -1054,7 +1056,8 @@
     },
     "research_profiles": ["orcid", "scholar", "scopus", "researchgate"],
     "connect_profiles": ["linkedin", "github"],
-    "copyright_name": "Rasel Al Mamun"
+    "copyright_name": "Rasel Al Mamun",
+    "ai_portrait_note": "Some portrait images on this site are AI-generated from my own photos."
   },
   "portfolio": {
     "profile": {
