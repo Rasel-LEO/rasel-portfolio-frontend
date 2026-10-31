@@ -2,7 +2,7 @@
 
 Author: Rasel Al Mamun
 
-This document describes how the static frontend (v1.0.1) becomes the templates and static
+This document describes how the static frontend (v1.3.1) becomes the templates and static
 files of the Django site. The frontend stays the reference: the Django pages should render
 the same HTML as `dist/` for the same content, apart from the template tags listed here.
 Decision ids (FD-xx) refer to `docs/decisions.md`.
@@ -80,24 +80,25 @@ Partial groups map to template folders: `{{> shell/header}}` → `{% include "sh
 parameters become `with` arguments (`{{> components/field id="hire-name" …}}` →
 `{% include "components/field.html" with id="hire-name" … %}`).
 
-| Partial                                                                                          | Used by                                                                                                            |
-| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------ |
-| `shell/head`                                                                                     | every page (title, description, OG/Twitter, preloads, JSON-LD, the two scripts)                                    |
-| `shell/page-wipe`, `shell/header`, `shell/drawer`, `shell/footer`, `shell/back-to-top`           | every page                                                                                                         |
-| `components/cv-button`                                                                           | Home, Portfolio, Hire me, drawer                                                                                   |
-| `components/field`                                                                               | Hire me, Contact (label, control, hint, error region)                                                              |
-| `components/email-box`                                                                           | Hire me, Contact (email + Copy button)                                                                             |
-| `components/pf-tabs`                                                                             | Portfolio, publications                                                                                            |
-| `components/status-chip`, `components/tag-pills`                                                 | project cards, archive cards, project page                                                                         |
-| `components/project-image`                                                                       | project page                                                                                                       |
-| `components/draft-chip`                                                                          | post page (draft builds only)                                                                                      |
-| `sections/work-card`, `sections/home-pub`, `sections/latest-card`, `sections/service`            | Home (service also Hire me)                                                                                        |
-| `sections/pf-card`, `sections/pf-pub`, `sections/articles-ld`                                    | Portfolio (pf-pub and articles-ld also publications)                                                               |
-| `sections/archive-card`                                                                          | research                                                                                                           |
-| `sections/related-pub`                                                                           | project page                                                                                                       |
-| `sections/blog-card`, `sections/blog-empty`                                                      | Blog                                                                                                               |
-| `sections/profile-links`                                                                         | Contact                                                                                                            |
-| `icons/area-icon`, `icons/line-icon`, `icons/pf-icon`, `icons/footer-icon`, `icons/illustration` | inline SVG icons by name; in Django one include per icon set with an `{% if name == … %}` chain, or a template tag |
+| Partial                                                                                          | Used by                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shell/head`                                                                                     | every page (title, description, OG/Twitter, preloads, JSON-LD, the two scripts)                                                                                                       |
+| `shell/page-wipe`, `shell/header`, `shell/drawer`, `shell/footer`, `shell/back-to-top`           | every page                                                                                                                                                                            |
+| `components/cv-button`                                                                           | Home, Portfolio, Hire me, drawer                                                                                                                                                      |
+| `components/field`                                                                               | Hire me, Contact (label, control, hint, error region)                                                                                                                                 |
+| `components/email-box`                                                                           | Hire me, Contact (email + Copy button)                                                                                                                                                |
+| `components/pf-tabs`                                                                             | Portfolio, publications                                                                                                                                                               |
+| `components/status-chip`, `components/tag-pills`                                                 | project cards, archive cards, project page                                                                                                                                            |
+| `components/project-image`                                                                       | project page                                                                                                                                                                          |
+| `components/draft-chip`                                                                          | post page (draft builds only)                                                                                                                                                         |
+| `sections/work-card`, `sections/home-pub`, `sections/latest-card`, `sections/service`            | Home (service also Hire me)                                                                                                                                                           |
+| `sections/pf-card`, `sections/pf-pub`, `sections/articles-ld`                                    | Portfolio (pf-pub and articles-ld also publications)                                                                                                                                  |
+| `sections/archive-card`                                                                          | research                                                                                                                                                                              |
+| `sections/related-pub`                                                                           | project page                                                                                                                                                                          |
+| `sections/blog-card`, `sections/blog-empty`                                                      | Blog                                                                                                                                                                                  |
+| `sections/profile-links`                                                                         | Contact                                                                                                                                                                               |
+| `icons/area-icon`, `icons/line-icon`, `icons/pf-icon`, `icons/footer-icon`, `icons/illustration` | inline SVG icons by name; in Django one include per icon set with an `{% if name == … %}` chain, or a template tag                                                                    |
+| `icons/logo-symbols` (in `shell/header`), `icons/logo`, `icons/logo-mark`                        | every page: the Ideatrium logo geometry once per page as `<symbol>`s, drawn by `<use>` in the header, drawer and footer (FD-139); keep the fixed `width` / `height` and `aria-hidden` |
 
 Handlebars helpers and their Django equivalents: `eq`/`and`/`or`/`not` → `{% if %}`;
 `ordinal` → `{{ forloop.counter|stringformat:"02d" }}`; `count` → `|length`; `doiUrl` →
@@ -133,6 +134,12 @@ text "(opens in a new tab)", FD-76); `authors` (the site author in `<strong>`) �
 | `Field` (area of work) | label, target, icon, order                                                                                                                                                                                             | `fields.json`                                                |
 | Page copy              | one settings-style model (or a JSON field) per block: home, portfolio, blog page, post sidebar, research archive, hire, contact, footer, meta descriptions, memberships, activities                                    | the remaining files                                          |
 
+New copy keys in 1.4.0 (FD-139, FD-140, FD-141): `footer.signature_by` ("by Rasel Al Mamun",
+the text beside the footer logo), `footer.ai_portrait_note` (the AI-portrait disclosure under
+the copyright on every page; any descriptive alt text of the P5 / P6 figures must end with
+"(AI-generated from my own photo)"), `contact.privacy_notice` and `hire.privacy_notice` (the
+owner-approved privacy notice under each form; the same text in both).
+
 Validation that `tools/validate-content.mjs` runs before every build must move into model
 validation or a management command: unique ids/slugs, publication → project references, DOI
 format, ISO dates, a published post has a date and a written standfirst, a Markdown body per
@@ -153,7 +160,11 @@ paragraphs as labelled placeholders. Port the same rules (for example `markdown-
   - `assets/` (hashed CSS, JS chunks, fonts, images);
   - `.vite/manifest.json` (Vite manifest: source path → hashed file);
   - `.vite/asset-map.json` (the supplementary map below);
-  - `js/theme-init.js` (classic script, as-is).
+  - `.vite/root-files.json` (the root files, below; FD-139);
+  - `js/theme-init.js` (classic script, as-is);
+  - the brand files, as-is: `favicon.ico`, `favicon.svg`, `apple-touch-icon.png`,
+    `icon-192.png`, `icon-512.png`, `site.webmanifest` and
+    `images/brand/share-image-1200x630.png` (FD-139).
 
   The HTML files are not copied; they are the reference for the templates.
 
@@ -169,18 +180,29 @@ paragraphs as labelled placeholders. Port the same rules (for example `markdown-
   | `js/main.js`       | `assets/main-<hash>.js`  | shared by every page, so a chunk with a hashed key       |
   | `scss/main.scss`   | `assets/main-<hash>.css` | the stylesheet of that chunk (its `css` in the manifest) |
   | `js/theme-init.js` | `js/theme-init.js`       | a `public/` file, copied unhashed                        |
+  | the brand files    | the same path            | `public/` files, copied unhashed (FD-139)                |
+
+- **Root files** (FD-139). `.vite/root-files.json` lists the files Django must also serve at
+  the **site root**: `/favicon.ico`, `/favicon.svg`, `/apple-touch-icon.png`,
+  `/icon-192.png`, `/icon-512.png` and `/site.webmanifest`. Browsers ask for
+  `/favicon.ico` and `/apple-touch-icon.png` there on their own, and the manifest names its
+  icons by root path. Serve them from `static/frontend/` through one small view or URL
+  pattern each (or the web server), with their types (`image/x-icon`, `image/svg+xml`,
+  `image/png`, `application/manifest+json`). The pages link them under the static URL
+  (`{% static 'frontend/favicon.ico' %}`, …), which works as well; `check-django-build.mjs`
+  checks the list, the files and the links, and `tests/django.spec.js` asks for each one at
+  the root.
 
 - Keys per page (`shell/head` and the page bodies):
 
-  | Page       | In `<head>`                                                                                                                                                                                      | In the body (manifest)                                                                                                |
-  | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
-  | every page | `js/theme-init.js` (first, classic), `js/main.js` (`type="module" crossorigin`), `scss/main.scss` (`rel="stylesheet" crossorigin`), `og:image` / `twitter:image` `images/avatar/avatar-512.webp` | `images/avatar/avatar-96.{avif,webp}` (header, drawer), `images/figure/P5-desktop-720x1300.{avif,webp}` (back to top) |
-  | Home, 404  | as above                                                                                                                                                                                         | also `images/figure/P6-desktop-720x1300.{avif,webp}`                                                                  |
-  | Portfolio  | as above                                                                                                                                                                                         | also `images/avatar/avatar-512.avif`                                                                                  |
+  | Page       | In `<head>`                                                                                                                                                                                                                                            | In the body (manifest)                                                                                                    |
+  | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- |
+  | every page | `js/theme-init.js` (first, classic), `js/main.js` (`type="module" crossorigin`), `scss/main.scss` (`rel="stylesheet" crossorigin`), `og:image` / `twitter:image` `images/brand/share-image-1200x630.png`, the icon links and the manifest (root files) | `images/figure/P5-desktop-720x1300.{avif,webp}` (back to top); the header, drawer and footer logo is inline SVG (no file) |
+  | Home, 404  | as above                                                                                                                                                                                                                                               | also `images/figure/P6-desktop-720x1300.{avif,webp}`                                                                      |
+  | Portfolio  | as above                                                                                                                                                                                                                                               | also `images/avatar/avatar-512.avif`                                                                                      |
 
   Preload keys: every page `fonts/bricolage-grotesque-latin-standard-normal.woff2`
-  (`as="font" type="font/woff2" crossorigin`) and `images/avatar/avatar-96.avif`
-  (`as="image"`); Home also `images/figure/P5-desktop-720x1300.avif` (`as="image"`, with
+  (`as="font" type="font/woff2" crossorigin`); Home also `images/figure/P5-desktop-720x1300.avif` (`as="image"`, with
   `imagesrcset`, `media="(min-width: 768px)"`, `fetchpriority="high"`).
   The stylesheet refers to `fonts/jetbrains-mono-latin-{400,500}-normal.woff2`,
   `images/arrow.svg` and `images/placeholder.svg` by URL under `/static/frontend/assets/`, so
@@ -190,7 +212,7 @@ paragraphs as labelled placeholders. Port the same rules (for example `markdown-
   `static/frontend/assets/` with `Cache-Control: public, max-age=31536000, immutable`
   (`ManifestStaticFilesStorage` is not needed for them).
 - Fonts are subset woff2 files (FD-130); keep the `<link rel="preload" as="font" … crossorigin>`
-  for the Bricolage file and the avatar / Home hero image preloads from `shell/head`.
+  for the Bricolage file and the Home hero image preload from `shell/head`.
 - Images: `<picture>` with AVIF + WebP, explicit `width` / `height`, `loading="lazy"` below
   the first screen (FD-130). Owner photographs are not licensed for reuse.
 
@@ -224,6 +246,10 @@ and when both are set, `localStorage` wins over the cookie.
 | Hire me | `name`: required; `email`: required, email; `kind`: one of `hire.form_kinds`; `organisation`: optional; `brief`: required       |
 | Contact | `name`: required; `email`: required, email; `subject`: one of `contact.subjects`; `organisation`: optional; `message`: required |
 
+- Under each form, the privacy notice (`contact.privacy_notice`, `hire.privacy_notice`;
+  FD-140) as plain small text, `<p class="form-notice">` right after `</form>`. Its promises
+  must stay true of the Django side: messages kept 12 months on the site then deleted, no IP
+  address stored (only a one-way code for the rate limit), sent to the owner's inbox.
 - The forms are `<form method="post">`. `src/js/pages/forms.js` validates on submit
   (messages in that file), marks fields with `aria-invalid` and `aria-describedby` and moves
   focus to the first error (FD-38). Without JavaScript the browser's native checks run
@@ -297,10 +323,17 @@ and when both are set, `localStorage` wins over the cookie.
 
 ## 10. Search engines
 
-- `<title>`: the page's short title + " — Rasel Al Mamun", at most 60 characters (FD-128);
-  the formal title stays in the `h1` and in Open Graph / Twitter titles.
+- `<title>`: the page's short title + " — Ideatrium", at most 60 characters (FD-128,
+  FD-139); Home is "Rasel Al Mamun — Ideatrium". The formal title stays in the `h1` and in the
+  Open Graph / Twitter titles (also " — Ideatrium"). `og:site_name` is Ideatrium; `meta
+author` and the `Person` stay Rasel Al Mamun.
+- Social cards: `og:image` / `twitter:image` the share image
+  (`images/brand/share-image-1200x630.png`, 1200 × 630, `image/png`, alt "Ideatrium — by
+  Rasel Al Mamun"), `twitter:card` `summary_large_image`. Icons and manifest: the root files
+  (section 5); `theme-color` per colour scheme, the `bg-0` token of each theme.
 - One meta description per page (`meta.json`, the project contribution, the post standfirst).
-- JSON-LD: `Person` on every page, `WebSite` on Home, `ScholarlyArticle` per publication on
+- JSON-LD: `Person` on every page, `WebSite` on Home (name Ideatrium, `url` the site root
+  when `SITE_URL` is set, `author` the Person; FD-139), `ScholarlyArticle` per publication on
   Portfolio and publications, `BlogPosting` on posts (`tools/content.mjs`).
 - `SITE_URL` (no domain yet, FD-22): when set, canonical links, `og:url` and absolute
   `og:image` / `twitter:image` URLs, `sitemap.xml` and the `Sitemap:` line in `robots.txt`
@@ -317,7 +350,7 @@ Templates must keep, unchanged:
   focusable element, one `h1` per page, visible focus (2 px `--focus` ring).
 - The drawer below 992 px (Bootstrap offcanvas: `aria-controls`, `aria-expanded`, focus
   trap, Escape), the theme button (its accessible name "Theme: dark" / "Theme: light" carries the state, no `aria-pressed`, FD-17; visible label from 992 px), the
-  back-to-top button on every page after the first screen (DD-17, FD-13).
+  back-to-top button on every page after the first screen (FD-05, FD-13).
 - Tabs and filters as button groups with `aria-pressed`; result counts in `role="status"`;
   hidden controls only for JS-only features (`.js-only`).
 - Decorative figures `aria-hidden="true"` with `alt=""`; external links with the hidden
@@ -333,7 +366,7 @@ Templates must keep, unchanged:
   `data-count*` (research), `data-form*`, `data-error-text`, `data-email`, `data-copy-*`
   (forms), `data-pf-*` (Portfolio styles). Renaming one breaks the matching module in
   `src/js/` or its styles.
-- Motion is always on (DD-16); the OS `prefers-reduced-motion` setting is respected through
+- Motion is always on (FD-04); the OS `prefers-reduced-motion` setting is respected through
   `gsap.matchMedia()` and CSS media queries. No motion switch.
 
 ## 12. Tests to port
@@ -342,13 +375,14 @@ Templates must keep, unchanged:
 `html-validate` over the built HTML, and the Playwright suite (`tests/*.spec.js`: content,
 pages, accessibility with axe, shell, Portfolio, Blog, forms (static and live), Home, stage, motion, inner
 pages, release: noindex, sitemap, 400 % zoom), plus `npm run test:widths` (seven widths, both themes) and `npm run lhci`
-(Lighthouse budgets, FD-129). The Playwright specs drive the browser through URLs and
-selectors, so most of them run against the Django server after two changes: the
-`baseURL` / `webServer` in `playwright.config.js`, and the page list in `tests/pages.js`
-(flat file names → Django URLs). The Node-only content tests become Django model and view
-tests.
+(Lighthouse budgets, FD-129). Since 1.3.0 the browser specs also run against the Django
+site itself: `npm run test:django` with `DJANGO_BASE_URL` switches `playwright.config.js`
+to that base URL, starts no server and maps every page through the URL table in
+`tests/pages.js` (FD-137; test sets, skips and the stand-in server in
+`docs/testing-django.md`). The Node-only content tests (`content`, `pages`, `release`)
+read `src/` and `dist/`; their Django equivalents are model and view tests.
 
-## 13. Owner content still pending
+## 13. Owner content to supply
 
 - Blog posts: the three posts are drafts with `[bracketed]` bodies; final text, dates and
   `status: published`.

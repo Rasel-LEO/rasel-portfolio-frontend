@@ -61,18 +61,22 @@ The folder name "Frontend Design" contains a space: always quote the path.
 ## 5. Repository settings (GitHub → Settings)
 
 - **General → Features**: Issues on, Wiki off.
-- **Code security**: Secret scanning, Push protection and Dependabot alerts on.
+- **Code security**: Secret scanning, Push protection and Dependabot alerts on. Version
+  updates come from `.github/dependabot.yml` in the public repository (FD-138).
 - **Branches → Add branch ruleset** for `main`: require a pull request before merging,
   require the `ci` status check, block force pushes.
 
 ## 6. Everyday work
 
+One change or release per branch, one pull request, squash merge with the pull request title
+as the message (FD-06). Update `CHANGELOG.md` and the version for a release.
+
 ```powershell
 git switch main; git pull
-git switch -c slice/NN-name
+git switch -c release/x.y.z-short-name
 # … edit …
 npm run lint; npm run build; npm test
-git push -u origin slice/NN-name
+git push -u origin release/x.y.z-short-name
 gh pr create --fill --base main
 gh pr checks --watch                      # wait for green CI
 gh pr merge --squash --delete-branch

@@ -51,7 +51,7 @@
   }
 }
 
-// Page head shared by inner pages (prototype rev 12 .page-head).
+// Page head shared by inner pages.
 .page-head {
   display: grid;
   gap: var(--s-4);
@@ -76,7 +76,7 @@
   }
 }
 
-// Project page (prototype rev 12 entry view)
+// Project page
 .breadcrumb-list {
   @include t-meta;
 
@@ -100,7 +100,7 @@
   }
 }
 
-// The status chip follows the <h1> in reading order but sits above it (prototype).
+// The status chip follows the <h1> in reading order but sits above it.
 .entry-status {
   order: -1;
 }
@@ -141,7 +141,7 @@
   border-radius: var(--r-2);
 }
 
-// Intro line under an inner-page <h1> (prototype rev 12 .measure).
+// Intro line under an inner-page <h1>.
 .page-intro {
   max-width: 62ch;
   color: var(--fg-1);
@@ -326,7 +326,7 @@
   border-radius: var(--r-2);
 }
 
-// Post (prototype rev 12 Post view, Phase 4 §2): prose at a 66-character measure.
+// Post: prose at a 66-character measure.
 
 .prose {
   display: grid;
@@ -540,7 +540,7 @@
   font-weight: 600;
 }
 
-// Hire me (DD-10, FD-39): three services, equal height in a row from lg.
+// Hire me (FD-39): three services, equal height in a row from lg.
 .services {
   --bs-gutter-y: var(--s-4);
 }
@@ -620,8 +620,8 @@
   color: var(--fg-1);
 }
 
-// Forms (Phase 4 §5.4, FD-38), Hire me and Contact. Values the tokens do not have come from
-// prototype rev 12 (.field, lines 124-131): 6 px label gap, 10 px padding (44 px with the
+// Forms (FD-38, FD-42), Hire me and Contact. Values the tokens do not have, from the
+// design: 6 px label gap, 10 px padding (44 px with the
 // 1.4 line height).
 :root {
   --field-gap: 6px;
@@ -756,6 +756,15 @@ select.field-control {
   a {
     overflow-wrap: anywhere;
   }
+}
+
+// FD-140: the privacy notice under the Contact and Hire me forms, small body text.
+.form-notice {
+  @include t-small;
+
+  max-width: 62ch;
+  margin-top: var(--s-4);
+  color: var(--fg-1);
 }
 
 .form-aside {

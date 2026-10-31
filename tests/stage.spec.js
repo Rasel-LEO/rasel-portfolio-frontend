@@ -354,7 +354,7 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
     page.on('pageerror', (error) => errors.push(String(error)));
     page.on('console', (message) => message.type() === 'error' && errors.push(message.text()));
     await openStage(page, { width: 1440, height: 900 });
-    // Tilt the hero with the pointer first (B4), then scroll on.
+    // Tilt the hero with the pointer first (FD-69), then scroll on.
     await page.mouse.move(1300, 800);
     await page.mouse.move(1350, 850);
     await page.waitForTimeout(300);
@@ -587,18 +587,66 @@ test.describe('fonts (FD-65)', () => {
     });
   }
 
-  test('the header avatar is never lazy, sized, and preloaded', async ({ page }) => {
+  // FD-139 keeps FD-65: the header logo is inline SVG with a fixed width and height, so the
+  // header does not move when the web fonts swap in (each box measured with the fonts blocked
+  // and loaded). Nothing in the header is preloaded or lazy any more.
+  for (const viewport of [
+    { width: 390, height: 844 },
+    { width: 1440, height: 900 },
+  ]) {
+    test(`header: logo sized, no layout shift at the font swap (${viewport.width}px)`, async ({
+      browser,
+    }) => {
+      const measure = async (block) => {
+        const context = await browser.newContext({ viewport });
+        const page = await context.newPage();
+        if (block) await page.route('**/*.woff2', (route) => route.abort());
+        await page.addInitScript(recorder);
+        await page.goto('/blog.html');
+        await page.evaluate(() => document.fonts.ready);
+        await page.waitForTimeout(500);
+        const result = await page.evaluate(() => {
+          const box = (selector) => {
+            const r = document.querySelector(selector).getBoundingClientRect();
+            return [r.left, r.top, r.width, r.height].map((value) => Math.round(value * 10) / 10);
+          };
+          // The recorder keeps each shifted node's class: the header's own parts.
+          const inHeader = /site-header|brand|logo|hire-cta|theme-toggle|menu-button|site-nav/;
+          return {
+            logo: box('.site-header .brand-logo'),
+            tools: box('.site-header-tools'),
+            header: box('.site-header'),
+            shifts: window.__shifts.filter((shift) =>
+              shift.sources.some((source) => inHeader.test(source ?? '')),
+            ),
+          };
+        });
+        await context.close();
+        return result;
+      };
+      const loaded = await measure(false);
+      const blocked = await measure(true);
+      expect(loaded.logo.slice(2)).toEqual([165, 24]);
+      expect(blocked).toEqual({ ...loaded, shifts: [] });
+      expect(loaded.shifts).toEqual([]);
+    });
+  }
+
+  test('the header logo is inline SVG with its width and height; no image preload', async ({
+    page,
+  }) => {
     await page.goto('/blog.html');
-    for (const selector of [
-      '.site-header .brand-mark img',
-      '#drawer .brand-mark img, #drawer img',
+    for (const [selector, size] of [
+      ['.site-header .brand-logo', ['165', '24']],
+      ['.site-header .brand-logo-mark', ['36', '36']],
+      ['#drawer .logo', ['165', '24']],
     ]) {
-      const img = page.locator(selector).first();
-      await expect(img).toHaveAttribute('loading', 'eager');
-      await expect(img).toHaveAttribute('width', '28');
-      await expect(img).toHaveAttribute('height', '28');
+      const svg = page.locator(selector);
+      await expect(svg).toHaveAttribute('width', size[0]);
+      await expect(svg).toHaveAttribute('height', size[1]);
     }
-    await expect(page.locator('link[rel="preload"][href*="avatar-96"]')).toHaveCount(1);
+    await expect(page.locator('.site-header img')).toHaveCount(0);
+    await expect(page.locator('link[rel="preload"][href*="avatar-96"]')).toHaveCount(0);
   });
 });
 

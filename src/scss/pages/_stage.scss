@@ -5,7 +5,7 @@
 $stage-desktop: "(min-width: 992px) and (prefers-reduced-motion: no-preference)";
 
 // Desktop (≥ 992 px, motion allowed). The stage becomes a tall wrapper whose container sticks
-// under the header for --stage-dist of scrolling (prototype .stage-wrap and .stage). Hero,
+// under the header for --stage-dist of scrolling. Hero,
 // screen 2 (FD-84) and Fork share that frame as layers.
 @mixin staged {
   --stage-dist: 360svh; // FD-69
@@ -42,7 +42,7 @@ $stage-desktop: "(min-width: 992px) and (prefers-reduced-motion: no-preference)"
     align-self: center;
   }
 
-  // The photo as a plane (handoff §4): perspective on the box, the picture is the plane
+  // The photo as a plane (FD-69): perspective on the box, the picture is the plane
   // turning about the face point; the pointer tilts the image inside it.
   .stage-figure {
     perspective: 1400px;
@@ -187,7 +187,7 @@ $stage-desktop: "(min-width: 992px) and (prefers-reduced-motion: no-preference)"
   }
 }
 
-// Scroll cue (prototype .scroll-cue), created by JS, decorative.
+// Scroll cue, created by JS, decorative.
 .stage-cue {
   @include t-meta;
 

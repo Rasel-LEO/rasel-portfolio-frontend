@@ -77,7 +77,7 @@
                 options=hire.form_kinds }} {{> components/field id="hire-organisation"
                 name="organisation" label="Organisation" optional=true autocomplete="organization"}}
                 {{> components/field id="hire-brief" name="brief" label="Brief" control="textarea"
-                required=true hint=contact.privacy_note}}
+                required=true}}
                 <div class="form-actions">
                   <button class="btn btn-primary" type="submit">
                     Send the brief
@@ -95,6 +95,8 @@
                   <p class="form-status mb-0" role="status" data-form-status></p>
                 </div>
               </form>
+              {{!-- FD-140: the privacy notice, under the form, in plain small text. --}}
+              <p class="form-notice mb-0">{{hire.privacy_notice}}</p>
             </div>
             <aside class="col-lg-5 form-aside" aria-label="Other ways to start">
               {{> components/email-box}}

@@ -1,5 +1,5 @@
 // Author: Rasel Al Mamun
-// Full-screen menu below lg (DD-08, FD-11) on Bootstrap Offcanvas, which provides the
+// Full-screen menu below lg (FD-11) on Bootstrap Offcanvas, which provides the
 // focus trap, Escape, body scroll lock and data-bs-dismiss. This module adds the
 // menu button state, focus return and closing when the viewport grows to lg.
 import Offcanvas from 'bootstrap/js/dist/offcanvas.js';

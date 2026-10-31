@@ -46,7 +46,7 @@ async function expectFooterColumn(page, width) {
   expect(bottom.top).toBeGreaterThanOrEqual(connect.bottom);
   // Left edges of the text (the columns carry the gutter).
   const lefts = await page
-    .locator('.footer-name, #footer-explore, #footer-connect, .site-footer-bottom')
+    .locator('.footer-signature, #footer-explore, #footer-connect, .site-footer-bottom')
     .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().left)));
   expect(new Set(lefts).size).toBe(1);
 }
@@ -76,7 +76,7 @@ for (const theme of themes) {
         }
 
         await expectNoOverflow(browserPage);
-        // Home hero (Phase 4 §2.2): the name never drops below 44 px and nothing in the
+        // Home hero: the name never drops below 44 px and nothing in the
         // stage runs past the viewport. From 992 px the photo's box may, by its transparent
         // right third (clipped by the stage); its visible outline is tested in stage.spec.js
         // (FD-83).
@@ -116,6 +116,36 @@ for (const theme of themes) {
       const overflow = await drawer.evaluate((el) => el.scrollWidth - el.clientWidth);
       expect(overflow).toBeLessThanOrEqual(0);
       await browserPage.screenshot({ path: `${shots}/drawer-${width}-${theme}.png` });
+    });
+  }
+}
+
+// FD-139: the header logo is visible at every phone breakpoint and beyond — the full logo from
+// 380 px, the mark alone below — with at least one bracket arm (8 px) clear of the tools, inside
+// the viewport, in both themes.
+for (const theme of themes) {
+  for (const width of [320, 380, 430, 768, 1440]) {
+    test(`header logo visible at ${width}px (${theme})`, async ({ page }) => {
+      await useTheme(page, theme);
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto('/blog.html');
+      await page.evaluate(() => document.fonts.ready);
+      const shown = page.locator(
+        width < 380 ? '.site-header .brand-logo-mark' : '.site-header .brand-logo',
+      );
+      const hidden = page.locator(
+        width < 380 ? '.site-header .brand-logo' : '.site-header .brand-logo-mark',
+      );
+      await expect(shown).toBeVisible();
+      await expect(hidden).toBeHidden();
+      const logo = await shown.boundingBox();
+      const tools = await page.locator('.site-header-tools').boundingBox();
+      const nav = page.locator('.site-nav');
+      const next = (await nav.isVisible()) ? await nav.boundingBox() : tools;
+      expect(logo.x).toBeGreaterThanOrEqual(8);
+      expect(logo.x + logo.width + 8).toBeLessThanOrEqual(next.x);
+      expect(logo.height).toBe(width < 380 ? 36 : 24);
+      await expectNoOverflow(page);
     });
   }
 }

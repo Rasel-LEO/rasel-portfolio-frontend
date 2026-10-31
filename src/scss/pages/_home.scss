@@ -1,6 +1,6 @@
 // Author: Rasel Al Mamun
-// Home: the stage as a plain document (handoff §3) and the sections after it.
-// Visual reference: design prototype revision 12, Home view. No motion here; _stage.scss
+// Home: the stage as a plain document (FD-47) and the sections after it.
+// No motion here; _stage.scss
 // and the motion modules pin and animate the stage through the data-stage* hooks without changing this resting layout.
 
 // The original 720 × 1300 portraits (P5, P6) on phones (FD-86, FD-93): a window of the image
@@ -43,7 +43,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   }
 }
 
-// Stage: hero + screen 2 + Fork (Phase 4 §3: text columns 1–7, figure 8–12).
+// Stage: hero + screen 2 + Fork (text columns 1–7, figure 8–12).
 // The top space sits on the container, which the desktop stage pins, so pinning
 // never moves it.
 // From lg the photo's empty right edge may pass the window (FD-83): clipped, never scrolled.
@@ -202,7 +202,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   max-width: 60ch;
 }
 
-// Phase 4 §2.2: display-xl at width 88; below 400 px the name may take three lines but its
+// display-xl at width 88; below 400 px the name may take three lines but its
 // size never drops under 44 px (the token's clamp floor).
 .hero-name {
   max-width: 100%;
@@ -409,7 +409,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   font-weight: 500;
 }
 
-// Fork (Phase 4 §5.1): two cards of identical size and weight; a 2 px accent seam between
+// Fork: two cards of identical size and weight; a 2 px accent seam between
 // them from lg (decorative).
 .fork {
   padding-block: var(--section-pad);
@@ -511,7 +511,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   margin-top: var(--s-3);
 }
 
-// Services on the bg-1 band take the page surface (prototype .hire .service).
+// Services on the bg-1 band take the page surface.
 .home-services {
   margin-top: var(--s-5);
 
@@ -881,7 +881,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   color: var(--fg-1);
 }
 
-// Contact band: the seated P6 photograph, decorative (DD-15). FD-72: from md as tall as the
+// Contact band: the seated P6 photograph, decorative (FD-72). FD-72: from md as tall as the
 // text block beside it (360–420 px, never above the 1300 px source); on phones the whole figure
 // under the action (FD-93, below). Its settle (scale and slide, home-motion.js) never widens the
 // page.

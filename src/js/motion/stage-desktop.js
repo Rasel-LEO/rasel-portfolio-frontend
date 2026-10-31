@@ -1,6 +1,6 @@
 // Author: Rasel Al Mamun
 // Desktop Home stage (≥ 992 px, motion allowed): the pinned scroll stage of the motion map
-// (docs/architecture.md, handoff §4, FD-69). The container sticks under the header for
+// (docs/architecture.md, FD-69). The container sticks under the header for
 // 360 svh (CSS: from the first paint, FD-66); one timeline, scrubbed with 0.8 s of smoothing,
 // maps stage progress p (0–1) to the layers.
 // Only transform and opacity animate. Layout is read on setup and on ScrollTrigger refresh,
@@ -37,7 +37,7 @@ const HANDOFF = 0.65;
 // Scrub smoothing in seconds (FD-69).
 const SCRUB = 0.8;
 
-// Each Fork column's own perspective while it opens (prototype).
+// Each Fork column's own perspective while it opens.
 const PERSPECTIVE = 1200;
 
 // FD-98: no empty stage. The figure first shrinks into the corner, fast (56–65 %), so it has
@@ -358,7 +358,7 @@ function buildStage(stage, nodes, { fine, context }) {
     );
     // From 65.5 %: the Fork comes in as screen 2 leaves (67 %, above) — heading and columns
     // half seen within FORK_FADE; the columns turn in from ±--rot-col and ∓--m-40 (each with
-    // its own perspective, as in the prototype) and the seam draws top → bottom over
+    // its own perspective) and the seam draws top → bottom over
     // FORK_OPEN_FOR.
     tl.fromTo(
       forkTitle,
@@ -421,7 +421,7 @@ function buildStage(stage, nodes, { fine, context }) {
     };
     frame.addEventListener('focusin', onFocus);
 
-    // Smooth scrolling (B7): Lenis reports to ScrollTrigger and runs on the GSAP ticker while
+    // Smooth scrolling (FD-64): Lenis reports to ScrollTrigger and runs on the GSAP ticker while
     // the stage is built; its own frame loop takes over again afterwards.
     offSmooth = onSmoothScroll((lenis) => {
       const offScroll = lenis.on('scroll', ScrollTrigger.update);
@@ -440,7 +440,7 @@ function buildStage(stage, nodes, { fine, context }) {
     // Pointer (fine pointers), anywhere over the stage (it spans the window); no layout
     // reads in the handler.
     // - The photo: ±6° rotateY / ±3° rotateX toward the pointer, until the shrink (56 %).
-    // - While the hero is shown (0–10 %, B4): the hero tilts ±--tilt-hero toward the pointer
+    // - While the hero is shown (0–10 %, FD-69): the hero tilts ±--tilt-hero toward the pointer
     //   and the name lines move 8 / 4 px against it.
     if (fine) {
       const duration = seconds('--d-scene');

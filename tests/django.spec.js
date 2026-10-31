@@ -1,10 +1,12 @@
 // Author: Rasel Al Mamun
 // Checks that exist only on the Django target (FD-137): the URL table answers, the Blog shows its
 // empty state (the posts are drafts, which Django does not publish) and an unknown path gets the
-// 404 page with status 404. Skipped on the static target.
+// 404 page with status 404; the root files (FD-139) answer at the site root. Skipped on the static
+// target.
+import { readFileSync } from 'node:fs';
 import { expect, test } from './fixtures.js';
 import { buildSite, loadContent } from '../tools/content.mjs';
-import { isDjango, pagePath, pages, templatePages } from './pages.js';
+import { isDjango, pagePath, pages, staticBase, templatePages } from './pages.js';
 
 test.skip(!isDjango, 'Django target only (TEST_TARGET=django)');
 
@@ -58,5 +60,39 @@ test.describe('404 page', () => {
     const response = await page.goto('/portfolio/no-such-project/');
     expect(response.status()).toBe(404);
     await expect(page.locator('h1')).toHaveText('Page not found');
+  });
+});
+
+// FD-139: browsers ask for /favicon.ico and /apple-touch-icon.png at the site root, and the
+// manifest names its icons by root path, so Django serves the files of .vite/root-files.json there
+// as well as under the static URL.
+test.describe('root files', () => {
+  const rootFiles = JSON.parse(readFileSync('dist-django/.vite/root-files.json', 'utf8'));
+
+  test('every root file answers 200 at the site root and under the static URL', async ({
+    request,
+  }) => {
+    expect(rootFiles).toEqual(
+      expect.arrayContaining(['favicon.ico', 'favicon.svg', 'site.webmanifest']),
+    );
+    for (const file of rootFiles) {
+      for (const path of [`/${file}`, `${staticBase}/${file}`]) {
+        const response = await request.get(path);
+        expect(response.status(), path).toBe(200);
+      }
+    }
+  });
+
+  test('the pages link the icons and the manifest that are served', async ({ page, request }) => {
+    await page.goto(pagePath('index.html'));
+    const hrefs = await page
+      .locator('link[rel="icon"], link[rel="apple-touch-icon"], link[rel="manifest"]')
+      .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
+    expect(hrefs).toHaveLength(4);
+    for (const href of hrefs) expect((await request.get(href)).status(), href).toBe(200);
+    const manifest = await (await request.get('/site.webmanifest')).json();
+    for (const icon of manifest.icons) {
+      expect((await request.get(icon.src)).status(), icon.src).toBe(200);
+    }
   });
 });

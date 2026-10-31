@@ -30,7 +30,7 @@ $font-family-monospace: $token-font-mono;
 $line-height-base: $token-type-body-line-height;
 $headings-font-weight: $token-type-h2-weight;
 
-// Radius (Phase 4 §3): chips 2, buttons and cards 4, media 8 px.
+// Radius: chips 2, buttons and cards 4, media 8 px.
 $border-radius-sm: $token-r-1;
 $border-radius: $token-r-2;
 $border-radius-lg: $token-r-3;
@@ -50,14 +50,14 @@ $spacers: (
   5: $token-s-7,
 );
 
-// Layout (Phase 4 §3): one container, max 1280 px; its side padding and the row
+// Layout: one container, max 1280 px; its side padding and the row
 // gutters follow --gutter (16 / 24 / 32 px) in _base.scss.
 $container-max-widths: (
   sm: 1280px,
 );
 $grid-gutter-width: $token-s-4;
 
-// Buttons: disabled at 40 % (Phase 4 §5.1); colours come from --bs-btn-* in _components.scss.
+// Buttons: disabled at 40 %; colours come from --bs-btn-* in _components.scss.
 $btn-disabled-opacity: 0.4;
 
 @import "bootstrap/scss/functions";

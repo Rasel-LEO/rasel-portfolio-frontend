@@ -1,5 +1,7 @@
 # Testing the Django site with the browser suite (FD-137)
 
+Author: Rasel Al Mamun
+
 The Playwright suite runs against a running Django site as well as against the static build.
 The default target is unchanged: `npm test` builds `dist/` and `dist-django/`, starts
 `vite preview` and runs the full suite.

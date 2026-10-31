@@ -48,7 +48,7 @@ for (const [name, value] of Object.entries(tokens.type.families)) {
   lines.push(`$token-font-${name}: ${value};`);
 }
 // Fixed sizes only; the fluid clamp() values live in each style's `usage` text
-// in tokens.json and are applied by the slices that build those components.
+// in tokens.json and are applied by the styles of those components.
 for (const group of tokens.type.groups) {
   for (const style of group.styles) {
     lines.push(`$token-type-${style.name}-size: ${style.fontSize};`);

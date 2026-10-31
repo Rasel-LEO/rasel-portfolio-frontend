@@ -128,7 +128,7 @@
     "JetBrains Fallback DejaVu", #{$token-font-mono};
 }
 
-// Type scale: design specification §2.2 (fluid 320 → 1440 px).
+// Type scale (fluid 320 → 1440 px).
 // Each step: size, line height (-lh), weight (-wt), width axis (-wd, font-stretch
 // within the variable font's 75–100 % range) and tracking (-tr).
 :root {
@@ -224,7 +224,7 @@
 }
 
 // Headings take their sizes from the tokens (RFS is off). Inner-page titles use
-// display-l, as in prototype revision 12.
+// display-l.
 h1,
 h2,
 h3,

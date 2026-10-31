@@ -32,7 +32,7 @@
               options=contact.subjects }} {{> components/field id="contact-organisation"
               name="organisation" label="Organisation" optional=true autocomplete="organization"}}
               {{> components/field id="contact-message" name="message" label="Message"
-              control="textarea" required=true hint=contact.privacy_note}}
+              control="textarea" required=true}}
               <div class="form-actions">
                 <button class="btn btn-primary" type="submit">
                   Send
@@ -50,6 +50,8 @@
                 <p class="form-status mb-0" role="status" data-form-status></p>
               </div>
             </form>
+            {{!-- FD-140: the privacy notice, under the form, in plain small text. --}}
+            <p class="form-notice mb-0">{{contact.privacy_notice}}</p>
           </div>
           <aside class="col-lg-5 form-aside" aria-label="Other ways to reach me">
             {{> components/email-box}}

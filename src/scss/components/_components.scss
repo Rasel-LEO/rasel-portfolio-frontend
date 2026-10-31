@@ -1,8 +1,8 @@
 // Author: Rasel Al Mamun
-// Buttons and links: design specification §5.1.
+// Buttons and links.
 // Colours go through Bootstrap's --bs-btn-* custom properties so both themes work.
 
-// Phase 4 §5.1 timings that tokens.json does not define (it has 120/200/320 ms).
+// Design timings that tokens.json does not define (it has 120/200/320 ms).
 :root {
   --d-btn: 160ms;
   --d-press: 90ms;
@@ -213,7 +213,7 @@ a[aria-current] > .link,
   }
 }
 
-// Chips and status (Phase 4 §5.3): label always present; colour is never the only signal.
+// Chips and status: label always present; colour is never the only signal.
 .chip {
   @include t-label;
 
@@ -271,8 +271,8 @@ a[aria-current] > .link,
   border-style: dashed;
 }
 
-// Tags (FD-110, amends Phase 4 §5.3 chip): pills — sentence case, --bg-2 fill, no border,
-// --r-3 radius, body font 14 px; --fg-1 on --bg-2 (Phase 4 §1.3: never --fg-2 there).
+// Tags (FD-110): pills — sentence case, --bg-2 fill, no border,
+// --r-3 radius, body font 14 px; --fg-1 on --bg-2 (never --fg-2 there).
 .pill-row {
   display: flex;
   flex-wrap: wrap;
@@ -316,7 +316,7 @@ a[aria-current] > .link,
   aspect-ratio: 3 / 2;
 }
 
-// fg-1 on bg-2, not fg-2: muted text is never used on bg-2 below 14 px (Phase 4 §1.3).
+// fg-1 on bg-2, not fg-2: muted text is never used on bg-2 below 14 px.
 .media-ph-caption {
   @include t-meta;
 
@@ -351,7 +351,7 @@ a[aria-current] > .link,
   aspect-ratio: 4 / 3;
 }
 
-// Work card (Phase 4 §5.2): the whole card is one link named by its title
+// Work card (FD-32): the whole card is one link named by its title
 // (the title link is stretched over the card; Bootstrap .stretched-link).
 .card {
   position: relative;
@@ -398,7 +398,7 @@ a[aria-current] > .link,
     }
   }
 
-  // Lift only for fine pointers (Phase 4 §5.2); on touch it would stick after a tap. The
+  // Lift only for fine pointers (FD-62); on touch it would stick after a tap. The
   // lift is `translate`, so the tilt (`rotate`, motion.js) and reveals (`transform`) add up.
   @media (hover: hover) and (pointer: fine) {
     &:hover {

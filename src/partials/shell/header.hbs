@@ -1,15 +1,12 @@
 {{!-- Author: Rasel Al Mamun --}}
 <a class="skip-link" href="#main">Skip to content</a>
+{{> icons/logo-symbols}}
 <header class="site-header">
   <div class="container site-header-bar">
-    <a class="brand" href="/index.html" data-brand{{{ariaCurrent "home"}}}>
-      <span class="brand-mark">
-        <picture>
-          <source type="image/avif" srcset="/images/avatar/avatar-96.avif" />
-          <img src="/images/avatar/avatar-96.webp" alt="" width="28" height="28" loading="eager" decoding="sync" />
-        </picture>
-      </span>
-      <span class="brand-name">{{profile.name}}</span>
+    {{!-- FD-139: the Ideatrium logo, 24 px tall; the mark alone on the narrowest phones. --}}
+    <a class="brand" href="/index.html" data-brand aria-label="Ideatrium, home"{{{ariaCurrent "home"}}}>
+      {{> icons/logo class="brand-logo"}}
+      {{> icons/logo-mark class="brand-logo-mark"}}
     </a>
     <nav class="site-nav d-none d-lg-block" aria-label="Primary">
       <ul class="list-unstyled d-flex gap-1 mb-0">

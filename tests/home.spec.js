@@ -1,6 +1,6 @@
 // Author: Rasel Al Mamun
 // Home: the document without motion — section order, data, screen 2 (FD-84), Fork,
-// Selected work, Latest posts (FD-45), Contact band, no-JS contract and the handoff §5 budgets.
+// Selected work, Latest posts (FD-45), Contact band, no-JS contract and the FD-52 budgets.
 import { spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
@@ -1044,7 +1044,7 @@ test.describe('Services (FD-89)', () => {
   });
 });
 
-test.describe('Home performance (handoff §5)', () => {
+test.describe('Home performance (FD-52)', () => {
   test('HTML is at most 60 KB', () => {
     expect(statSync('dist/index.html').size).toBeLessThanOrEqual(60 * 1024);
   });
@@ -1105,7 +1105,7 @@ test.describe('Home performance (handoff §5)', () => {
   }
 });
 
-test.describe('Home without JavaScript (handoff §3)', () => {
+test.describe('Home without JavaScript (FD-47)', () => {
   test.use({ javaScriptEnabled: false });
 
   test('every section is visible and every link works', async ({ page, request, baseURL }) => {

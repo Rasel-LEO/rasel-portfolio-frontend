@@ -3,6 +3,7 @@
 // /static/frontend/, exists in dist-django/ and resolves by a source key from the Vite manifest
 // or the asset map; js/theme-init.js is present; and each page's HTML equals the static page
 // once the base is replaced by '/' and the hashes of the chunks that embed the base are removed.
+// The root files of .vite/root-files.json (FD-139) are checked as well.
 // Reads dist/ and dist-django/ (npm test builds both first).
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
@@ -70,6 +71,35 @@ for (const file of [...htmlFiles, ...cssFiles]) {
 for (const [path, files] of urls) {
   if (!existsSync(join(django, path))) problems.push(`${path} (in ${files[0]}): file missing`);
   if (!sources.has(path)) problems.push(`${path} (in ${files[0]}): no source key`);
+}
+
+// FD-139: the root files (icons, manifest) Django serves at the site root as well. Each one listed
+// in .vite/root-files.json sits at the build root, equals its public/ file and has an asset-map
+// key; every icon or manifest link of the pages and every icon of the manifest is one of them.
+const rootFiles = readJson('.vite/root-files.json');
+if (!Array.isArray(rootFiles) || !rootFiles.length) problems.push('.vite/root-files.json missing');
+const rootList = Array.isArray(rootFiles) ? rootFiles : [];
+for (const file of rootList) {
+  if (file.includes('/')) problems.push(`root file ${file}: not at the root`);
+  else if (!existsSync(join(django, file))) problems.push(`root file ${file}: missing`);
+  else if (!readFileSync(join(django, file)).equals(readFileSync(join(root, 'public', file))))
+    problems.push(`root file ${file}: differs from public/${file}`);
+  if (assetMap[file] !== file) problems.push(`root file ${file}: no asset-map key`);
+}
+for (const file of htmlFiles) {
+  const links = read(django, file).matchAll(
+    /<link rel="(?:icon|apple-touch-icon|manifest)"[^>]*href="([^"]+)"/g,
+  );
+  for (const [, href] of links) {
+    if (!rootList.includes(href.replace(base, '')))
+      problems.push(`${file}: ${href} is not a listed root file`);
+  }
+}
+if (rootList.includes('site.webmanifest') && existsSync(join(django, 'site.webmanifest'))) {
+  for (const icon of JSON.parse(read(django, 'site.webmanifest')).icons ?? []) {
+    if (!icon.src.startsWith('/') || !rootList.includes(icon.src.slice(1)))
+      problems.push(`site.webmanifest: icon ${icon.src} is not a listed root file`);
+  }
 }
 
 // The two targets differ only in their base.

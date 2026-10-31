@@ -48,9 +48,9 @@ for (const form of forms) {
       await expect(element).toHaveAttribute('method', 'post');
       await expect(element).toHaveAttribute('novalidate', '');
       await expect(element).not.toHaveAttribute('action', /.*/);
-      await expect(page.locator(`${id(form.text)}-hint`)).toHaveText(
-        loadContent().contact.privacy_note,
-      );
+      // FD-140: no field hint; the privacy notice under the form is the only privacy text.
+      await expect(page.locator(`${id(form.text)}-hint`)).toHaveCount(0);
+      await expect(page.locator(id(form.text))).not.toHaveAttribute('aria-describedby', /.*/);
     });
 
     test('an empty submit marks every required field and focuses the first', async ({ page }) => {
@@ -70,10 +70,11 @@ for (const form of forms) {
           new RegExp((await error.innerText()).trim().replace(/[.]/g, '\\.')),
         );
       }
-      // The privacy note stays linked to the text field while it shows an error.
-      expect(
-        (await page.locator(id(form.text)).getAttribute('aria-describedby')).split(' '),
-      ).toContain(`${form.prefix}-${form.text}-hint`);
+      // The text field is described by its error alone (no hint, FD-140).
+      await expect(page.locator(id(form.text))).toHaveAttribute(
+        'aria-describedby',
+        `${form.prefix}-${form.text}-error`,
+      );
       for (const name of ['organisation', form.select]) {
         await expect(page.locator(id(name))).not.toHaveAttribute('aria-invalid', /.*/);
       }
@@ -99,10 +100,7 @@ for (const form of forms) {
       await expect(page.locator(id('email'))).toHaveAttribute('aria-invalid', 'true');
 
       await page.locator(id(form.text)).fill('Some text');
-      await expect(page.locator(id(form.text))).toHaveAttribute(
-        'aria-describedby',
-        `${form.prefix}-${form.text}-hint`,
-      );
+      await expect(page.locator(id(form.text))).not.toHaveAttribute('aria-describedby', /.*/);
     });
 
     test('a valid submit stays on the page and offers a mailto: link', async ({ page }) => {
@@ -258,3 +256,33 @@ test('services are equal height in a row from 992 px and stacked below', async (
   expect(stacked[1]).toBeGreaterThan(stacked[0]);
   expect(stacked[2]).toBeGreaterThan(stacked[1]);
 });
+
+// FD-140: the owner-approved privacy notice, from each page's content, as plain small text right
+// under its form (not linked by aria-describedby: the existing hint pattern is per field).
+for (const form of forms) {
+  test(`${form.page}: the privacy notice sits under the form`, async ({ page }) => {
+    await page.goto(`/${form.page}`);
+    const content = loadContent();
+    const text = content[form.prefix].privacy_notice;
+    expect(text).toBe(content.contact.privacy_notice);
+    expect(text).toContain('deleted from the site after 12 months');
+    // The only privacy text on the page: the old field note is gone.
+    expect(content.contact).not.toHaveProperty('privacy_note');
+    await expect(page.locator('.field-hint')).toHaveCount(0);
+    await expect(page.getByText('Your message goes only to me')).toHaveCount(0);
+    const notice = page.locator('.form-notice');
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveText(text);
+    await expect(notice).toBeVisible();
+    const placement = await notice.evaluate((el) => ({
+      afterForm: el.previousElementSibling?.matches('form[data-form]') ?? false,
+      describes: [...document.querySelectorAll('[aria-describedby]')].some((node) =>
+        node.getAttribute('aria-describedby').split(' ').includes(el.id),
+      ),
+      size: getComputedStyle(el).fontSize,
+    }));
+    expect(placement.afterForm).toBe(true);
+    expect(placement.describes).toBe(false);
+    expect(parseFloat(placement.size)).toBeLessThan(16);
+  });
+}

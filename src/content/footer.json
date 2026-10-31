@@ -1,4 +1,5 @@
 {
+  "signature_by": "by Rasel Al Mamun",
   "role_line": "Agricultural engineer · Researcher · Developer",
   "groups": {
     "explore": "Explore",
@@ -7,5 +8,6 @@
   },
   "research_profiles": ["orcid", "scholar", "scopus", "researchgate"],
   "connect_profiles": ["linkedin", "github"],
-  "copyright_name": "Rasel Al Mamun"
+  "copyright_name": "Rasel Al Mamun",
+  "ai_portrait_note": "Some portrait images on this site are AI-generated from my own photos."
 }
