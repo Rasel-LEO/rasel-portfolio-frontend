@@ -266,6 +266,11 @@ for (const form of forms) {
     const text = content[form.prefix].privacy_notice;
     expect(text).toBe(content.contact.privacy_notice);
     expect(text).toContain('deleted from the site after 12 months');
+    // 1.4.1 wording: the IP address is not stored with the message.
+    expect(text).toContain(
+      'Your IP address is not stored with your message, only a one-way code used to limit spam.',
+    );
+    expect(text).not.toContain('Your IP address is not stored, only');
     // The only privacy text on the page: the old field note is gone.
     expect(content.contact).not.toHaveProperty('privacy_note');
     await expect(page.locator('.field-hint')).toHaveCount(0);
