@@ -5,6 +5,12 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.4.1 — 2026-11-01
+
+- Changed: the privacy notice under the Contact and Hire me forms (FD-140, amended) now says
+  "Your IP address is not stored with your message, only a one-way code used to limit spam."
+  (was "Your IP address is not stored, only …"). Test updated.
+
 ## 1.4.0 — 2026-10-31
 
 - Added: the **Ideatrium** brand (FD-139).
