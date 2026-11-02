@@ -150,7 +150,10 @@ for (const form of forms) {
       await page.getByRole('button', { name: 'Copy email address' }).click();
       await expect(status).toHaveText('Email address copied');
       expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(profile.email);
-      await expect(page.locator('.email-text')).toHaveText(profile.email);
+      await expect(page.locator('.email-text')).toHaveText([
+        profile.email,
+        profile.secondary_email,
+      ]);
     });
   });
 
@@ -170,10 +173,10 @@ for (const form of forms) {
       }
       await expect(page.getByRole('button', { name: form.submit })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Copy email address' })).toBeHidden();
-      await expect(page.locator('.email-text a')).toHaveAttribute(
-        'href',
-        `mailto:${profile.email}`,
-      );
+      const links = page.locator('.email-text a');
+      await expect(links).toHaveCount(2);
+      await expect(links.nth(0)).toHaveAttribute('href', `mailto:${profile.email}`);
+      await expect(links.nth(1)).toHaveAttribute('href', `mailto:${profile.secondary_email}`);
     });
   });
 }

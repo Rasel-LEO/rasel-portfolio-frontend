@@ -5,6 +5,16 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.5.1 — 2026-11-02
+
+- Changed: two public email addresses (FD-145). Wherever the site shows an address (footer of
+  every page, Home contact band, Contact, Hire me) it shows hello@ideatrium.com first, then
+  mr.raselalmamun@gmail.com, each its own `mailto:` link named "Email <address>". The CV
+  request, the structured data, the form's mailto and the Privacy Policy keep
+  hello@ideatrium.com only.
+- Added: `secondary_email` in `src/content/profile.json` (mirrored in `docs/content/`).
+- Tests: the "no Gmail anywhere" release test is replaced by tests for where each address shows.
+
 ## 1.5.0 — 2026-11-02
 
 - Added: rich-content styles in the design system (FD-142). The frontend now styles the

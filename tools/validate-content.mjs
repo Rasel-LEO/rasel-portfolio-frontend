@@ -139,6 +139,7 @@ const shapes = {
     statement: isText,
     summary: isText,
     email: (v) => isText(v) && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+    secondary_email: (v) => isText(v) && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
     languages: isTextList,
     'cv?': (v) => isText(v.href) && isText(v.size),
     research_interests: isTextList,

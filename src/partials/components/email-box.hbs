@@ -3,7 +3,10 @@
 status stays rendered while empty so screen readers announce it when the text arrives. --}}
 <div class="aside-box">
   <h2 class="eyebrow mb-0">Direct</h2>
-  <p class="email-text mb-0"><a class="profile-link" href="mailto:{{profile.email}}"><span class="link">{{profile.email}}</span></a></p>
+  <ul class="email-list list-unstyled mb-0">
+    <li class="email-text"><a class="profile-link" href="mailto:{{profile.email}}" aria-label="Email {{profile.email}}"><span class="link">{{profile.email}}</span></a></li>
+    <li class="email-text"><a class="profile-link" href="mailto:{{profile.secondary_email}}" aria-label="Email {{profile.secondary_email}}"><span class="link">{{profile.secondary_email}}</span></a></li>
+  </ul>
   <div class="copy-row">
     <button type="button" class="btn btn-secondary btn-sm js-only" data-copy-email="{{profile.email}}">
       Copy<span class="visually-hidden"> email address</span>

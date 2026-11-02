@@ -897,6 +897,11 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 
 .contact-band-email {
   margin-top: var(--s-2);
+  overflow-wrap: anywhere;
+}
+
+.contact-band-email-2 {
+  margin-top: var(--s-1);
 }
 
 .contact-band-figure-col {

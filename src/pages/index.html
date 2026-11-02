@@ -395,8 +395,19 @@
               </h2>
               <p class="band-text mb-0">{{home.contact_band.text}}</p>
               <p class="contact-band-email mb-0">
-                <a class="profile-link" href="mailto:{{profile.email}}"
+                <a
+                  class="profile-link"
+                  href="mailto:{{profile.email}}"
+                  aria-label="Email {{profile.email}}"
                   ><span class="link">{{profile.email}}</span></a
+                >
+              </p>
+              <p class="contact-band-email contact-band-email-2 mb-0">
+                <a
+                  class="profile-link"
+                  href="mailto:{{profile.secondary_email}}"
+                  aria-label="Email {{profile.secondary_email}}"
+                  ><span class="link">{{profile.secondary_email}}</span></a
                 >
               </p>
               <div class="band-actions">
