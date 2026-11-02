@@ -508,18 +508,26 @@ test.describe('entrance (FD-67)', () => {
   });
 
   // Portfolio has its own profile entrance (FD-111, tests/portfolio.spec.js item 10).
+  // 1.5.0: each fade is recorded when it starts. Read after the load, a 200 ms fade could already
+  // have finished under a busy machine (and left document.getAnimations()), so the old check
+  // flaked; what it asserts is unchanged: one fade, on <main>, over 200 ms.
   test('other pages: main fades in over --d-base', async ({ page }) => {
+    await page.addInitScript(() => {
+      window.fades = [];
+      document.addEventListener(
+        'animationstart',
+        (event) => {
+          if (event.animationName !== 'enter-fade') return;
+          const duration = getComputedStyle(event.target).animationDuration;
+          window.fades.push([event.target.tagName, parseFloat(duration) * 1000]);
+        },
+        true,
+      );
+    });
     await page.goto('/blog.html');
-    const fade = await page.evaluate(() =>
-      document
-        .getAnimations()
-        .filter((animation) => animation.animationName === 'enter-fade')
-        .map((animation) => [
-          animation.effect.target.tagName,
-          animation.effect.getComputedTiming().duration,
-        ]),
-    );
-    expect(fade).toEqual([['MAIN', 200]]);
+    await expect.poll(() => page.evaluate(() => window.fades.length)).toBeGreaterThan(0);
+    await entranceDone(page);
+    expect(await page.evaluate(() => window.fades)).toEqual([['MAIN', 200]]);
   });
 
   // The LCP element and time with and without the entrance (median of three loads each).

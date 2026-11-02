@@ -63,7 +63,13 @@
         <div class="project-cols">
           <div class="row">
             <section class="col-lg-6 project-col" aria-labelledby="overview-title">
-              {{#if project.detail.overview}}
+              {{!-- FD-142: the template page only — a rich Overview as Django renders one
+              (div.project-text.project-rich), the visual and parity reference. --}} {{#if
+              richSamples}}
+              <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
+              {{> samples/rich-overview}}
+              <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>
+              {{else if project.detail.overview}}
               <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
               <p class="project-text">{{project.detail.overview}}</p>
               <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>

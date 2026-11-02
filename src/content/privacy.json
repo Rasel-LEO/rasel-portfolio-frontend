@@ -1,0 +1,94 @@
+{
+  "version": "1.1",
+  "title": "Privacy Policy",
+  "short_title": "Privacy Policy",
+  "description": "How Ideatrium handles your data: no tracking, what the forms keep and for how long, who else processes it, and how to ask for deletion.",
+  "link_label": "Privacy Policy",
+  "form_line": "Your details are used only to reply and are processed in the EU and US.",
+  "updated_label": "Last updated:",
+  "updated": "2026-11-02",
+  "updated_text": "2 November 2026",
+  "intro": [
+    "This page explains what happens to your data when you visit this site or send me a message. The site is run by me, Rasel Al Mamun, in Bangladesh. You can reach me at hello@ideatrium.com."
+  ],
+  "sections": [
+    {
+      "id": "when-you-visit",
+      "heading": "When you visit",
+      "paragraphs": [
+        "I don't use tracking cookies or analytics. The site sets only two small cookies: one remembers whether you chose the light or dark theme, and one protects the forms against misuse. Your browser also keeps your theme choice in its own storage on your device.",
+        "To deliver the pages, my host, Heroku, and my network provider, Cloudflare, process your IP address, as for any website. Heroku keeps it only for a short time in a technical log."
+      ]
+    },
+    {
+      "id": "when-you-send-me-a-message",
+      "heading": "When you send me a message",
+      "list": [
+        {
+          "label": "What I keep:",
+          "text": "your name, your email address, your organisation if you give one, the subject or kind of work you choose, and your message or project brief. I also keep the date and whether the email to me was delivered."
+        },
+        {
+          "label": "Why:",
+          "text": "to read your message and reply to you, and to protect the forms from spam. Nothing else."
+        },
+        {
+          "label": "Legal basis:",
+          "text": "I use your details with your consent, which you give by sending the form, and to take the steps you ask for, such as replying to a work inquiry. Keeping the spam codes below is also in my legitimate interest in keeping the forms safe."
+        },
+        {
+          "label": "Your IP address",
+          "text": "is not stored with your message, only a one-way code used to limit spam."
+        },
+        {
+          "label": "Email:",
+          "text": "your message is also sent to my mailbox through an email delivery service, Resend."
+        },
+        {
+          "label": "How long:",
+          "text": "the site deletes messages automatically after 365 days, and backups that contain them expire within about six months after that. I delete the email copy from my mailbox at the same time as the site."
+        }
+      ]
+    },
+    {
+      "id": "who-else-handles-your-data",
+      "heading": "Who else handles your data",
+      "table": {
+        "columns": ["Service", "What it does", "Where"],
+        "rows": [
+          [
+            "Heroku",
+            "Hosts the website and its database; keeps daily database backups for up to two weeks",
+            "Website and database: European Union; backups: United States"
+          ],
+          [
+            "Cloudflare",
+            "Runs the domain and the email forwarding for hello@ideatrium.com; stores the released images and encrypted backups; delivers the images through its network",
+            "Images and backups stored in the European Union; delivered from data centres worldwide"
+          ],
+          [
+            "Resend",
+            "Delivers your message to my mailbox; keeps it for up to 30 days",
+            "United States"
+          ],
+          ["Google (Gmail)", "Receives your message in my mailbox", "United States"]
+        ]
+      },
+      "paragraphs_after": [
+        "These services handle the data only to provide the site for me. Heroku, Resend and Google are certified under the EU–U.S. Data Privacy Framework, an agreed standard for protecting personal data sent to the United States. I never sell your data or share it for marketing."
+      ]
+    },
+    {
+      "id": "your-rights",
+      "heading": "Your rights",
+      "paragraphs": [
+        "You can ask me at any time to see, correct or delete your message, to withdraw your consent, or to stop using your data. Email hello@ideatrium.com from the same address you used in the form, so I know it is you. I will reply within one month. If you are not happy with my answer, you can complain to the data protection authority in your country."
+      ]
+    },
+    {
+      "id": "changes",
+      "heading": "Changes",
+      "paragraphs": ["If I change this page, I update the date at the top."]
+    }
+  ]
+}

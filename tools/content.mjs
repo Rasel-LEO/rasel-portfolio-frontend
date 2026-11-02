@@ -34,6 +34,7 @@ const contentFiles = [
   'portfolio',
   'post-sidebar',
   'research-archive',
+  'privacy',
 ];
 
 // blog-page.json → content.blogPage

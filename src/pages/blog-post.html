@@ -56,7 +56,9 @@
               >
                 {{post.standfirst}}
               </p>
-              {{{post.html}}}
+              {{{post.html}}} {{!-- FD-142: the template page only — one sample of each rich
+              element, as Django renders an HTML post body (the visual and parity reference). --}}
+              {{#if richSamples}}{{> samples/rich-post}}{{/if}}
             </div>
             <footer class="post-foot">
               <p class="mb-0">

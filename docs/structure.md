@@ -59,7 +59,7 @@ Module-level detail: `docs/architecture.md`.
 │   │   ├── core/                    theme, drawer, back-to-top, page wipe, scrolling, tabs, toggle groups
 │   │   ├── motion/                  reveals, tilt, cursor, Lenis, the Home stage, screen 2, Home motion
 │   │   └── pages/                   Portfolio, research archive, Blog, post, forms
-│   ├── pages/                       one Handlebars page per route (10); two are templates
+│   ├── pages/                       one Handlebars page per route (11); two are templates
 │   │   ├── index.html               Home
 │   │   ├── portfolio.html           Portfolio
 │   │   ├── publications.html        all publications
@@ -69,21 +69,23 @@ Module-level detail: `docs/architecture.md`.
 │   │   ├── blog-post.html           template of every post-<slug>.html
 │   │   ├── hire.html                Hire me
 │   │   ├── contact.html             Contact
+│   │   ├── privacy.html             Privacy Policy (FD-143)
 │   │   └── 404.html                 not found
 │   ├── partials/                    build-time Handlebars partials
 │   │   ├── shell/                   head, header, drawer, footer, back-to-top, page wipe
 │   │   ├── components/              buttons, chips, pills, form field, tabs, images
 │   │   ├── sections/                cards and rows of page sections, JSON-LD
-│   │   └── icons/                   in-house line icons and illustrations
+│   │   ├── icons/                   in-house line icons and illustrations
+│   │   └── samples/                 Django's rich-content output, template pages only (FD-142)
 │   └── scss/
 │       ├── main.scss                imports in cascade order
 │       ├── base/                    tokens (generated), Bootstrap overrides, base, type, motion
 │       ├── layout/                  shell: skip link, header, drawer, footer, back-to-top
 │       ├── components/              buttons, links, chips, cards
-│       └── pages/                   Home, stage, Portfolio, inner pages
+│       └── pages/                   Home, stage, Portfolio, inner pages, rich content (FD-142)
 ├── tests/                           Playwright specs (one file per area) and shared helpers
 │   ├── *.spec.js                    a11y, blog, content, django, forms, forms-live, home, inner-pages,
-│   │                                motion, pages, portfolio, release, shell, stage, widths
+│   │                                motion, pages, portfolio, release, rich, shell, stage, widths
 │   ├── fixtures.js                  the shared test; maps page URLs on the Django target
 │   └── pages.js                     page lists, the Django URL table, build paths
 ├── tools/                           Node scripts for the build, checks and test runners

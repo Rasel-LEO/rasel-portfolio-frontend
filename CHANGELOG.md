@@ -5,6 +5,37 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.5.0 — 2026-11-02
+
+- Added: rich-content styles in the design system (FD-142). The frontend now styles the
+  markup of the Django rich-text editor with Django's exact class names, on the design tokens in
+  both themes: the post body (`.rt-content`: lists, quotation, rule, highlight, inline code,
+  tables, code blocks with the Pygments `tok-*` colours, inline and block math, figures and the
+  alignment / size / colour vocabulary) and the rich project Overview (`.project-rich`). Wide
+  formulas, tables and code scroll inside their own focusable region, never the page. The two
+  template pages show one sample of each element, in Django's exact output, as the visual and
+  parity reference.
+- Added: the Privacy Policy page `privacy.html` (Django `/privacy/`, FD-143), in the site's text
+  style, its whole text in `src/content/privacy.json` (the final v1 text); in the sitemap when `SITE_URL` is
+  set. A "Privacy Policy" link in the footer of every page.
+- Changed: under the Contact and Hire me forms, the privacy notice is now one line, "Your details
+  are used only to reply and are processed in the EU and US.", and the link "Privacy Policy" (FD-140, amended); the
+  rest of the old notice, the IP sentence included, is on the Privacy Policy page.
+- Changed: each Markdown table region in a post is named "Table 1", "Table 2", … (was "Table");
+  blog cards separate the category and "Draft" for screen readers and say "(draft)" in the link
+  name.
+- Fix round (FD-144): the Privacy Policy is the final v1 text; the public address is
+  hello@ideatrium.com everywhere (the Gmail address is gone from the built site, with a test); the
+  rich-text orange and purple have design tokens (`text-orange`, `text-purple`, AA in both themes).
+- Privacy Policy text v1.1: the sentence about a browser-type code is removed (the site stores only a
+  keyed hash of the IP address, no browser code); nothing else in the text changes.
+- Docs: no local paths in `docs/setup.md` and FD-01; the Django handover lists the new page and
+  route, the copy keys, the rich-content classes and the error page's forced-colours border.
+- Tests: a new `tests/rich.spec.js`; the Privacy page in the page, shell, accessibility, widths,
+  release and Django-path tests; the footer link on every page; the new form line; a
+  forced-colours check of the 404 buttons. The flaky entrance-fade test (`motion.spec.js`) now
+  records the fade when it starts and asserts the same thing.
+
 ## 1.4.1 — 2026-11-01
 
 - Changed: the privacy notice under the Contact and Hire me forms (FD-140, amended) now says

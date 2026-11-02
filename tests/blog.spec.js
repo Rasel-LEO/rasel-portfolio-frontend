@@ -29,6 +29,12 @@ test.describe('Blog list', () => {
       const item = items.nth(i);
       await expect(item.locator('.blog-card-category')).toHaveText(post.categoryLabel);
       await expect(item.locator('[data-draft-label]')).toHaveText('Draft');
+      // 1.5.0: the category and "Draft" read as two words ("…, Draft"), and the link name says
+      // the post is a draft.
+      await expect(item.locator('.blog-card-meta')).toHaveText(`${post.categoryLabel}, Draft`);
+      await expect(item.locator('.blog-card-link')).toHaveAccessibleName(
+        `Read article: ${post.title} (draft)`,
+      );
       const link = item.getByRole('link', { name: post.title });
       await expect(link).toHaveAttribute('href', pagePath(post.file));
       await expect(item.locator('.blog-card-excerpt')).toHaveText(post.standfirst);
@@ -216,9 +222,18 @@ test.describe('Markdown (FD-37)', () => {
       '<pre class="prose-code" tabindex="0" role="region" aria-label="Code sample (js)">',
     );
     expect(html).toContain(
-      '<div class="prose-table" tabindex="0" role="region" aria-label="Table"><table>',
+      '<div class="prose-table" tabindex="0" role="region" aria-label="Table 1"><table>',
     );
     expect(html).toContain('</table></div>');
+    // 1.5.0: each table region has its own name, numbered in the post (no repeated "Table"); a
+    // new post starts at 1 again.
+    const table = '| a | b |\n|---|---|\n| 1 | 2 |';
+    const two = renderMarkdown(`${table}\n\ntext\n\n${table}`);
+    expect(two).toContain('aria-label="Table 1"><table>');
+    expect(two).toContain('aria-label="Table 2"><table>');
+    expect(two).not.toContain('aria-label="Table"');
+    expect(two.match(/<\/table><\/div>/g)).toHaveLength(2);
+    expect(renderMarkdown(table)).toContain('aria-label="Table 1"');
   });
 
   test('links other than http(s), mailto and site paths fail the build', () => {

@@ -31,6 +31,8 @@ test('every page has a unique <title> of at most 60 characters', async ({ page }
   }
   expect(titles.get('index.html')).toBe('Rasel Al Mamun — Ideatrium');
   expect(titles.get('blog.html')).toBe('Blog — Ideatrium');
+  // FD-143: the brief's title.
+  expect(titles.get('privacy.html')).toBe('Privacy Policy — Ideatrium');
   // The two templates repeat a generated page's title by design (noindex, FD-131).
   const unique = [...titles].filter(
     ([file]) => !['portfolio-entry.html', 'blog-post.html'].includes(file),
@@ -55,12 +57,13 @@ test('every page has a specific meta description', async ({ page }) => {
     );
     seen.set(file, description);
   }
-  const { meta } = loadContent();
+  const { meta, privacy } = loadContent();
   expect(seen.get('index.html')).toBe(meta.home);
   expect(seen.get('blog.html')).toBe(meta.blog);
   expect(seen.get('hire.html')).toBe(meta.hire);
   expect(seen.get('contact.html')).toBe(meta.contact);
   expect(seen.get('404.html')).toBe(meta['404']);
+  expect(seen.get('privacy.html')).toBe(privacy.description);
 });
 
 for (const page of pages) {
@@ -195,6 +198,9 @@ test('FD-130: images carry dimensions and load lazily below the first screen', (
       else expect(img, file).toContain('loading="lazy"');
     }
     for (const [source] of html.matchAll(/<source\b[^>]*>/g)) {
+      // FD-142: Django's released images (the rich-content figure samples) list their WebP
+      // variants with `sizes`; every other source has one candidate.
+      if (/\ssizes="[^"]+"/.test(source)) continue;
       expect(source, file).not.toMatch(/srcset="[^"]*,/);
     }
   }
@@ -306,6 +312,59 @@ test('FD-141: the AI-portrait note is in the footer of every page', () => {
       `<p class="footer-ai-note mb-0">${footer.ai_portrait_note}</p>`,
     );
   }
+});
+
+// FD-143: the footer of every built page links the Privacy Policy, and the page itself is built
+// from privacy.json (headings, the list, the table, the date, the mailto links).
+test('FD-143: the Privacy Policy link is in the footer of every page', () => {
+  const { privacy } = loadContent();
+  for (const file of pages) {
+    const html = readFileSync(`dist/${file}`, 'utf8');
+    const inFooter = html.slice(html.indexOf('<footer class="site-footer">'));
+    const current = file === 'privacy.html' ? ' aria-current="page"' : '';
+    expect(inFooter, file).toContain(
+      `<a class="footer-link footer-privacy-link" href="/privacy.html"${current}><span class="link">${privacy.link_label}</span></a>`,
+    );
+  }
+});
+
+test('FD-143: the Privacy Policy page shows the text of privacy.json', async ({ page }) => {
+  const { privacy } = loadContent();
+  await page.goto('/privacy.html');
+  await expect(page.locator('h1')).toHaveText(privacy.title);
+  await expect(page.locator('main time')).toHaveAttribute('datetime', privacy.updated);
+  await expect(page.locator('main time')).toHaveText(privacy.updated_text);
+  await expect(page.locator('main h2')).toHaveText(privacy.sections.map((s) => s.heading));
+  const body = page.locator('main .prose');
+  for (const text of [
+    ...privacy.intro,
+    ...privacy.sections.flatMap((s) => [...(s.paragraphs ?? []), ...(s.paragraphs_after ?? [])]),
+  ]) {
+    await expect(body.getByText(text, { exact: true })).toHaveCount(1);
+  }
+  const items = privacy.sections.flatMap((s) => s.list ?? []);
+  await expect(body.locator('li')).toHaveText(items.map((i) => `${i.label} ${i.text}`));
+  const { table, id } = privacy.sections.find((s) => s.table);
+  const region = page.getByRole('region', {
+    name: privacy.sections.find((s) => s.id === id).heading,
+  });
+  await expect(region).toHaveAttribute('tabindex', '0');
+  await expect(region.locator('thead th')).toHaveText(table.columns);
+  await expect(region.locator('tbody tr')).toHaveCount(table.rows.length);
+  for (const [i, row] of table.rows.entries()) {
+    await expect(region.locator('tbody tr').nth(i).locator('th, td')).toHaveText(row);
+  }
+  // The contact address in the text is a mailto link wherever it appears.
+  const mail = body.locator('a[href^="mailto:"]');
+  await expect(mail).toHaveCount(2);
+  for (const link of await mail.all()) {
+    const address = await link.textContent();
+    await expect(link).toHaveAttribute('href', `mailto:${address}`);
+  }
+  // The old IP sentence of the forms lives here now (DEC-P1).
+  await expect(body).toContainText(
+    'is not stored with your message, only a one-way code used to limit spam.',
+  );
 });
 
 test('FD-141: P5 / P6 alt text is disclosed where descriptive; the avatar is not labelled', async ({

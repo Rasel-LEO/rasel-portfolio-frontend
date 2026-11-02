@@ -427,6 +427,11 @@
   color: var(--fg-2);
 }
 
+// FD-143: the Privacy Policy link in the legal block, small text with the 44 px touch target.
+.footer-privacy-link {
+  font-size: var(--type-small-size);
+}
+
 .footer-theme {
   display: inline-flex;
   gap: var(--s-2);

@@ -2,7 +2,7 @@
 
 Author: Rasel Al Mamun
 
-This document describes how the static frontend (v1.3.1) becomes the templates and static
+This document describes how the static frontend (v1.5.0) becomes the templates and static
 files of the Django site. The frontend stays the reference: the Django pages should render
 the same HTML as `dist/` for the same content, apart from the template tags listed here.
 Decision ids (FD-xx) refer to `docs/decisions.md`.
@@ -56,6 +56,7 @@ URL in the HTML and CSS exists and resolves from the manifest or the asset map.
 | `blog-post.html` → `post-<slug>.html` (one per post)        | `blog/post.html`              | `/blog/<slug>/`            | one post, its table of contents, more posts                                                           |
 | `hire.html`                                                 | `hire.html`                   | `/hire/`                   | hire block, services, process, form                                                                   |
 | `contact.html`                                              | `contact.html`                | `/contact/`                | contact block, links, form                                                                            |
+| `privacy.html` (1.5.0, FD-143)                              | `privacy.html`                | `/privacy/`                | the `privacy` copy block                                                                              |
 | `404.html`                                                  | `404.html`                    | handler404                 | `meta.404` line                                                                                       |
 
 Generated project pages today: `project-poultry-aiot-edge`, `-poultry-iot-undergrad`,
@@ -97,6 +98,7 @@ parameters become `with` arguments (`{{> components/field id="hire-name" …}}` 
 | `sections/related-pub`                                                                           | project page                                                                                                                                                                          |
 | `sections/blog-card`, `sections/blog-empty`                                                      | Blog                                                                                                                                                                                  |
 | `sections/profile-links`                                                                         | Contact                                                                                                                                                                               |
+| `samples/rich-post`, `samples/rich-overview`                                                     | the two template pages only (FD-142): Django's own rich-content output, the parity reference; no Django include                                                                       |
 | `icons/area-icon`, `icons/line-icon`, `icons/pf-icon`, `icons/footer-icon`, `icons/illustration` | inline SVG icons by name; in Django one include per icon set with an `{% if name == … %}` chain, or a template tag                                                                    |
 | `icons/logo-symbols` (in `shell/header`), `icons/logo`, `icons/logo-mark`                        | every page: the Ideatrium logo geometry once per page as `<symbol>`s, drawn by `<use>` in the header, drawer and footer (FD-139); keep the fixed `width` / `height` and `aria-hidden` |
 
@@ -140,6 +142,17 @@ the copyright on every page; any descriptive alt text of the P5 / P6 figures mus
 "(AI-generated from my own photo)"), `contact.privacy_notice` and `hire.privacy_notice` (the
 owner-approved privacy notice under each form; the same text in both).
 
+**Copy keys in 1.5.0** (FD-140 amended, FD-143): the new file `privacy.json` holds every word of
+the Privacy Policy page and of the line under the forms — `version` (the content version, now
+"1.1", the final text), `title`, `short_title`, `description`, `link_label` ("Privacy Policy", the footer
+and form link), `form_line`, `updated_label`, `updated` (ISO date, the `<time datetime>`),
+`updated_text`, `intro` (paragraphs), `sections` (each `id`, `heading` and any of
+`paragraphs`, `list` of `label` + `text`, `table` of `columns` + `rows`,
+`paragraphs_after`). Email addresses in the paragraphs become `mailto:` links (the `mailLinks`
+helper: escape the text, then link each address). **Removed:** `contact.privacy_notice` and
+`hire.privacy_notice`. The owner's decision keeps this text in the site copy in Git (not the
+admin), so a wording change is a small reviewed commit with a dated record.
+
 Validation that `tools/validate-content.mjs` runs before every build must move into model
 validation or a management command: unique ids/slugs, publication → project references, DOI
 format, ISO dates, a published post has a date and a written standfirst, a Markdown body per
@@ -151,7 +164,30 @@ Post bodies are Markdown rendered at build time with the rules of FD-37 / FD-41
 (`tools/markdown.mjs`): raw HTML escaped, only http(s), mailto and relative links, `h2`
 ids for the table of contents, code blocks as focusable scroll regions, `[Figure: …]`
 paragraphs as labelled placeholders. Port the same rules (for example `markdown-it` or
-`Python-Markdown` with a sanitiser and the same output classes).
+`Python-Markdown` with a sanitiser and the same output classes). **1.5.0:** each Markdown table
+region is named by its number in the post, `aria-label="Table 1"`, `"Table 2"`, … (was
+"Table" for all); Django's Markdown renderer (`prose-table`) should number them the same way.
+
+**Rich content (FD-142, 1.5.0).** The frontend stylesheet now styles Django's rich-text output
+with Django's class names, on the design tokens in both themes. After the pin, Django can drop
+the stopgap public rules of its `richtext-content.css` (its `.rt-content` palette rules stay
+for the staff previews and the editor):
+
+| Django output (unchanged)                                                                                     | Where                            | Frontend rule                                            |
+| ------------------------------------------------------------------------------------------------------------- | -------------------------------- | -------------------------------------------------------- |
+| `div.rt-content` (HTML post body)                                                                             | inside `.prose` on the post page | `_rich.scss`: grid flow, lists, quote, `hr`, `mark`      |
+| `div.rt-table-scroll[role=region][tabindex=0][aria-label="Table N"]`                                          | post body                        | shared with `.prose-table` (`_pages.scss`)               |
+| `pre.rt-code[tabindex=0] > code.language-* > span.tok-*`, plain `pre > code`                                  | post body                        | shared with `.prose-code`; token colours in `_rich.scss` |
+| `div.rt-math-display[tabindex=0] > math[display=block]`, inline `math[display=inline]`                        | post body, Overview              | scrolls in its wrapper; `fg-0`                           |
+| `figure.rt-figure` (+ `rt-figure-wide` / `-narrow`, `rt-align-center`, `rt-figure-decorative`) with `picture` | post body                        | `_rich.scss`                                             |
+| `rt-align-*`, `rt-size-*`, `rt-color-*` (orange and purple use the tokens `text-orange` and `text-purple`)    | post body                        | `_rich.scss`                                             |
+| `div.project-text.project-rich` (E-4B Overview)                                                               | project page, Overview           | `_rich.scss`: lists, inline code, flow                   |
+
+The template pages `blog-post.html` and `portfolio-entry.html` show one sample of each, generated
+with the Django renderer itself (`src/partials/samples/`); the parity test can compare Django's
+render of the same stored HTML with those bytes (only the image URLs differ). Links in rich
+text keep the site's inline-link rule; Django's contract drops `target`, so they open in the same
+tab. **The FD-76 new-tab rule does not apply to post and project text** (owner decision, fix round).
 
 ## 5. Static files
 
@@ -246,10 +282,13 @@ and when both are set, `localStorage` wins over the cookie.
 | Hire me | `name`: required; `email`: required, email; `kind`: one of `hire.form_kinds`; `organisation`: optional; `brief`: required       |
 | Contact | `name`: required; `email`: required, email; `subject`: one of `contact.subjects`; `organisation`: optional; `message`: required |
 
-- Under each form, the privacy notice (`contact.privacy_notice`, `hire.privacy_notice`;
-  FD-140) as plain small text, `<p class="form-notice">` right after `</form>`. Its promises
-  must stay true of the Django side: messages kept 12 months on the site then deleted, no IP
-  address stored (only a one-way code for the rate limit), sent to the owner's inbox.
+- Under each form (FD-140, amended in 1.5.0): `<p class="form-notice">` right after `</form>`
+  with `privacy.form_line` ("Your details are used only to reply and are processed in the EU and US."), a space,
+  and the link to `/privacy/` labelled `privacy.link_label` (a plain link, no JavaScript). The
+  full notice — retention, the IP sentence, the processors — is on the Privacy Policy page
+  (FD-143). Its promises must stay true of the Django side: messages deleted automatically after
+  365 days, no IP address stored with a message (only a one-way code for the rate limit), sent to
+  the owner's mailbox through Resend.
 - The forms are `<form method="post">`. `src/js/pages/forms.js` validates on submit
   (messages in that file), marks fields with `aria-invalid` and `aria-describedby` and moves
   focus to the first error (FD-38). Without JavaScript the browser's native checks run
@@ -339,7 +378,15 @@ author` and the `Person` stay Rasel Al Mamun.
   `og:image` / `twitter:image` URLs, `sitemap.xml` and the `Sitemap:` line in `robots.txt`
   (FD-131). Django: `django.contrib.sitemaps` with the same pages (Home, Portfolio,
   publications, research, Blog, Hire me, Contact, every project and published post) and
-  `request.build_absolute_uri` for canonical URLs.
+  `request.build_absolute_uri` for canonical URLs. **1.5.0:** the Privacy Policy (`/privacy/`) is
+  indexable and in the sitemap.
+
+**The `/privacy/` route (FD-143, the Django pin of 1.5.0).** Add the URL name `privacy` for
+`privacy.html` (a simple page view with the `privacy` copy block as context, nav key `privacy`
+so the footer link gets `aria-current="page"`), the footer link on every page (`shell/footer`:
+`<p class="footer-privacy">` in `.footer-legal`), the sitemap entry, and the Django test table
+entry `privacy.html` → `/privacy/` (already in `tests/pages.js`).
+
 - `noindex` on the two template pages; in Django it applies only to draft previews.
 
 ## 11. Accessibility and motion contracts
@@ -366,6 +413,12 @@ Templates must keep, unchanged:
   `data-count*` (research), `data-form*`, `data-error-text`, `data-email`, `data-copy-*`
   (forms), `data-pf-*` (Portfolio styles). Renaming one breaks the matching module in
   `src/js/` or its styles.
+- **1.5.0 small items.** Blog cards: a visually hidden `", "` between the category and "Draft"
+  (`<span class="visually-hidden">, </span>` before `.blog-card-draft`), and the card link's
+  name ends with " (draft)" for a draft. **Error page (Django's static 500 page):** in
+  forced-colours mode the system drops backgrounds, so its pill link needs a real border, for
+  example `border: 1px solid transparent` on the link in `static/site/error.css` (the
+  frontend's 404 buttons keep Bootstrap's 1 px border; `tests/inner-pages.spec.js` checks it).
 - Motion is always on (FD-04); the OS `prefers-reduced-motion` setting is respected through
   `gsap.matchMedia()` and CSS media queries. No motion switch.
 

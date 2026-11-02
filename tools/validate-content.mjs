@@ -252,14 +252,12 @@ const shapes = {
     ),
     process: isListOf((v) => isStep(v) && isText(v.text)),
     form_kinds: isTextList,
-    privacy_notice: isText,
   },
   contact: {
     heading: isText,
     intro: isText,
     audiences: isTextList,
     subjects: isTextList,
-    privacy_notice: isText,
   },
   meta: { 404: isText, blog: isText, hire: isText, contact: isText, home: isText },
   home: {
@@ -298,6 +296,35 @@ const shapes = {
       // index shown only when asked for.
       v.areas_interactive === false &&
       typeof v.areas_show_index === 'boolean',
+  },
+  // FD-143: the Privacy Policy page and the line under both forms; a text update is a copy-only
+  // change to src/content/privacy.json.
+  privacy: {
+    version: isText,
+    title: isText,
+    short_title: isText,
+    description: isText,
+    link_label: isText,
+    form_line: isText,
+    updated_label: isText,
+    updated: (v) => ISO_DATE.test(v),
+    updated_text: isText,
+    intro: isTextList,
+    sections: isListOf(
+      (v) =>
+        SLUG.test(v.id) &&
+        isText(v.heading) &&
+        (v.paragraphs === undefined || isTextList(v.paragraphs)) &&
+        (v.list === undefined ||
+          isListOf((item) => isText(item.label) && isText(item.text))(v.list)) &&
+        (v.table === undefined ||
+          (isTextList(v.table.columns) &&
+            isListOf((row) => isTextList(row) && row.length === v.table.columns.length)(
+              v.table.rows,
+            ))) &&
+        (v.paragraphs_after === undefined || isTextList(v.paragraphs_after)) &&
+        Boolean(v.paragraphs || v.list || v.table),
+    ),
   },
   // Footer (FD-94): the brand line, three group names, which profile links each group shows.
   footer: {
@@ -376,6 +403,7 @@ const objects = [
   'portfolio',
   'postSidebar',
   'researchArchive',
+  'privacy',
 ];
 const stringLists = ['memberships', 'activities'];
 

@@ -20,6 +20,8 @@ const current = {
   'blog-post.html': [pagePath('blog.html'), 'true'],
   'hire.html': [pagePath('hire.html'), 'page'],
   'contact.html': [pagePath('contact.html'), 'page'],
+  // FD-143: only the footer's Privacy Policy link names this page.
+  'privacy.html': [pagePath('privacy.html'), 'page'],
   '404.html': [null, null],
 };
 
@@ -424,7 +426,7 @@ test.describe('focus is never dropped to <body>', () => {
     await expect(drawer.locator('.drawer-title')).not.toContainText(content.profile.name);
     await expect(drawer.getByRole('link', { name: 'Request CV' })).toHaveAttribute(
       'href',
-      'mailto:mr.raselalmamun@gmail.com?subject=CV%20request',
+      'mailto:hello@ideatrium.com?subject=CV%20request',
     );
   });
 
@@ -512,6 +514,15 @@ test.describe('footer (FD-94)', () => {
       expect(parseFloat(await note.evaluate((el) => getComputedStyle(el).fontSize))).toBeLessThan(
         16,
       );
+      // FD-143: the Privacy Policy link, on every page, with a 44 px touch target; on its own page
+      // it is marked current.
+      const privacy = footer.getByRole('link', { name: content.privacy.link_label, exact: true });
+      await expect(privacy).toHaveCount(1);
+      await expect(privacy).toBeVisible();
+      await expect(privacy).toHaveAttribute('href', pagePath('privacy.html'));
+      expect((await privacy.boundingBox()).height).toBeGreaterThanOrEqual(44);
+      if (name === 'privacy.html') await expect(privacy).toHaveAttribute('aria-current', 'page');
+      else await expect(privacy).not.toHaveAttribute('aria-current', /.*/);
       // The Theme button works.
       const before = await page.evaluate(() => document.documentElement.dataset.theme ?? 'dark');
       await footer.getByRole('button', { name: /^Theme/ }).click();

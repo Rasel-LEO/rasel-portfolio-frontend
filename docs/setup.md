@@ -47,8 +47,9 @@ the one-time code in the browser. Check with `gh auth status`.
 
 ## 4. Clone and install
 
+Open PowerShell in your checkout folder (the folder that will hold the repository), then:
+
 ```powershell
-Set-Location "E:\WebDev\Frontend Design"
 gh repo clone Rasel-LEO/rasel-portfolio-frontend
 Set-Location rasel-portfolio-frontend
 npm ci
@@ -56,7 +57,7 @@ npx playwright install chromium
 npm run dev                               # http://localhost:5173
 ```
 
-The folder name "Frontend Design" contains a space: always quote the path.
+If the path to your checkout folder contains a space, always quote it.
 
 ## 5. Repository settings (GitHub → Settings)
 
@@ -103,7 +104,7 @@ npm run test:linux -- tests/inner-pages.spec.js -g "CLS" --repeat-each=5   # bui
 | Symptom                              | Fix                                                             |
 | ------------------------------------ | --------------------------------------------------------------- |
 | `running scripts is disabled`        | `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`           |
-| Path errors with "Frontend Design"   | put the path in double quotes                                   |
+| Path errors (a space in the path)    | put the path in double quotes                                   |
 | `npm ci` fails after a branch switch | delete `node_modules` and run `npm ci` again                    |
 | Playwright cannot find a browser     | `npx playwright install chromium`                               |
 | CI red, local green                  | `gh run view --log-failed`; reproduce with `npm run test:linux` |
