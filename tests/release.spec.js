@@ -114,10 +114,40 @@ test('FD-139: no shipped image carries tool names or provenance metadata', () =>
   expect(problems).toEqual([]);
 });
 
-// The public contact address is hello@ideatrium.com; the old Gmail address must not appear
-// anywhere a visitor can get it: every built page and file of both builds (FD-144).
-test('the old Gmail address appears nowhere in the built site', () => {
-  const old = /raselalmamun|@gmail.com/i;
+// Two public addresses (FD-145, amending FD-144): hello@ideatrium.com first, then
+// mr.raselalmamun@gmail.com, each its own mailto link, wherever the site shows an address
+// (footer of every page, Home contact band, Contact, Hire me). Actions, structured data and the
+// Privacy Policy keep hello@ideatrium.com only.
+const PRIMARY = 'hello@ideatrium.com';
+const SECONDARY = 'mr.raselalmamun@gmail.com';
+const SHOWN_ON = ['index.html', 'contact.html', 'hire.html'];
+
+test('both addresses show in the footer, Contact, Hire me and the Home band, primary first', () => {
+  for (const file of pages) {
+    const html = readFileSync(`dist/${file}`, 'utf8');
+    const start = html.indexOf('<footer class="site-footer"');
+    const footer = html.slice(start, html.indexOf('</footer>', start));
+    for (const [address, other] of [
+      [PRIMARY, SECONDARY],
+      [SECONDARY, PRIMARY],
+    ]) {
+      expect(footer, `${file} footer`).toContain(`href="mailto:${address}"`);
+      expect(footer, `${file} footer`).toContain(`aria-label="Email ${address}"`);
+      expect(address).not.toBe(other);
+    }
+    expect(footer.indexOf(PRIMARY), file).toBeLessThan(footer.indexOf(SECONDARY));
+  }
+  for (const file of SHOWN_ON) {
+    const html = readFileSync(`dist/${file}`, 'utf8');
+    expect(html, file).toContain(`href="mailto:${PRIMARY}" aria-label="Email ${PRIMARY}"`);
+    expect(html, file).toContain(`href="mailto:${SECONDARY}" aria-label="Email ${SECONDARY}"`);
+    expect(html.indexOf(`mailto:${PRIMARY}"`), file).toBeLessThan(
+      html.indexOf(`mailto:${SECONDARY}"`),
+    );
+  }
+});
+
+test('the second address appears only in those places, in both builds', () => {
   const textFile = /.(html|css|js|json|xml|txt|webmanifest|svg|map)$/i;
   let checked = 0;
   for (const dir of ['dist', 'dist-django']) {
@@ -125,14 +155,45 @@ test('the old Gmail address appears nowhere in the built site', () => {
       const path = join(dir, String(file));
       if (!textFile.test(path) || !statSync(path).isFile()) continue;
       checked += 1;
-      expect(readFileSync(path, 'utf8'), path).not.toMatch(old);
+      const text = readFileSync(path, 'utf8');
+      if (!text.includes(SECONDARY)) continue;
+      expect(/\.html$/.test(path), `${path} is a page`).toBe(true);
+      // Only as a mailto link with its accessible name, and in the visible link text.
+      const bare = text
+        .replaceAll(`href="mailto:${SECONDARY}"`, '')
+        .replaceAll(`aria-label="Email ${SECONDARY}"`, '')
+        .replaceAll(`<span class="link">${SECONDARY}</span>`, '');
+      expect(bare, path).not.toContain(SECONDARY);
     }
   }
   expect(checked).toBeGreaterThan(40);
-  // The new address is the one the pages show.
-  const contact = readFileSync('dist/contact.html', 'utf8');
-  expect(contact).toContain('mailto:hello@ideatrium.com');
-  expect(readFileSync('dist/index.html', 'utf8')).toContain('hello@ideatrium.com');
+});
+
+test('CV request, structured data and the Privacy Policy use hello@ideatrium.com only', () => {
+  for (const dir of ['dist', 'dist-django']) {
+    for (const file of readdirSync(dir, { recursive: true })) {
+      const path = join(dir, String(file));
+      if (!/\.html$/.test(path)) continue;
+      const html = readFileSync(path, 'utf8');
+      for (const m of html.matchAll(/href="(mailto:[^"]*CV%20request[^"]*)"/g)) {
+        expect(m[1], path).toBe(`mailto:${PRIMARY}?subject=CV%20request`);
+      }
+      for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
+        expect(m[1], path).not.toContain(SECONDARY);
+        expect(m[1], path).not.toMatch(/raselalmamun|@gmail\.com/i);
+      }
+    }
+  }
+  const person = readFileSync('dist/index.html', 'utf8');
+  expect(person).toContain(`"email":"mailto:${PRIMARY}"`);
+  // The policy text itself (the page's footer shows both addresses like every footer).
+  const policy = readFileSync('src/content/privacy.json', 'utf8');
+  expect(policy).toContain(PRIMARY);
+  expect(policy).not.toMatch(/raselalmamun|@gmail\.com/i);
+  const page = readFileSync('dist/privacy.html', 'utf8');
+  const main = page.slice(page.indexOf('<main'), page.indexOf('</main>'));
+  expect(main).toContain(PRIMARY);
+  expect(main).not.toMatch(/raselalmamun|@gmail\.com/i);
 });
 
 test('noindex on the two template pages only', () => {

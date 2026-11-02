@@ -382,6 +382,13 @@
 
 .footer-email {
   margin-top: var(--s-2);
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+// FD-145: the second address sits directly under the first.
+.footer-email-2 {
+  margin-top: var(--s-1);
 }
 
 // Phones: LinkedIn and GitHub on one line.

@@ -13,7 +13,8 @@ The bottom row keeps the back-to-top photo's slot free (FD-95, FD-104). --}}
         <p class="footer-affiliation mb-0">
           {{#each footerAffiliation}}<span class="d-block">{{this}}</span>{{/each}}
         </p>
-        <a class="footer-link footer-email" href="mailto:{{profile.email}}">{{> icons/footer-icon name="mail"}}<span class="link">{{profile.email}}</span></a>
+        <a class="footer-link footer-email" href="mailto:{{profile.email}}" aria-label="Email {{profile.email}}">{{> icons/footer-icon name="mail"}}<span class="link">{{profile.email}}</span></a>
+        <a class="footer-link footer-email footer-email-2" href="mailto:{{profile.secondary_email}}" aria-label="Email {{profile.secondary_email}}">{{> icons/footer-icon name="mail"}}<span class="link">{{profile.secondary_email}}</span></a>
       </div>
 
       <nav class="col-5 col-lg-2 offset-lg-1 footer-group" aria-labelledby="footer-explore">

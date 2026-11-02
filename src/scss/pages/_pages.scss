@@ -796,6 +796,11 @@ select.field-control {
   }
 }
 
+.email-list {
+  display: grid;
+  gap: var(--s-1);
+}
+
 .email-text {
   overflow-wrap: anywhere;
   user-select: all;
