@@ -3,7 +3,7 @@
 // sitemap and robots line, the RELEASE=true build with the current (all-draft) content, and
 // the reveal elements at 400 % zoom; no shipped image carries provenance metadata (FD-139).
 import { spawnSync } from 'node:child_process';
-import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from '@playwright/test';
@@ -114,6 +114,27 @@ test('FD-139: no shipped image carries tool names or provenance metadata', () =>
   expect(problems).toEqual([]);
 });
 
+// The public contact address is hello@ideatrium.com; the old Gmail address must not appear
+// anywhere a visitor can get it: every built page and file of both builds (FD-144).
+test('the old Gmail address appears nowhere in the built site', () => {
+  const old = /raselalmamun|@gmail.com/i;
+  const textFile = /.(html|css|js|json|xml|txt|webmanifest|svg|map)$/i;
+  let checked = 0;
+  for (const dir of ['dist', 'dist-django']) {
+    for (const file of readdirSync(dir, { recursive: true })) {
+      const path = join(dir, String(file));
+      if (!textFile.test(path) || !statSync(path).isFile()) continue;
+      checked += 1;
+      expect(readFileSync(path, 'utf8'), path).not.toMatch(old);
+    }
+  }
+  expect(checked).toBeGreaterThan(40);
+  // The new address is the one the pages show.
+  const contact = readFileSync('dist/contact.html', 'utf8');
+  expect(contact).toContain('mailto:hello@ideatrium.com');
+  expect(readFileSync('dist/index.html', 'utf8')).toContain('hello@ideatrium.com');
+});
+
 test('noindex on the two template pages only', () => {
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
@@ -181,6 +202,12 @@ test.describe('release build', () => {
     expect(locs[0]).toBe(`${siteUrl}/index.html`);
     expect([...locs].sort()).toEqual(indexable.map((file) => `${siteUrl}/${file}`).sort());
     expect(locs.some((loc) => loc.includes('/project-'))).toBe(true);
+    // FD-143: the Privacy Policy is indexable and in the sitemap.
+    expect(locs).toContain(`${siteUrl}/privacy.html`);
+    expect(html('privacy.html')).not.toContain('noindex');
+    expect(html('privacy.html')).toContain(
+      `<link rel="canonical" href="${siteUrl}/privacy.html" />`,
+    );
     expect(html('robots.txt')).toBe(`User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`);
     expect(html('hire.html')).toContain(`<link rel="canonical" href="${siteUrl}/hire.html" />`);
   });

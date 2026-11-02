@@ -65,6 +65,8 @@ const pageNav = {
   'blog-post.html': { nav: 'blog', current: 'true' },
   'hire.html': { nav: 'hire', current: 'page' },
   'contact.html': { nav: 'contact', current: 'page' },
+  // FD-143: the footer's Privacy Policy link marks the page.
+  'privacy.html': { nav: 'privacy', current: 'page' },
 };
 
 // FD-131: the template pages repeat a generated page's content; they are built for review and
@@ -76,7 +78,18 @@ function pageContext(pagePath) {
   const project = projectPages.get(file);
   const post = postPages.get(file);
   const noindex = templateOnly.has(file);
-  const context = { ...site, siteUrl, buildYear, pageFile: file, noindex, pageBackground };
+  // FD-142: the two template pages (never the generated ones) carry one sample of each rich
+  // element, in Django's exact output (src/partials/samples/).
+  const richSamples = noindex;
+  const context = {
+    ...site,
+    siteUrl,
+    buildYear,
+    pageFile: file,
+    noindex,
+    richSamples,
+    pageBackground,
+  };
   if (project) return { ...context, ...pageNav['portfolio-entry.html'], project };
   if (file === 'portfolio-entry.html')
     return { ...context, ...pageNav[file], project: templateProject };
@@ -105,6 +118,13 @@ const helpers = {
   // {{ordinal @index}} → "01", "02", … (mono indexes, as in the Areas-of-work grid).
   ordinal: (index) => String(index + 1).padStart(2, '0'),
   count: (list) => (Array.isArray(list) ? list.length : 0),
+  // {{{mailLinks text}}}: the text escaped, each email address in it a mailto link (FD-143: the
+  // Privacy Policy names its contact address in running text).
+  mailLinks: (text) =>
+    escapeHtml(text).replace(
+      /[\w.+-]+@[\w-]+(?:\.[\w-]+)+/g,
+      (address) => `<a href="mailto:${address}">${address}</a>`,
+    ),
   doiUrl,
   // Placeholder copy (FD-19 content in [brackets]) gets the .is-placeholder style.
   isPlaceholder: isBracketed,

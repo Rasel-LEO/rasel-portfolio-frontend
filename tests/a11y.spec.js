@@ -93,6 +93,23 @@ for (const theme of themes) {
   }
 }
 
+// FD-144: the rich-text orange and purple are text colours; every surface they can sit on (the
+// page, the raised surface, the elevated one) must give at least 4.5:1 in both themes.
+test('text-orange and text-purple meet 4.5:1 on every surface in both themes', () => {
+  const tokens = JSON.parse(readFileSync('src/design/tokens.json', 'utf8')).color.tokens;
+  const value = (name, theme) => tokens.find((token) => token.name === name).value[theme];
+  for (const theme of themes) {
+    for (const text of ['text-orange', 'text-purple']) {
+      for (const surface of ['bg-0', 'bg-1', 'bg-2']) {
+        expect(
+          ratio(value(text, theme), value(surface, theme)),
+          `${text} on ${surface} (${theme})`,
+        ).toBeGreaterThanOrEqual(4.5);
+      }
+    }
+  }
+});
+
 test('logo colours meet the brand ratios on the page background', () => {
   const tokens = JSON.parse(readFileSync('src/design/tokens.json', 'utf8')).color.tokens;
   const value = (name, theme) => {

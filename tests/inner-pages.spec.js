@@ -185,7 +185,10 @@ test.describe('item 3: Blog (FD-112, FD-113)', () => {
       expect(ratio).toBeCloseTo(16 / 9, 1);
       await expect(card.locator('.blog-card-category')).toHaveText(post.categoryLabel);
       await expect(card.locator('.blog-card-title')).toHaveText(post.title);
-      const link = card.getByRole('link', { name: `Read article: ${post.title}` });
+      const link = card.getByRole('link', {
+        name: `Read article: ${post.title}${post.draft ? ' (draft)' : ''}`,
+        exact: true,
+      });
       await expect(link).toHaveAttribute('href', pagePath(post.file));
     }
   });
@@ -668,6 +671,27 @@ test.describe('item 9: 404 and site-wide links (FD-119, FD-76)', () => {
     expect(photo.x).toBeGreaterThan(text.x + text.width - 1);
   });
 
+  // 1.5.0 (the error-page note): in forced-colours mode the system drops backgrounds, so a pill
+  // link needs a real border to stay visible. The 404 actions keep a solid border; Django's
+  // static 500 page needs the same (docs/handover-django.md, section 11).
+  test('404: the action buttons keep a visible border in forced-colours mode', async ({ page }) => {
+    await page.emulateMedia({ forcedColors: 'active' });
+    await page.goto('/404.html');
+    const borders = await page
+      .locator('.not-found-actions .btn')
+      .evaluateAll((links) =>
+        links.map((el) => [
+          getComputedStyle(el).borderTopStyle,
+          getComputedStyle(el).borderTopWidth,
+        ]),
+      );
+    expect(borders).toHaveLength(3);
+    for (const [style, width] of borders) {
+      expect(style).toBe('solid');
+      expect(parseFloat(width)).toBeGreaterThanOrEqual(1);
+    }
+  });
+
   test('404 at 390: actions full width, photo under the copy', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/404.html');
@@ -681,10 +705,25 @@ test.describe('item 9: 404 and site-wide links (FD-119, FD-76)', () => {
 
   test('every external link on every page opens a new tab and says so', () => {
     const files = readdirSync('dist').filter((file) => file.endsWith('.html'));
+    // FD-142: the rich-content samples on the two template pages are Django's exact output, whose
+    // contract drops `target` from links (an open owner question); they are checked as Django
+    // writes them in tests/rich.spec.js.
+    const djangoSamples = new Set(
+      ['rich-post', 'rich-overview'].flatMap((name) =>
+        [
+          ...readFileSync(`src/partials/samples/${name}.hbs`, 'utf8').matchAll(
+            /<a\b[^>]*>[\s\S]*?<\/a>/g,
+          ),
+        ].map(([anchor]) => anchor),
+      ),
+    );
+    expect(djangoSamples.size).toBeGreaterThan(0);
     let checked = 0;
     for (const file of files) {
       const html = readFileSync(join('dist', file), 'utf8');
       for (const [anchor] of html.matchAll(/<a\b[^>]*>[\s\S]*?<\/a>/g)) {
+        if (djangoSamples.has(anchor) && ['blog-post.html', 'portfolio-entry.html'].includes(file))
+          continue;
         const href = anchor.match(/href="([^"]*)"/)?.[1] ?? '';
         if (/^https?:/.test(href)) {
           checked += 1;

@@ -50,8 +50,12 @@
                 <p class="form-status mb-0" role="status" data-form-status></p>
               </div>
             </form>
-            {{!-- FD-140: the privacy notice, under the form, in plain small text. --}}
-            <p class="form-notice mb-0">{{contact.privacy_notice}}</p>
+            {{!-- FD-140 (amended in 1.5.0): the short line under the form, then the link to the
+            Privacy Policy (FD-143); the text from privacy.json. A plain link: it works without
+            JavaScript. --}}
+            <p class="form-notice mb-0">
+              {{privacy.form_line}} <a href="/privacy.html">{{privacy.link_label}}</a>
+            </p>
           </div>
           <aside class="col-lg-5 form-aside" aria-label="Other ways to reach me">
             {{> components/email-box}}

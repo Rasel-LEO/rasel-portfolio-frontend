@@ -1,0 +1,307 @@
+// Author: Rasel Al Mamun
+// FD-142: rich content from the Django editor, styled with the design tokens in both themes.
+// The class names are Django's output contract (its docs/richtext-contract.md):
+// - a post body in the HTML format: div.rt-content inside .prose (paragraphs, h2–h4, lists,
+//   quotation, rules, inline code, highlight, sub/superscript, links, tables in
+//   div.rt-table-scroll, code in pre.rt-code with Pygments tok-* spans, block math in
+//   div.rt-math-display, figures figure.rt-figure, the rt-align-*, rt-size-* and rt-color-*
+//   vocabulary);
+// - a rich project Overview: div.project-text.project-rich (paragraphs, line breaks, lists,
+//   inline code, links, sub/superscript, inline math).
+// Links need nothing here: they carry no class, so the site's inline-link rule applies
+// (a:not([class]), --accent, AA in both themes). Tables and code blocks share the post's
+// .prose-table and .prose-code rules (_pages.scss).
+
+// Lists: nesting cycles disc / circle / square and decimal / lower-alpha / lower-roman.
+@mixin rich-lists {
+  // Top-level margins come from the container's flow (> * and > * + *).
+  :is(ul, ol) {
+    padding-left: 1.5em;
+  }
+
+  :is(ul, ol) :is(ul, ol) {
+    margin-block: var(--s-1) 0;
+  }
+
+  ul ul {
+    list-style-type: circle;
+  }
+
+  ul ul ul {
+    list-style-type: square;
+  }
+
+  ol ol {
+    list-style-type: lower-alpha;
+  }
+
+  ol ol ol {
+    list-style-type: lower-roman;
+  }
+
+  li > p {
+    margin: 0;
+  }
+
+  li + li {
+    margin-top: var(--s-1);
+  }
+}
+
+// Inline code: JetBrains Mono on the elevated surface; a long identifier wraps, never the page.
+@mixin rich-inline-code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  color: var(--fg-0);
+  overflow-wrap: anywhere;
+  background: var(--bg-2);
+  border-radius: var(--r-1);
+  padding: 0.1em 0.3em;
+}
+
+.rt-content {
+  display: grid;
+  gap: var(--s-4);
+  min-width: 0;
+  overflow-wrap: break-word;
+
+  @include rich-lists;
+
+  > * {
+    min-width: 0;
+    margin: 0;
+  }
+
+  h4 {
+    margin-top: var(--s-5);
+    color: var(--fg-0);
+  }
+
+  :not(pre) > code {
+    @include rich-inline-code;
+  }
+
+  // A highlight: the accent tint behind primary text (the accent's "inline highlight" role).
+  mark {
+    padding: 0 0.15em;
+    color: var(--fg-0);
+    background: var(--accent-soft);
+    border-radius: var(--r-1);
+    box-shadow: inset 0 -2px 0 var(--accent);
+  }
+
+  blockquote {
+    padding-left: var(--s-4);
+    color: var(--fg-0);
+    border-left: 2px solid var(--accent);
+
+    > p {
+      margin: 0;
+    }
+
+    > p + p {
+      margin-top: var(--s-3);
+    }
+  }
+
+  hr {
+    margin: var(--s-2) 0;
+    color: var(--line);
+    border-top: 1px solid currentcolor;
+    opacity: 1;
+  }
+
+  // Text vocabulary: alignment on paragraphs and headings, sizes and colours on spans.
+  :is(p, h2, h3, h4).rt-align-center {
+    text-align: center;
+  }
+
+  :is(p, h2, h3, h4).rt-align-right {
+    text-align: right;
+  }
+
+  :is(p, h2, h3, h4).rt-align-justify {
+    text-align: justify;
+  }
+
+  .rt-size-sm {
+    font-size: 0.875em;
+  }
+
+  .rt-size-lg {
+    font-size: 1.25em;
+  }
+
+  .rt-size-xl {
+    font-size: 1.5em;
+  }
+
+  // Colours map onto the text tokens that pass AA on every surface in both themes; orange and
+  // purple have their own tokens (text-orange, text-purple, FD-144).
+  .rt-color-accent {
+    color: var(--accent);
+  }
+
+  .rt-color-red {
+    color: var(--error);
+  }
+
+  .rt-color-green {
+    color: var(--success);
+  }
+
+  .rt-color-blue {
+    color: var(--info);
+  }
+
+  .rt-color-orange {
+    color: var(--text-orange);
+  }
+
+  .rt-color-purple {
+    color: var(--text-purple);
+  }
+}
+
+// Tables: the header cells (th, in the first row) in primary text; cell paragraphs flush.
+.rt-table-scroll {
+  :is(th, td) {
+    vertical-align: top;
+  }
+
+  :is(th, td) > p {
+    margin: 0;
+  }
+}
+
+// Code blocks: the Pygments token classes on the design-system text colours. Each is checked
+// on the code surface (--bg-1) in both themes (tests/a11y.spec.js, at least 4.5:1). The colour
+// only helps reading; the code is the same without it.
+.rt-code {
+  :is(.tok-k, .tok-kc, .tok-kd, .tok-kn, .tok-kp, .tok-kr, .tok-kt, .tok-nd) {
+    color: var(--accent);
+  }
+
+  :is(
+    .tok-s,
+    .tok-sa,
+    .tok-sb,
+    .tok-sc,
+    .tok-dl,
+    .tok-sd,
+    .tok-s2,
+    .tok-se,
+    .tok-sh,
+    .tok-si,
+    .tok-sx,
+    .tok-sr,
+    .tok-s1,
+    .tok-ss
+  ) {
+    color: var(--success);
+  }
+
+  :is(.tok-m, .tok-mb, .tok-mf, .tok-mh, .tok-mi, .tok-il, .tok-mo, .tok-na) {
+    color: var(--error);
+  }
+
+  :is(.tok-nf, .tok-fm, .tok-nc, .tok-nn, .tok-nt, .tok-nb, .tok-bp) {
+    color: var(--info);
+  }
+
+  :is(.tok-o, .tok-ow, .tok-p) {
+    color: var(--fg-1);
+  }
+
+  :is(.tok-c, .tok-ch, .tok-cm, .tok-cpf, .tok-c1, .tok-cs, .tok-cp) {
+    font-style: italic;
+    color: var(--fg-2);
+  }
+
+  .tok-err {
+    color: var(--error);
+    text-decoration: underline wavy;
+  }
+
+  :is(.tok-gh, .tok-gu, .tok-gs) {
+    font-weight: 600;
+  }
+}
+
+// Equations: server-side MathML in primary text. A wide block formula scrolls sideways inside
+// its focusable wrapper, never the page (320 px included).
+:is(.rt-content, .project-rich) math {
+  color: var(--fg-0);
+}
+
+.rt-math-display {
+  max-width: 100%;
+  padding-block: var(--s-1);
+  overflow-x: auto;
+
+  math[display="block"] {
+    margin: 0;
+  }
+}
+
+// Figures: width and alignment are classes only. Images keep their ratio, rounded like the
+// site's media (r-3); captions in small secondary text.
+.rt-figure {
+  max-width: 100%;
+
+  picture {
+    display: block;
+  }
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border-radius: var(--r-3);
+  }
+
+  figcaption {
+    @include t-small;
+
+    margin-top: var(--s-2);
+    color: var(--fg-1);
+  }
+}
+
+.rt-figure-wide img {
+  width: 100%;
+}
+
+.rt-figure-narrow {
+  max-width: min(100%, 24rem);
+}
+
+.rt-content .rt-figure.rt-align-center {
+  margin-inline: auto;
+
+  img {
+    margin-inline: auto;
+  }
+
+  figcaption {
+    text-align: center;
+  }
+}
+
+// The rich project Overview (E-4B): .project-text sets the measure and colour; paragraphs and
+// lists follow each other at --s-3.
+.project-rich {
+  @include rich-lists;
+
+  > * {
+    margin: 0;
+  }
+
+  > * + * {
+    margin-top: var(--s-3);
+  }
+
+  code {
+    @include rich-inline-code;
+  }
+}

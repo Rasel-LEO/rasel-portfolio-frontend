@@ -257,28 +257,37 @@ test('services are equal height in a row from 992 px and stacked below', async (
   expect(stacked[2]).toBeGreaterThan(stacked[1]);
 });
 
-// FD-140: the owner-approved privacy notice, from each page's content, as plain small text right
-// under its form (not linked by aria-describedby: the existing hint pattern is per field).
+// FD-140 (amended in 1.5.0, DEC-P1): under each form, one short line from privacy.json and the
+// link to the Privacy Policy (FD-143), as plain small text right after the form (not linked by
+// aria-describedby: the existing hint pattern is per field). The old notice and its IP sentence
+// are gone from the forms; the IP sentence now lives on the Privacy Policy page.
+const OLD_NOTICE = 'I use what you send only to reply to you.';
+const OLD_IP =
+  'Your IP address is not stored with your message, only a one-way code used to limit spam.';
+
 for (const form of forms) {
-  test(`${form.page}: the privacy notice sits under the form`, async ({ page }) => {
+  test(`${form.page}: the privacy line and its link sit under the form`, async ({ page }) => {
     await page.goto(`/${form.page}`);
     const content = loadContent();
-    const text = content[form.prefix].privacy_notice;
-    expect(text).toBe(content.contact.privacy_notice);
-    expect(text).toContain('deleted from the site after 12 months');
-    // 1.4.1 wording: the IP address is not stored with the message.
-    expect(text).toContain(
-      'Your IP address is not stored with your message, only a one-way code used to limit spam.',
+    const { privacy } = content;
+    expect(privacy.form_line).toBe(
+      'Your details are used only to reply and are processed in the EU and US.',
     );
-    expect(text).not.toContain('Your IP address is not stored, only');
-    // The only privacy text on the page: the old field note is gone.
+    expect(privacy.link_label).toBe('Privacy Policy');
+    // The old keys are gone from the content and the old text from the page.
+    expect(content[form.prefix]).not.toHaveProperty('privacy_notice');
     expect(content.contact).not.toHaveProperty('privacy_note');
+    await expect(page.getByText(OLD_NOTICE)).toHaveCount(0);
+    await expect(page.getByText(OLD_IP)).toHaveCount(0);
     await expect(page.locator('.field-hint')).toHaveCount(0);
     await expect(page.getByText('Your message goes only to me')).toHaveCount(0);
+
     const notice = page.locator('.form-notice');
     await expect(notice).toHaveCount(1);
-    await expect(notice).toHaveText(text);
+    await expect(notice).toHaveText(`${privacy.form_line} ${privacy.link_label}`);
     await expect(notice).toBeVisible();
+    const link = notice.getByRole('link', { name: privacy.link_label, exact: true });
+    await expect(link).toHaveAttribute('href', '/privacy.html');
     const placement = await notice.evaluate((el) => ({
       afterForm: el.previousElementSibling?.matches('form[data-form]') ?? false,
       describes: [...document.querySelectorAll('[aria-describedby]')].some((node) =>
@@ -289,5 +298,34 @@ for (const form of forms) {
     expect(placement.afterForm).toBe(true);
     expect(placement.describes).toBe(false);
     expect(parseFloat(placement.size)).toBeLessThan(16);
+
+    // A visible focus ring on the link (the shared --focus ring, 2 px).
+    await link.focus();
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Tab');
+    await expect(link).toBeFocused();
+    const ring = await link.evaluate((el) => {
+      const style = getComputedStyle(el);
+      return { width: parseFloat(style.outlineWidth), style: style.outlineStyle };
+    });
+    expect(ring.style).not.toBe('none');
+    expect(ring.width).toBeGreaterThanOrEqual(2);
+
+    // It is a plain link: it works without JavaScript.
+    await link.click();
+    await expect(page).toHaveURL(/\/privacy\.html$/);
+    await expect(page.locator('h1')).toHaveText(privacy.title);
   });
 }
+
+test.describe('without JavaScript', () => {
+  test.use({ javaScriptEnabled: false });
+  for (const form of forms) {
+    test(`${form.page}: the Privacy Policy link opens the page`, async ({ page }) => {
+      await page.goto(`/${form.page}`);
+      await page.locator('.form-notice a').click();
+      await expect(page).toHaveURL(/\/privacy\.html$/);
+      await expect(page.locator('h1')).toHaveText(loadContent().privacy.title);
+    });
+  }
+});

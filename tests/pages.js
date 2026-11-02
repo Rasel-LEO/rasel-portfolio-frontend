@@ -1,7 +1,7 @@
 // Author: Rasel Al Mamun
 import { readdirSync, readFileSync } from 'node:fs';
 
-// The ten template pages of docs/architecture.md (src/pages/), as served from dist/.
+// The eleven template pages of docs/architecture.md (src/pages/), as served from dist/.
 const allTemplatePages = [
   'index.html',
   'portfolio.html',
@@ -12,6 +12,8 @@ const allTemplatePages = [
   'blog-post.html',
   'hire.html',
   'contact.html',
+  // FD-143: the Privacy Policy.
+  'privacy.html',
   '404.html',
 ];
 
@@ -34,11 +36,13 @@ const djangoPaths = {
   'blog.html': '/blog/',
   'hire.html': '/hire/',
   'contact.html': '/contact/',
+  // FD-143: added by the Django pin of 1.5.0.
+  'privacy.html': '/privacy/',
   // Any unknown path answers with the 404 page.
   '404.html': '/no-such-page/',
 };
 
-// The template pages the target serves: all ten, or the eight that have a Django URL.
+// The template pages the target serves: all eleven, or the nine that have a Django URL.
 export const templatePages = isDjango
   ? allTemplatePages.filter((file) => file in djangoPaths)
   : allTemplatePages;

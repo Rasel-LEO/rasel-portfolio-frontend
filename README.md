@@ -54,6 +54,7 @@ npm run dev                       # http://localhost:5173
 | Blog post (one per post)      | `src/pages/blog-post.html` template       | `post-<slug>.html`  |
 | Hire me                       | `src/pages/hire.html`                     | `hire.html`         |
 | Contact                       | `src/pages/contact.html`                  | `contact.html`      |
+| Privacy Policy                | `src/pages/privacy.html`                  | `privacy.html`      |
 | Not found                     | `src/pages/404.html`                      | `404.html`          |
 
 ## npm scripts

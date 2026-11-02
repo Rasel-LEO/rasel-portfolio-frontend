@@ -71,7 +71,10 @@ export function siteCharacters() {
   ];
   const characters = new Set();
   for (const file of sources) {
-    for (const character of readFileSync(file, 'utf8')) {
+    // MathML (FD-142) is drawn in the browser's math font (`font-family: math` in the user-agent
+    // style sheet), never in the site's subset fonts: its characters (∑, ∫, Greek) are skipped.
+    const text = readFileSync(file, 'utf8').replace(/<math\b[\s\S]*?<\/math>/g, '');
+    for (const character of text) {
       if (character.codePointAt(0) >= 0x20) characters.add(character);
     }
   }

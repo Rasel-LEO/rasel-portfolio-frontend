@@ -28,11 +28,12 @@ module layout:
 ```
 src/
   pages/        index.html portfolio.html publications.html research.html
-                portfolio-entry.html blog.html blog-post.html hire.html contact.html 404.html
+                portfolio-entry.html blog.html blog-post.html hire.html contact.html privacy.html
+                404.html
                 + project-<id>.html, generated from portfolio-entry.html per project
                 + post-<slug>.html, generated from blog-post.html per post
   content/      activities awards blog blog-page certifications contact education fields
-                footer hire home links memberships meta portfolio post-sidebar profile
+                footer hire home links memberships meta portfolio post-sidebar privacy profile
                 projects publications research-archive skills (.json; FD-19)
                 posts/<slug>.md (post bodies, Markdown; FD-37)
   partials/
@@ -43,6 +44,8 @@ src/
                   pf-pub profile-links related-pub service work-card
     icons/        area-icon footer-icon illustration line-icon pf-icon; logo, logo-mark
                   and logo-symbols (the Ideatrium logo, FD-139)
+    samples/      rich-post rich-overview (Django's rich-content output, on the two
+                  template pages only; FD-142)
   scss/
     base/         _tokens (generated from src/design/tokens.json by tools/tokens.mjs),
                   _bootstrap (variable overrides + selective imports), _base (theme-aware
@@ -120,6 +123,7 @@ Partials are called with their group: `{{> shell/header}}`, `{{> icons/pf-icon n
 | blog-post.html       | `blog/post.html`              | `/blog/<slug>/`                     |
 | hire.html            | `hire.html`                   | `/hire/`                            |
 | contact.html         | `contact.html`                | `/contact/`                         |
+| privacy.html         | `privacy.html`                | `/privacy/` (FD-143)                |
 | 404.html             | `404.html`                    | —                                   |
 
 Partial groups map to template folders (`shell/header.hbs` → `{% include "shell/header.html" %}`);

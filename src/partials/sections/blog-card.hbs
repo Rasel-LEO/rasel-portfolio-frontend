@@ -3,7 +3,8 @@
 heading level. Cover on top (16:9): the in-house line drawing now, a real photo (cover.src,
 WebP + AVIF) later in the same frame. The cover is decorative here (the card's link names the post; the
 post page names it). Category (amber mono) · Draft (only while drafts are
-shown), title, standfirst as the excerpt, "Read article →" stretched over the card. --}}
+shown; a hidden ", " separates the two for screen readers, and the link name ends with "(draft)",
+1.5.0), title, standfirst as the excerpt, "Read article →" stretched over the card. --}}
 <article class="card blog-card" data-reveal>
   <div class="blog-cover">
     {{#if cover.src}}
@@ -16,9 +17,9 @@ shown), title, standfirst as the excerpt, "Read article →" stretched over the 
     {{/if}}
   </div>
   <div class="blog-card-body">
-    <p class="blog-card-meta mb-0"><span class="t-label blog-card-category">{{categoryLabel}}</span>{{#if draft}}<span class="blog-card-draft" data-draft-label>Draft</span>{{/if}}</p>
+    <p class="blog-card-meta mb-0"><span class="t-label blog-card-category">{{categoryLabel}}</span>{{#if draft}}<span class="visually-hidden">, </span><span class="blog-card-draft" data-draft-label>Draft</span>{{/if}}</p>
     <{{tag}} class="t-h3 blog-card-title mb-0">{{title}}</{{tag}}>
     <p class="blog-card-excerpt mb-0{{#if (isPlaceholder standfirst)}} is-placeholder{{/if}}">{{standfirst}}</p>
-    <a class="blog-card-link stretched-link" href="/{{file}}" aria-label="Read article: {{title}}"><span>Read article</span><svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
+    <a class="blog-card-link stretched-link" href="/{{file}}" aria-label="Read article: {{title}}{{#if draft}} (draft){{/if}}"><span>Read article</span><svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
   </div>
 </article>

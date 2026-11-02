@@ -87,13 +87,16 @@ function markdown() {
       },
     },
     hooks: {
-      // Wide tables scroll inside the measure, never the page (same rule as code blocks).
+      // Wide tables scroll inside the measure, never the page (same rule as code blocks). Each
+      // region is named by its number in the post — "Table 1", "Table 2", … — so no two share a
+      // name (1.5.0; Django names its rich tables the same way).
       postprocess(html) {
+        let tables = 0;
         return html
-          .replace(
-            /<table>/g,
-            '<div class="prose-table" tabindex="0" role="region" aria-label="Table"><table>',
-          )
+          .replace(/<table>/g, () => {
+            tables += 1;
+            return `<div class="prose-table" tabindex="0" role="region" aria-label="Table ${tables}"><table>`;
+          })
           .replace(/<\/table>/g, '</table></div>');
       },
     },

@@ -359,8 +359,9 @@
   }
 }
 
-// Tables (GFM) scroll sideways inside the measure, like code.
-.prose-table {
+// Tables (GFM, and Django's rich tables, FD-142) scroll sideways inside the measure, like code.
+.prose-table,
+.rt-table-scroll {
   max-width: 100%;
   overflow-x: auto;
 
@@ -382,8 +383,10 @@
   }
 }
 
-// Code: JetBrains Mono, scrolls sideways inside the measure, never the page.
-.prose-code {
+// Code: JetBrains Mono, scrolls sideways inside the measure, never the page (also Django's rich
+// code blocks, pre.rt-code and plain pre, FD-142).
+.prose-code,
+.rt-content pre {
   max-width: 100%;
   padding: var(--s-4);
   overflow-x: auto;
@@ -398,6 +401,22 @@
   code {
     font: inherit;
     color: inherit;
+  }
+}
+
+// FD-143: a text page (the Privacy Policy): the page head, then the text in the post's readable
+// column; the page ends with the section rhythm (FD-101).
+.text-page {
+  padding-bottom: var(--section-pad);
+}
+
+.text-page-list {
+  display: grid;
+  gap: var(--s-2);
+  padding-left: 1.5em;
+
+  strong {
+    color: var(--fg-0);
   }
 }
 

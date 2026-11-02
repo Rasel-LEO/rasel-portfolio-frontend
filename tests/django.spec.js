@@ -21,9 +21,12 @@ test.describe('URL table', () => {
     });
   }
 
-  test('the pages are the ten templates minus the two without a Django URL, plus the projects', () => {
+  test('the pages are the eleven templates minus the two without a Django URL, plus the projects', () => {
     expect(templatePages).not.toContain('portfolio-entry.html');
     expect(templatePages).not.toContain('blog-post.html');
+    // FD-143: the Privacy Policy has its Django URL.
+    expect(templatePages).toContain('privacy.html');
+    expect(pagePath('privacy.html')).toBe('/privacy/');
     expect(pages.filter((name) => name.startsWith('project-'))).toHaveLength(
       site.projectList.length,
     );

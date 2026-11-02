@@ -1,0 +1,7 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- FD-142: a rich project Overview (the E-4B short profile), exactly as Django renders it
+(portfolio/detail.html: div.project-text.project-rich).
+Generated with the Django renderer itself (its sanitiser and render transform), placeholder
+text only; the image URLs are the only change (the frontend's avatar files stand in for
+released images). Keep it byte for byte: it is the parity reference. --}}
+<div class="project-text project-rich"><p>[Sample Overview paragraph: <strong>bold</strong>, <em>italic</em>, <code>inline_code()</code>, CO<sub>2</sub>, 10<sup>3</sup>, an inline equation <math display="inline"><semantics><mrow><mrow><mi>y</mi><mo>=</mo><mi>a</mi><mi>x</mi><mo>+</mo><mi>b</mi></mrow></mrow><annotation encoding="application/x-tex">y = ax + b</annotation></semantics></math> and <a href="https://example.com/" rel="noopener noreferrer">a link</a>.]<br>[A second line after a line break.]</p><ul><li><p>[First point]</p><ul><li><p>[Nested point]</p></li></ul></li><li><p>[Second point]</p></li></ul><ol><li><p>[First step]</p></li><li><p>[Second step]</p></li></ol></div>
