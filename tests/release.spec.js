@@ -11,6 +11,8 @@ import { loadContent } from '../tools/content.mjs';
 import { pages, templatePages } from './pages.js';
 
 const templateOnly = ['portfolio-entry.html', 'blog-post.html'];
+// 1.7.0: the hidden formatting test page is noindex and out of the sitemap too.
+const hiddenOnly = ['format-test.html'];
 
 // A production build into a temporary folder with extra environment.
 function buildInto(env) {
@@ -169,15 +171,12 @@ test('the second address appears only in those places, in both builds', () => {
   expect(checked).toBeGreaterThan(40);
 });
 
-test('CV request, structured data and the Privacy Policy use hello@ideatrium.com only', () => {
+test('structured data and the Privacy Policy use hello@ideatrium.com only', () => {
   for (const dir of ['dist', 'dist-django']) {
     for (const file of readdirSync(dir, { recursive: true })) {
       const path = join(dir, String(file));
       if (!/\.html$/.test(path)) continue;
       const html = readFileSync(path, 'utf8');
-      for (const m of html.matchAll(/href="(mailto:[^"]*CV%20request[^"]*)"/g)) {
-        expect(m[1], path).toBe(`mailto:${PRIMARY}?subject=CV%20request`);
-      }
       for (const m of html.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) {
         expect(m[1], path).not.toContain(SECONDARY);
         expect(m[1], path).not.toMatch(/raselalmamun|@gmail\.com/i);
@@ -196,11 +195,50 @@ test('CV request, structured data and the Privacy Policy use hello@ideatrium.com
   expect(main).not.toMatch(/raselalmamun|@gmail\.com/i);
 });
 
-test('noindex on the two template pages only', () => {
+test('the CV is a direct PDF link; no CV-request mailto; no PDF in dist-django (FD-146)', () => {
+  const href = '/cv/Rasel_Al_Mamun_CV.pdf';
+  let links = 0;
+  for (const dir of ['dist', 'dist-django']) {
+    for (const file of readdirSync(dir, { recursive: true })) {
+      const path = join(dir, String(file));
+      if (/\.pdf$/i.test(path)) {
+        // Only the static preview carries the placeholder; the Django build never does.
+        expect(dir, path).toBe('dist');
+        expect(String(file).replaceAll('\\', '/'), path).toBe(href.slice(1));
+      }
+      if (!/\.html$/.test(path)) continue;
+      const html = readFileSync(path, 'utf8');
+      expect(html, path).not.toMatch(/CV%20request|Request CV/);
+      for (const m of html.matchAll(/<a[^>]*href="\/cv\/[^"]*"[^>]*>/g)) {
+        expect(m[0], path).toContain(`href="${href}"`);
+        expect(m[0], path).not.toContain('download');
+        links += 1;
+      }
+    }
+  }
+  expect(links).toBeGreaterThan(8);
+  // The placeholder is in dist exactly when its source is here (the public copy has none).
+  expect(existsSync(join('dist', 'cv', 'Rasel_Al_Mamun_CV.pdf'))).toBe(
+    existsSync(join('tools', 'preview', 'cv', 'Rasel_Al_Mamun_CV.pdf')),
+  );
+});
+
+// The export scan fails on any PDF and the placeholder folder is never exported. The export script is
+// a working-repository tool that the public copy does not have, so its path is built here (this file
+// is exported) and the test skips where the script is missing.
+const exportTool = join('tools', ['export', 'public'].join('-') + '.mjs');
+test('FD-146: the export fails on any PDF and leaves out the placeholder folder', () => {
+  test.skip(!existsSync(exportTool), 'the export script is not part of the public copy');
+  const exporter = readFileSync(exportTool, 'utf8');
+  expect(exporter).toContain('PDF file');
+  expect(exporter).toContain("'tools/preview/'");
+});
+
+test('noindex on the two template pages and the hidden formatting page only', () => {
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
     const noindex = html.includes('<meta name="robots" content="noindex" />');
-    expect(noindex, file).toBe(templateOnly.includes(file));
+    expect(noindex, file).toBe(templateOnly.includes(file) || hiddenOnly.includes(file));
   }
 });
 
@@ -257,7 +295,14 @@ test.describe('release build', () => {
 
   test('SITE_URL: sitemap of the indexable pages, robots Sitemap line, canonical links', () => {
     const files = readdirSync(out).filter((file) => file.endsWith('.html'));
-    const indexable = files.filter((file) => file !== '404.html' && !templateOnly.includes(file));
+    const indexable = files.filter(
+      (file) =>
+        file !== '404.html' &&
+        !templateOnly.includes(file) &&
+        !hiddenOnly.includes(file) &&
+        // FD-154: a topic, a category or a search with no match is not a page of its own.
+        !/^(research|blog)-(topic|category|empty)/.test(file),
+    );
     const sitemap = html('sitemap.xml');
     const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map(([, loc]) => loc);
     expect(locs[0]).toBe(`${siteUrl}/index.html`);

@@ -1,0 +1,70 @@
+// Author: Rasel Al Mamun
+// Figures in the text (1.7.0): one reading column. Every figure has the same left and right edges as
+// the paragraphs (.prose, 66ch); nothing breaks out of it at any width, so "wide" renders like "normal".
+// The whole image, never cropped (natural ratio, object-fit: contain), slightly rounded corners, no
+// plate or border, the caption below as "Figure n. caption".
+// Normal and wide: the column width. Narrow: at most 360 px from 768 px, at most 75% of the viewport
+// width on phones, centred in the column.
+// Height: at most 520 px from 768 px, 60vh on phones; a taller image is scaled down, centred.
+.prose {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.fig {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--s-2);
+  justify-items: center;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.fig-plate {
+  display: flex;
+  justify-content: center;
+  max-width: 100%;
+
+  picture {
+    display: block;
+    max-width: 100%;
+  }
+
+  img {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: var(--r-3);
+  }
+}
+
+.fig-narrow {
+  justify-self: center;
+  width: min(100%, 75vw);
+}
+
+@include media-breakpoint-up(md) {
+  .fig-plate img {
+    max-height: 520px;
+  }
+
+  .fig-narrow {
+    width: min(100%, 360px);
+  }
+}
+
+.fig figcaption {
+  @include t-small;
+
+  max-width: 66ch;
+  color: var(--fg-1);
+  text-align: center;
+}
+
+.fig-label {
+  font-weight: 600;
+  color: var(--fg-0);
+}

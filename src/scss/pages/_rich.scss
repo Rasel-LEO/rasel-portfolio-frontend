@@ -305,3 +305,41 @@
     @include rich-inline-code;
   }
 }
+
+// 1.7.0: the Markdown body of a post or a project (.prose) in the same look as Django's rich text:
+// lists with nested markers, a quotation with the accent rule, inline code, a rule, and equations.
+.prose {
+  @include rich-lists;
+
+  // A long word or address wraps inside the measure, never the page.
+  overflow-wrap: break-word;
+
+  :not(pre) > code {
+    @include rich-inline-code;
+  }
+
+  blockquote {
+    padding-left: var(--s-4);
+    color: var(--fg-0);
+    border-left: 2px solid var(--accent);
+
+    > p {
+      margin: 0;
+    }
+
+    > p + p {
+      margin-top: var(--s-3);
+    }
+  }
+
+  hr {
+    margin: var(--s-2) 0;
+    color: var(--line);
+    border-top: 1px solid currentcolor;
+    opacity: 1;
+  }
+
+  math {
+    color: var(--fg-0);
+  }
+}

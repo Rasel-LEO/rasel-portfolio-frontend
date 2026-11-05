@@ -1,0 +1,18 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- "What to expect" card (F3, C1; 1.6.0) on Hire me and Contact: response time, location and
+languages. Sample content from contact.expect (Django: admin-editable Page text). --}}
+{{#if contact.expect.items.length}}
+<div class="aside-box expect-box">
+  {{!-- Round 6 (FD-175): no visible label — the card starts with its first item; the heading stays
+  for screen readers (and gives the card its name). --}}
+  <h2 class="visually-hidden">{{contact.expect.heading}}</h2>
+  <dl class="expect-list mb-0">
+    {{#each contact.expect.items}}
+    <div class="expect-item">
+      <dt class="t-label">{{label}}</dt>
+      <dd class="mb-0">{{value}}</dd>
+    </div>
+    {{/each}}
+  </dl>
+</div>
+{{/if}}

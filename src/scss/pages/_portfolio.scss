@@ -83,6 +83,14 @@
   color: var(--fg-0);
 }
 
+// FD-149: the introduction (278 characters in the sample): body size, full text, never clamped;
+// it wraps inside the text column at every width.
+.pf-statement {
+  max-width: 60ch;
+  color: var(--fg-1);
+  overflow-wrap: anywhere;
+}
+
 .pf-location {
   display: flex;
   gap: var(--s-3);
@@ -160,7 +168,7 @@
   }
 }
 
-// Request CV + Hire me: side by side, half width each on phones.
+// Download CV (PDF) + Hire me: side by side, half width each on phones.
 .pf-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -187,19 +195,25 @@
   column-gap: var(--s-4);
   margin-top: var(--s-5);
 
-  // Under 360 px one column: "ResearchGate" never breaks.
-  @media (width < 360px) {
+  // FD-156: one column below 600 px, each link on one line; two columns from 600 px.
+  @media (width < 600px) {
     grid-template-columns: minmax(0, 1fr);
 
-    li:nth-child(2) {
+    li:nth-child(n + 2) {
       border-top: 1px solid var(--line);
+    }
+
+    .pf-link-label {
+      white-space: nowrap;
     }
   }
 
   @include media-breakpoint-up(lg) {
     display: flex;
     flex-wrap: wrap;
-    gap: var(--s-2) var(--s-5);
+
+    // FD-151: seven links (Web of Science joined): the tighter gap keeps one row at 1280 px and up.
+    gap: var(--s-2) var(--s-4);
     justify-content: space-between;
   }
 
@@ -292,21 +306,33 @@
     border-left: 1px solid var(--line);
   }
 
-  // Phones (profile-mobile): three on the first row, two on the second; a row never starts
-  // with a divider.
+  // FD-156: phones — one row that scrolls sideways (never two rows), not sticky. The right edge
+  // fades out while there is more to scroll to, and the scrollbar stays thin and visible.
   @include media-breakpoint-down(sm) {
-    ul::before {
-      flex-basis: 100%;
-      order: 1;
-      content: "";
+    ul {
+      flex-wrap: nowrap;
+      justify-content: flex-start;
+      padding-bottom: var(--s-1);
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-snap-type: x proximity;
+      scrollbar-width: thin;
+      scrollbar-color: var(--fg-2) transparent;
+      mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
     }
 
-    li:nth-child(n + 4) {
-      order: 2;
+    li {
+      flex: none;
+      scroll-snap-align: start;
     }
 
-    li:nth-child(4) {
-      border-left: 0;
+    a {
+      white-space: nowrap;
+    }
+
+    // The last item scrolls clear of the fade.
+    li:last-child a {
+      margin-right: var(--s-6);
     }
   }
 
@@ -371,6 +397,8 @@
 }
 
 .pf-tab {
+  display: inline-flex;
+  align-items: center;
   min-width: 44px;
   min-height: 48px;
   padding: var(--s-2) var(--s-3);
@@ -379,14 +407,17 @@
   cursor: pointer;
   background: none;
   border: 0;
+  text-decoration: none;
   transition: color var(--d-fast) var(--e-out);
 
   &:hover,
-  &[aria-pressed="true"] {
+  &[aria-pressed="true"],
+  &[aria-current="page"] {
     color: var(--fg-0);
   }
 
-  &[aria-pressed="true"] {
+  &[aria-pressed="true"],
+  &[aria-current="page"] {
     font-weight: 600;
   }
 
@@ -406,8 +437,13 @@
   transform: translate(var(--ink-x, 0), var(--ink-y, 0));
 }
 
-// Rows: type label | citation | actions from lg; stacked below, two buttons side by side.
+// Rows: type label | citation | actions from lg; stacked below, two buttons side by side. U1, U2
+// (1.6.0): the actions sit in a fixed-width right column (room for DOI and Project side by side), so
+// every row lines up whether or not it has a Project button; the citation takes all the width left,
+// long titles included; on narrow screens the actions move under the title.
 .pf-pub {
+  --pf-actions-w: 16.5rem;
+
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s-3);
@@ -419,7 +455,7 @@
   }
 
   @include media-breakpoint-up(lg) {
-    grid-template-columns: var(--s-11) minmax(0, 1fr) auto;
+    grid-template-columns: var(--s-11) minmax(0, 1fr) var(--pf-actions-w);
     gap: var(--s-6);
     align-items: start;
   }
@@ -436,7 +472,6 @@
 .pf-pub-body {
   display: grid;
   gap: var(--s-1);
-  max-width: 66ch;
 }
 
 .pf-pub-title {
@@ -467,6 +502,7 @@
   @include media-breakpoint-up(lg) {
     display: flex;
     gap: var(--s-4);
+    justify-content: flex-start;
     margin-top: 0;
   }
 
@@ -496,8 +532,10 @@
   }
 }
 
+// FD-157: a little larger than the small text, --fg-1 (AA on the card in both themes).
 .pf-card-role {
-  color: var(--fg-2);
+  font-size: 0.8125rem;
+  color: var(--fg-1);
 }
 
 // One small-text line high, with or without a status.
@@ -519,7 +557,7 @@
 .pf-card-title {
   margin-top: var(--s-1);
   color: var(--fg-0);
-  text-wrap: wrap;
+  text-wrap: balance;
 }
 
 .pf-card-summary {
@@ -587,6 +625,13 @@
   }
 }
 
+// The last row has no rule of its own: the section edge is the single line that closes Awards,
+// as at the other section ends.
+.pf-award:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
 .pf-award-icon {
   display: flex;
   padding-top: var(--s-1);
@@ -640,13 +685,6 @@
     grid-row: 1;
     align-self: center;
   }
-}
-
-// The CV note and its action (Awards; Experience has a text link).
-.pf-cv {
-  display: grid;
-  gap: var(--s-4);
-  justify-items: start;
 }
 
 // 5. Experience & education (experience-desktop / -mobile): two columns with a divider from
@@ -737,36 +775,6 @@
 
   li::marker {
     color: var(--fg-2);
-  }
-}
-
-// The closing note on a rule, with its CV text link (mail icon).
-.pf-rule {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--s-2);
-  align-items: center;
-  padding-top: var(--s-5);
-  border-top: 1px solid var(--line);
-}
-
-.pf-cv-link {
-  display: inline-flex;
-  gap: var(--s-2);
-  align-items: center;
-  min-height: 44px;
-  color: var(--fg-0);
-  text-decoration: underline;
-  text-underline-offset: 0.25em;
-
-  .icon {
-    width: 20px;
-    height: 20px;
-  }
-
-  &:hover {
-    color: var(--accent);
-    text-decoration-thickness: 2px;
   }
 }
 
@@ -869,35 +877,12 @@
   color: var(--fg-0);
 }
 
+// FD-156: the items are compact wrapping tags in the project-tag style (.pill), on every width.
 .pf-group-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
   color: var(--fg-1);
-
-  // Phones: one line, "·" between the items. The "·" ends its item behind a no-break space,
-  // so a wrapped line never starts with it (the markup's space follows).
-  // Each item stays whole; lines break between items.
-  li {
-    display: inline;
-    white-space: nowrap;
-  }
-
-  li:not(:last-child)::after {
-    color: var(--fg-2);
-    content: "\00a0·" / "";
-  }
-
-  @include media-breakpoint-up(md) {
-    display: grid;
-    gap: var(--s-2);
-
-    li {
-      display: list-item;
-      white-space: normal;
-    }
-
-    li:not(:last-child)::after {
-      content: none;
-    }
-  }
 }
 
 // Selected training: on a rule; two certificates side by side with a divider from lg,

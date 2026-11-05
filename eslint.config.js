@@ -18,7 +18,7 @@ const rules = {
 
 export default [
   {
-    ignores: ['dist/', 'node_modules/', 'playwright-report/', 'test-results/'],
+    ignores: ['dist/', 'node_modules/', 'playwright-report/', 'test-results/', '.slots/'],
   },
   // FD-133: the Django build target's output.
   { ignores: ['dist-django/'] },

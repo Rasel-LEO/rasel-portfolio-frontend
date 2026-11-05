@@ -51,24 +51,23 @@ test('the real content is valid', () => {
   expect(validateContent(loadContent())).toEqual([]);
 });
 
-test('validate-content accepts optional project images and rejects bad ones', () => {
+test('validate-content checks card images and figure images, and the files exist', () => {
   const content = structuredClone(loadContent());
-  const image = { src: '/images/projects/x.webp', alt: '[alt]', width: 1200, height: 800 };
-  content.projects[0].image = { ...image, avif: '/images/projects/x.avif' };
-  content.projects[0].gallery = [image, image];
+  const image = { src: '/images/projects/x.webp', alt: '[alt]', width: 1600, height: 900 };
+  content.projects[0].card_image = { ...image, avif: '/images/projects/x.avif' };
   expect(validateContent(content)).toEqual([]);
 
-  content.projects[1].image = { src: 'https://example.com/x.jpg', alt: '', width: 0 };
-  content.projects[3].image = { ...image, src: '/images/../secret.webp' };
-  content.projects[2].gallery = [];
-  // The files do not exist, so the build check reports them (src and avif, twice in gallery).
+  content.projects[1].card_image = { src: 'https://example.com/x.jpg', alt: '', width: 0 };
+  content.projects[3].card_image = { ...image, src: '/images/../secret.webp' };
+  content.projects[2].card_image = { ...image, width: 1200 };
+  // The files do not exist, so the build check reports them (src and avif).
   expect(missingImages(content).length).toBeGreaterThan(0);
   expect(missingImages(loadContent())).toEqual([]);
 
   const problems = validateContent(content).join('\n');
-  expect(problems).toContain('projects[1]: invalid "image"');
-  expect(problems).toContain('projects[2]: invalid "gallery"');
-  expect(problems).toContain('projects[3]: invalid "image"');
+  expect(problems).toContain('projects[1]: invalid "card_image"');
+  expect(problems).toContain('projects[2]: invalid "card_image"');
+  expect(problems).toContain('projects[3]: invalid "card_image"');
 });
 
 test('validate-content catches broken records', () => {
@@ -126,11 +125,11 @@ test('validate-content checks blog posts (FD-36, FD-37)', () => {
 test('validate-content checks the Home block (FD-44)', () => {
   const content = structuredClone(loadContent());
   content.home.ctas[0].variant = 'tertiary';
-  delete content.home.fork.blog.tags;
+  delete content.home.latest.cta;
   content.meta.home = '';
   const problems = validateContent(content).join('\n');
   expect(problems).toContain('home: invalid "ctas"');
-  expect(problems).toContain('home: invalid "fork"');
+  expect(problems).toContain('home: invalid "latest"');
   expect(problems).toContain('meta: invalid "home"');
 
   const renamed = structuredClone(loadContent());
@@ -153,32 +152,29 @@ test('validate-content checks the Home short forms and order of featured work (F
   expect(validateContent(short)).toContain('projects[0]: missing "short_title"');
 
   const wrong = structuredClone(loadContent());
-  wrong.projects.find((project) => project.featured).short_summary = '';
-  expect(validateContent(wrong).join('\n')).toContain('invalid "short_summary"');
+  wrong.projects.find((project) => project.featured).card_description = '';
+  expect(validateContent(wrong).join('\n')).toContain('invalid "card_description"');
 });
 
-test('validate-content keeps featured_tags a subset of the tags', () => {
+test('validate-content keeps card_tags exactly three and a subset of the tags (1.7.0)', () => {
   const content = structuredClone(loadContent());
-  const project = content.projects.find((p) => p.featured_tags);
-  project.featured_tags = [...project.featured_tags, 'Invented'];
+  const project = content.projects.find((p) => p.featured);
+  project.card_tags = [...project.card_tags.slice(0, 2), 'Invented'];
   expect(validateContent(content)).toContain(
-    `projects "${project.id}": featured_tags not in tags: Invented`,
+    `projects "${project.id}": card_tags not in tags: Invented`,
   );
-  const unfeatured = structuredClone(loadContent());
-  const other = unfeatured.projects.find((p) => !p.featured);
-  other.featured_tags = [other.tags[0]];
-  expect(validateContent(unfeatured)).toContain(
-    `projects "${other.id}": featured_tags but not featured`,
-  );
+  const two = structuredClone(loadContent());
+  two.projects[0].card_tags = two.projects[0].card_tags.slice(0, 2);
+  expect(validateContent(two).join('\n')).toContain('projects[0]: invalid "card_tags"');
 });
 
-test('validate-content requires one large featured card with its role line (FD-102)', () => {
+test('validate-content requires one large featured card and a role line on every project (FD-102)', () => {
   const content = structuredClone(loadContent());
   expect(validateContent(content)).toEqual([]);
   const large = content.projects.find((project) => project.featured_large);
-  delete large.featured_role_line;
+  delete large.role_line;
   expect(validateContent(content)).toContain(
-    `projects "${large.id}": featured_large without "featured_role_line"`,
+    `projects[${content.projects.indexOf(large)}]: missing "role_line"`,
   );
   const two = structuredClone(loadContent());
   two.projects.find((project) => project.featured && !project.featured_large).featured_large = true;
@@ -236,9 +232,7 @@ test.describe('FD-108: Portfolio content', () => {
     for (const projects of [content.projects, read('docs/content/public-content.json').projects]) {
       const biofloc = projects.find((p) => p.id === 'biofloc-iot');
       expect(biofloc.tags).toContain('Automation');
-      expect(biofloc.featured_tags).toEqual(
-        approved.project_tag_updates['biofloc-iot'].featured_tags,
-      );
+      expect(biofloc.card_tags).toEqual(approved.project_tag_updates['biofloc-iot'].card_tags);
     }
     // The rest of public-content.json is src/content, file by file.
     const pub = read('docs/content/public-content.json');
@@ -256,7 +250,7 @@ test.describe('FD-108: Portfolio content', () => {
       ['awards', 6],
     ]);
     expect(site.portfolioView.publicationsCta).toBe('View all 8 publications');
-    expect(site.portfolioView.projectsCta).toBe('View all 15 research projects');
+    expect(site.portfolioView.projectsCta).toBe('View all 15 projects');
     expect(site.portfolioView.publications.map((p) => p.id)).toEqual(
       site.portfolio.publications.order,
     );
@@ -284,7 +278,6 @@ test.describe('FD-108: Portfolio content', () => {
     const { portfolio } = content;
     portfolio.publications.order = ['das-2025-fish-feed', 'no-such-paper'];
     portfolio.projects.order.push('no-such-project');
-    portfolio.projects.role_lines['no-such-project'] = 'Team';
     portfolio.awards.items[0].title = 'Agricultural Machinery Makeathon Award';
     const problems = validateContent(content).join('\n');
     expect(problems).toContain('"das-2025-fish-feed" is not a first-author paper');

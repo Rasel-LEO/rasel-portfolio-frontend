@@ -34,7 +34,10 @@ test.describe('item 2: Profile', () => {
     await expect(page.locator('h1')).toHaveText(site.profile.name);
     const img = profile.locator('.pf-avatar img');
     await expect(img).toHaveAttribute('src', /\/avatar-512[\w-]*\.webp$/);
-    await expect(img).toHaveAttribute('alt', `Portrait of ${site.profile.name}`);
+    await expect(img).toHaveAttribute(
+      'alt',
+      `Portrait of ${site.profile.name} in a dark suit and tie.`,
+    );
     await expect(profile.locator('.pf-role')).toHaveText(pf.profile.eyebrow);
     await expect(profile.locator('.pf-summary')).toHaveText(pf.profile.summary_line);
     await expect(profile.locator('.pf-location')).toHaveText(pf.profile.location_line);
@@ -45,7 +48,7 @@ test.describe('item 2: Profile', () => {
     expect(site.counts).toMatchObject({ publications: 8, projects: 15, awards: 6 });
     const expected = [
       ['publications', 'Publications'],
-      ['projects', 'Research projects'],
+      ['projects', 'Projects'],
       ['awards', 'Awards'],
     ];
     for (const [i, [key, label]] of expected.entries()) {
@@ -57,12 +60,13 @@ test.describe('item 2: Profile', () => {
     }
   });
 
-  test('Request CV (primary, mail icon first) and Hire me (secondary, →)', async ({ page }) => {
+  test('Download CV (PDF) (primary, icon first) and Hire me (secondary, →)', async ({ page }) => {
     await page.goto('/portfolio.html');
     const cv = page.locator('.pf-actions a').first();
-    await expect(cv).toHaveText('Request CV');
+    await expect(cv).toHaveText('Download CV (PDF)');
     await expect(cv).toHaveClass(/btn-primary/);
-    await expect(cv).toHaveAttribute('href', `mailto:${site.profile.email}?subject=CV%20request`);
+    await expect(cv).toHaveAttribute('href', '/cv/Rasel_Al_Mamun_CV.pdf');
+    await expect(cv).not.toHaveAttribute('download');
     expect(await cv.evaluate((el) => el.firstElementChild.tagName)).toBe('svg');
     const hire = page.locator('.pf-actions a').nth(1);
     await expect(hire).toHaveText('Hire me');
@@ -71,12 +75,12 @@ test.describe('item 2: Profile', () => {
     await expect(hire.locator('.icon-arrow')).toHaveCount(1);
   });
 
-  test('six profile links with icons open in a new tab', async ({ page }) => {
+  test('seven profile links with icons open in a new tab', async ({ page }) => {
     await page.goto('/portfolio.html');
     const links = page
       .getByRole('list', { name: 'Research and social profiles' })
       .getByRole('link');
-    await expect(links).toHaveCount(6);
+    await expect(links).toHaveCount(7);
     for (const [i, link] of site.links.entries()) {
       const a = links.nth(i);
       await expect(a).toHaveAttribute('href', link.url);
@@ -87,7 +91,9 @@ test.describe('item 2: Profile', () => {
       await expect(a.locator('svg[aria-hidden="true"]')).toHaveCount(2);
     }
     // ORCID, LinkedIn and GitHub are their official (filled) marks.
-    for (const i of [0, 4, 5]) {
+    for (const i of ['orcid', 'linkedin', 'github'].map((id) =>
+      site.links.findIndex((l) => l.id === id),
+    )) {
       const fill = await links
         .nth(i)
         .locator('svg')
@@ -120,7 +126,7 @@ test.describe('item 2: Profile', () => {
   });
 
   for (const width of [320, 390]) {
-    test(`${width}: portrait centred, links in two columns (one under 360), nav 3 + 2`, async ({
+    test(`${width}: portrait centred, links in one column, the section menu one scrolling row`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height: 844 });
@@ -129,15 +135,20 @@ test.describe('item 2: Profile', () => {
       expect(Math.abs(avatar.left + avatar.width / 2 - width / 2)).toBeLessThanOrEqual(2);
       const text = await box(page.locator('.pf-intro-text'));
       expect(text.top).toBeGreaterThan(avatar.bottom);
+      // FD-156: one column below 600 px, each link on one line.
       const [a, b] = await tops(page.locator('.pf-links li'));
-      if (width >= 360) expect(b).toBe(a);
-      else expect(b).toBeGreaterThan(a);
+      expect(b).toBeGreaterThan(a);
+      for (const label of await page.locator('.pf-link-label').all()) {
+        const lines = await label.evaluate(
+          (el) => el.getBoundingClientRect().height / parseFloat(getComputedStyle(el).lineHeight),
+        );
+        expect(lines).toBeLessThan(1.5);
+      }
+      // The section menu is one row that scrolls sideways, not sticky.
       const rows = await tops(page.locator('.pf-nav li'));
-      expect(new Set(rows.slice(0, 3)).size).toBe(1);
-      expect(rows[3]).toBeGreaterThan(rows[0]);
-      expect(rows[4]).toBe(rows[3]);
-      // A wrapped row never starts with a divider.
-      await expect(page.locator('.pf-nav li').nth(3)).toHaveCSS('border-left-width', '0px');
+      expect(new Set(rows).size).toBe(1);
+      await expect(page.locator('.pf-nav ul')).toHaveCSS('overflow-x', 'auto');
+      await expect(page.locator('.pf-nav')).not.toHaveCSS('position', 'sticky');
     });
   }
 });
@@ -278,10 +289,11 @@ test.describe('item 4: Selected research projects', () => {
     for (const [i, id] of pf.projects.order.entries()) {
       const project = site.projectById[id];
       const card = cards.nth(i);
-      await expect(card.locator('.pf-card-role')).toHaveText(pf.projects.role_lines[id]);
+      await expect(card.locator('.pf-card-role')).toHaveText(project.role_line);
       await expect(card.getByRole('heading', { level: 3 })).toHaveText(project.short_title);
-      await expect(card.locator('.pf-card-summary')).toHaveText(project.short_summary);
-      await expect(card.locator('.pill')).toHaveText(project.featured_tags);
+      await expect(card.locator('.pf-card-summary')).toHaveText(project.card_description);
+      await expect(card.locator('.pill')).toHaveText(project.card_tags);
+      // FD-157: a status badge only where the project has one (never a placeholder).
       await expect(card.locator('.pf-card-status')).toHaveCount(project.status ? 1 : 0);
       const link = card.getByRole('link');
       await expect(link).toHaveAccessibleName(`View project: ${project.short_title}`);
@@ -290,7 +302,7 @@ test.describe('item 4: Selected research projects', () => {
     }
     // The poultry project is in progress (FD-110: shown with the --info dot).
     await expect(cards.first().locator('.pf-card-status')).toContainText('In progress');
-    const more = section.getByRole('link', { name: 'View all 15 research projects' });
+    const more = section.getByRole('link', { name: 'View all 15 projects' });
     await expect(more).toHaveAttribute('href', pagePath('research.html'));
     await expect(more).toHaveClass(/btn-accent-outline/);
   });
@@ -334,7 +346,7 @@ test.describe('item 4: Selected research projects', () => {
     const narrow = await Promise.all([0, 1, 2].map((i) => box(cards.nth(i))));
     expect(narrow[1].top).toBeGreaterThan(narrow[0].bottom);
     expect(narrow[2].top).toBeGreaterThan(narrow[1].bottom);
-    const more = await box(page.getByRole('link', { name: 'View all 15 research projects' }));
+    const more = await box(page.getByRole('link', { name: 'View all 15 projects' }));
     expect(more.width).toBeGreaterThan(350);
   });
 });
@@ -363,12 +375,9 @@ test.describe('item 5: Awards & honours', () => {
     await expect(rows.first().getByRole('heading')).toHaveText(
       'Agricultural Machinery Talent Hunt Award',
     );
-    await expect(section.locator('.pf-note')).toHaveText(pf.awards.note);
-    const cv = section.getByRole('link', { name: 'Request CV' });
-    await expect(cv).toHaveClass(/btn-primary/);
-    await expect(cv).toHaveAttribute('href', /^mailto:/);
-    expect(await cv.evaluate((el) => el.firstElementChild.tagName)).toBe('svg');
-    await expect(cv.locator('.icon-arrow')).toHaveCount(1);
+    // No CV button or CV link here (the CV button is in the profile head).
+    await expect(section.locator('.btn')).toHaveCount(0);
+    await expect(section.locator('a[href="/cv/Rasel_Al_Mamun_CV.pdf"]')).toHaveCount(0);
   });
 
   test('1440: highlight right; 390: highlight under the text', async ({ page }) => {
@@ -400,9 +409,7 @@ test.describe('item 5: Awards & honours', () => {
 });
 
 test.describe('item 6: Experience & education', () => {
-  test('role and degrees from the data, column heads with icons, CV note and link', async ({
-    page,
-  }) => {
+  test('role and degrees from the data, column heads with icons, no CV link', async ({ page }) => {
     await page.goto('/portfolio.html');
     const section = page.locator('#experience');
     const xp = pf.experience;
@@ -410,19 +417,24 @@ test.describe('item 6: Experience & education', () => {
     await expect(section.getByRole('heading', { level: 2 })).toHaveText(xp.heading);
     await expect(section.locator('.section-intro')).toHaveText(xp.intro);
     await expect(section.getByRole('heading', { level: 3 })).toHaveText([
-      'Research experience',
+      'Experience',
       'Education',
     ]);
     await expect(section.locator('.pf-column-head svg[aria-hidden="true"]')).toHaveCount(2);
     const columns = section.locator('.pf-column');
     const role = columns.nth(0).locator('.pf-entry');
     await expect(role).toHaveCount(xp.roles.length);
-    const [r] = xp.roles;
-    await expect(role.getByRole('heading', { level: 4 })).toHaveText(r.title);
-    await expect(role.locator('.pf-entry-date')).toHaveText(r.period);
-    await expect(role.locator('.pf-entry-sub span')).toHaveText([r.unit, r.institution]);
-    await expect(role.locator('.pf-entry-text')).toHaveText(r.text);
-    await expect(role.locator('.pf-bullets li')).toHaveText(r.bullets);
+    // FD-149: every role of the data, in order (a role without a unit shows only its institution).
+    for (const [i, r] of xp.roles.entries()) {
+      const entry = role.nth(i);
+      await expect(entry.getByRole('heading', { level: 4 })).toHaveText(r.title);
+      await expect(entry.locator('.pf-entry-date')).toHaveText(r.period);
+      await expect(entry.locator('.pf-entry-sub span')).toHaveText(
+        [r.unit, r.institution].filter(Boolean),
+      );
+      await expect(entry.locator('.pf-entry-text')).toHaveText(r.text);
+      await expect(entry.locator('.pf-bullets li')).toHaveText(r.bullets);
+    }
     const degrees = columns.nth(1).locator('.pf-entry');
     await expect(degrees).toHaveCount(xp.education.length);
     for (const [i, d] of xp.education.entries()) {
@@ -430,10 +442,8 @@ test.describe('item 6: Experience & education', () => {
       await expect(degrees.nth(i).locator('.pf-entry-date')).toHaveText(d.year);
       await expect(degrees.nth(i).locator('.pf-entry-sub')).toHaveText(d.institution);
     }
-    await expect(section.locator('.pf-note')).toContainText(xp.note);
-    const cv = section.getByRole('link', { name: 'Request CV' });
-    await expect(cv).toHaveAttribute('href', `mailto:${site.profile.email}?subject=CV%20request`);
-    await expect(cv.locator('svg[aria-hidden="true"]')).toHaveCount(1);
+    await expect(section.locator('.btn')).toHaveCount(0);
+    await expect(section.locator('a[href="/cv/Rasel_Al_Mamun_CV.pdf"]')).toHaveCount(0);
   });
 
   test('1440: two columns with a divider; 390: stacked', async ({ page }) => {
@@ -499,6 +509,7 @@ test.describe('item 7: Technical expertise', () => {
           left: Math.round(r.left),
           iconLeftOfTitle: icon.right <= title.left,
           itemRows: new Set(items).size,
+          items: items.length,
         };
       }),
     );
@@ -508,7 +519,8 @@ test.describe('item 7: Technical expertise', () => {
     await page.goto('/portfolio.html');
     const groups = await layout(page);
     expect(new Set(groups.map((g) => g.top)).size).toBe(1);
-    expect(groups.every((g) => !g.iconLeftOfTitle && g.itemRows === 3)).toBe(true);
+    // Items listed down: one row each (FD-149: five items in two groups now).
+    expect(groups.every((g) => !g.iconLeftOfTitle)).toBe(true);
     for (const i of [1, 2, 3]) {
       await expect(page.locator('#expertise .pf-group').nth(i)).toHaveCSS(
         'border-left-width',
@@ -535,22 +547,17 @@ test.describe('item 7: Technical expertise', () => {
     }
   });
 
-  test('< 768 (expertise-mobile): one column, icon left, items on one line with ·', async ({
-    page,
-  }) => {
+  test('< 768 (expertise-mobile): one column, icon left, items as tags', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/portfolio.html');
     const g = await layout(page);
     expect(new Set(g.map((x) => x.left)).size).toBe(1);
     expect(g.every((x, i) => i === 0 || x.top > g[i - 1].top)).toBe(true);
     expect(g.every((x) => x.iconLeftOfTitle)).toBe(true);
-    // "Engineering tools" fits one line at 390.
-    expect(g[3].itemRows).toBe(1);
-    const sep = await page
-      .locator('#expertise .pf-group-items li')
-      .first()
-      .evaluate((el) => getComputedStyle(el, '::after').content);
-    expect(sep).toContain('·');
+    // FD-156: the items are compact wrapping tags (the project-tag style) on every width.
+    const pill = page.locator('#expertise .pf-group-items li').first();
+    await expect(pill).toHaveClass(/(^|\s)pill(\s|$)/);
+    await expect(page.locator('#expertise .pf-group-items').first()).toHaveCSS('flex-wrap', 'wrap');
     // Training stacked.
     const [a, b] = await tops(page.locator('#expertise .pf-cert'));
     expect(b).toBeGreaterThan(a);
@@ -579,12 +586,12 @@ test.describe('item 8: View-all pages', () => {
       site.portfolioView.publicationsDescription,
     );
     await expect(page.locator('h1')).toHaveText('Publications');
-    const crumb = page.getByRole('navigation', { name: 'Breadcrumb' });
-    await expect(crumb.getByRole('link', { name: 'Portfolio' })).toHaveAttribute(
+    // S5 (1.6.0): one back link at the top, "← Portfolio".
+    await expect(page.getByRole('navigation', { name: 'Back' }).getByRole('link')).toHaveAttribute(
       'href',
       pagePath('portfolio.html'),
     );
-    await expect(crumb).toContainText(/Portfolio\s*\/?\s*Publications/);
+    await expect(page.getByRole('navigation', { name: 'Back' })).toHaveText('Portfolio');
     await expect(
       page.locator(`.site-header nav a[href="${pagePath('portfolio.html')}"]`),
     ).toHaveAttribute('aria-current', 'true');
@@ -621,34 +628,37 @@ test.describe('item 8: View-all pages', () => {
     await expect(page.locator('[data-pub-row]:visible')).toHaveCount(site.counts.publications);
   });
 
-  test('research.html: all 15 cards, two pills, status where set, 3 / 2 / 1 columns', async ({
+  test('research.html: page 1 of 2 (9 cards), two pills, a badge only where a status is set, 3 / 2 / 1 columns', async ({
     page,
   }) => {
     await page.setViewportSize(DESKTOP);
     await page.goto('/research.html');
-    await expect(page).toHaveTitle('Research projects — Ideatrium');
+    await expect(page).toHaveTitle('Projects — Ideatrium');
     await expect(page.locator('meta[name="description"]')).toHaveAttribute(
       'content',
       site.portfolioView.researchDescription,
     );
-    await expect(page.locator('h1')).toHaveText('Research projects');
-    // FD-115: a back link instead of the breadcrumb.
-    await expect(page.getByRole('link', { name: 'Back to Portfolio' })).toHaveAttribute(
-      'href',
-      pagePath('portfolio.html'),
-    );
+    await expect(page.locator('h1')).toHaveText('Projects');
+    // FD-115, S5: a back link instead of the breadcrumb, "← Portfolio".
+    await expect(
+      page.getByRole('link', { name: 'Portfolio', exact: true }).first(),
+    ).toHaveAttribute('href', pagePath('portfolio.html'));
+    // FD-171: the archive is the Projects item; Portfolio is not current there.
+    await expect(
+      page.locator(`.site-header nav a[href="${pagePath('research.html')}"]`),
+    ).toHaveAttribute('aria-current', 'page');
     await expect(
       page.locator(`.site-header nav a[href="${pagePath('portfolio.html')}"]`),
-    ).toHaveAttribute('aria-current', 'true');
+    ).not.toHaveAttribute('aria-current');
     const cards = page.locator('[data-project-card]');
-    await expect(cards).toHaveCount(15);
-    for (const [i, project] of site.projectList.entries()) {
+    await expect(cards).toHaveCount(9);
+    for (const [i, project] of site.projectList.slice(0, 9).entries()) {
       const card = cards.nth(i);
-      // FD-115: short title, two pills, the status where set.
-      await expect(card.getByRole('heading', { level: 2 })).toHaveText(project.short_title);
-      await expect(card.locator('.pill')).toHaveText(
-        (project.featured_tags ?? project.tags).slice(0, 2),
-      );
+      // FD-115, 1.7.0: short title, the card image, three pills; FD-157: a status badge only where
+      // one is set.
+      await expect(card.getByRole('heading', { level: 3 })).toHaveText(project.short_title);
+      await expect(card.locator('.blog-cover img')).toHaveCount(1);
+      await expect(card.locator('.pill')).toHaveText(project.card_tags);
       await expect(card.locator('.archive-status')).toHaveCount(project.status ? 1 : 0);
       await expect(card.getByRole('link')).toHaveAttribute('href', pagePath(project.file));
     }
@@ -671,7 +681,7 @@ test.describe('item 8: View-all pages', () => {
     await page.getByRole('link', { name: 'View all 8 publications' }).click();
     await page.waitForURL(`**${pagePath('publications.html')}`);
     await page.goto('/portfolio.html');
-    await page.getByRole('link', { name: 'View all 15 research projects' }).click();
+    await page.getByRole('link', { name: 'View all 15 projects' }).click();
     await page.waitForURL(`**${pagePath('research.html')}`);
   });
 });
@@ -715,13 +725,11 @@ test.describe('item 9: pills site-wide (FD-110)', () => {
       expect(s.family).toMatch(/Bricolage/);
       expect(s.transform).toBe('none');
       // No tag is an old chip any more.
-      await expect(page.locator('main .chip-row li.chip')).toHaveCount(
-        file === 'index.html' ? await page.locator('[data-fork-col] li.chip').count() : 0,
-      );
+      await expect(page.locator('main .chip-row li.chip')).toHaveCount(0);
     });
   }
 
-  test('status: "In progress" is an --info dot with text, "Done" a --success tick', async ({
+  test('status: "In progress" is an --info dot with text, "Completed" a --success tick (R1)', async ({
     page,
   }) => {
     await page.goto('/research.html');
@@ -741,7 +749,7 @@ test.describe('item 9: pills site-wide (FD-110)', () => {
     ).toBe(await colour('--info'));
     await expect(progress).toHaveCSS('border-top-width', '0px');
     const done = page.locator('.status-done').first();
-    await expect(done).toHaveText('Done');
+    await expect(done).toHaveText('Completed');
     expect(await done.locator('svg').evaluate((el) => getComputedStyle(el).stroke)).toBe(
       await colour('--success'),
     );
@@ -890,7 +898,9 @@ test.describe('item 11: back-to-top and shell', () => {
     }
   }
 
-  test('drawer: the Portfolio sub-line names the sections', async ({ page }) => {
+  test('drawer: the Portfolio sub-line names the sections; Projects is the current item', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/research.html');
     await page.locator('[data-menu-button]').click();
@@ -898,8 +908,11 @@ test.describe('item 11: back-to-top and shell', () => {
     await expect(drawer).toBeVisible();
     const link = drawer.getByRole('link', { name: /^Portfolio/ });
     await expect(link.locator('.drawer-sub')).toHaveText('Publications · Projects · Awards');
-    // A "View all" page marks Portfolio as its section.
-    await expect(link).toHaveAttribute('aria-current', 'true');
+    // FD-171: the Projects archive marks its own item, not Portfolio.
+    await expect(link).not.toHaveAttribute('aria-current');
+    const projects = drawer.getByRole('link', { name: /^Projects/ });
+    await expect(projects.locator('.drawer-sub')).toHaveText('Research · Software');
+    await expect(projects).toHaveAttribute('aria-current', 'page');
   });
 });
 
@@ -1011,21 +1024,17 @@ test.describe('project pages', () => {
         'content',
         project.contribution,
       );
-      await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toContainText(
-        /Portfolio\s*Research project/,
-      );
+      // S5: "← Projects".
+      await expect(page.getByRole('navigation', { name: 'Back' })).toHaveText('Projects');
       // FD-116: the contribution as the detail's list where verified, else the paragraph.
       if (!project.detail) {
         await expect(page.locator('.detail-text')).toHaveText(project.contribution);
       }
-      // No photo placeholder: blocks render only with data (FD-116); no gallery without images.
+      // No photo placeholder: blocks render only with data (FD-116); 1.7.0: the card image is the
+      // page-top image, and there is no Gallery.
       await expect(page.locator('main .media-ph')).toHaveCount(0);
-      await expect(page.locator('main .project-image')).toHaveCount(
-        (project.image ? 1 : 0) + (project.gallery?.length ?? 0),
-      );
-      await expect(page.getByRole('heading', { name: 'Gallery' })).toHaveCount(
-        project.gallery ? 1 : 0,
-      );
+      await expect(page.locator('main .project-cover img')).toHaveCount(1);
+      await expect(page.getByRole('heading', { name: 'Gallery' })).toHaveCount(0);
       await expect(page.locator('main .related-pub')).toHaveCount(project.publications.length);
       await expect(page.locator('.status-progress, .status-done')).toHaveCount(
         project.status ? 1 : 0,

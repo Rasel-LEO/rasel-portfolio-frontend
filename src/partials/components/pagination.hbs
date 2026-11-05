@@ -1,0 +1,24 @@
+{{!-- Author: Rasel Al Mamun --}}
+{{!-- Pagination (FD-154, release 1.6.0 round 3), shared by the projects archive, the Blog and the
+Publications page. Context: `pager` from tools/lists.mjs (null with one page: nothing is rendered)
+— { page, pages, prev: { href } | null, next: { href } | null, items: [{ n, href, current } | { gap }] };
+`label` names the landmark (default "Pagination"). A real <nav> of links, so it works without
+JavaScript (Django: ?page=N next to the current q / topic / category). The current page is
+aria-current="page"; Previous and Next are links (rel="prev" / "next"), disabled as aria-disabled
+text at the ends. Below 576 px the numbers collapse to "Page 2 of 5" between Previous and Next. --}}
+{{#if pager}}
+<nav class="pager" aria-label="{{#if label}}{{label}}{{else}}Pagination{{/if}}" data-pager>
+  <ul class="pager-list list-unstyled mb-0">
+    <li class="pager-step">{{#if pager.prev}}<a class="pager-link" href="{{pager.prev.href}}" rel="prev"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M19 12H5M11 6l-6 6 6 6" /></svg><span>Previous</span></a>{{else}}<span class="pager-link is-disabled" aria-disabled="true"><svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M19 12H5M11 6l-6 6 6 6" /></svg><span>Previous</span></span>{{/if}}</li>
+    {{#each pager.items}}
+    {{#if gap}}
+    <li class="pager-num pager-gap" aria-hidden="true">…</li>
+    {{else}}
+    <li class="pager-num"><a class="pager-link{{#if current}} is-current{{/if}}" href="{{href}}" aria-label="Page {{n}}"{{#if current}} aria-current="page"{{/if}}>{{n}}</a></li>
+    {{/if}}
+    {{/each}}
+    <li class="pager-status" aria-hidden="true">Page {{pager.page}} of {{pager.pages}}</li>
+    <li class="pager-step">{{#if pager.next}}<a class="pager-link" href="{{pager.next.href}}" rel="next"><span>Next</span><svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>{{else}}<span class="pager-link is-disabled" aria-disabled="true"><span>Next</span><svg class="icon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></span>{{/if}}</li>
+  </ul>
+</nav>
+{{/if}}

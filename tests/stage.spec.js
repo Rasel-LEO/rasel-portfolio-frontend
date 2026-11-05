@@ -4,23 +4,29 @@
 // motion and clean reverts. Production build (npm test builds first).
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from './fixtures.js';
-import { entranceDone, pageEnd, phonePortrait, staticBase, themes, useTheme } from './pages.js';
+import { entranceDone, phonePortrait, staticBase, themes, useTheme } from './pages.js';
 
 const shots = 'tests/screenshots/stage';
 
 // Scroll so the stage is at progress p and let ScrollTrigger render the frame; the scrub's
 // 0.8 s smoothing (FD-69) has caught up after SETTLE ms.
 const SETTLE = 950;
+// FD-163: the stage ends at the hand-off (65 %). The tests keep v1.5.1's progress values p (0–0.65
+// is the whole stage now; a larger p is its end).
+const END = 0.65;
 async function goTo(page, p) {
-  await page.evaluate(async (p) => {
-    const stage = document.querySelector('[data-stage]');
-    const stickyTop = parseFloat(getComputedStyle(stage.firstElementChild).top);
-    const top = stage.getBoundingClientRect().top + window.scrollY;
-    const start = top - stickyTop;
-    const end = top + stage.offsetHeight - window.innerHeight;
-    window.scrollTo({ top: start + p * (end - start), behavior: 'instant' });
-    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  }, p);
+  await page.evaluate(
+    async (p) => {
+      const stage = document.querySelector('[data-stage]');
+      const stickyTop = parseFloat(getComputedStyle(stage.firstElementChild).top);
+      const top = stage.getBoundingClientRect().top + window.scrollY;
+      const start = top - stickyTop;
+      const end = top + stage.offsetHeight - window.innerHeight;
+      window.scrollTo({ top: start + p * (end - start), behavior: 'instant' });
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    },
+    Math.min(p, END) / END,
+  );
   await page.waitForTimeout(SETTLE);
 }
 
@@ -74,23 +80,12 @@ async function readStage(page) {
     const effectiveOpacity = ${effectiveOpacity};
     const $ = (s) => document.querySelector(s);
     const m = new DOMMatrix(getComputedStyle($('[data-stage-figure] picture')).transform);
-    const flat = (el) => {
-      const t = getComputedStyle(el).transform;
-      if (t === 'none') return true;
-      // Flat: no rotation or offset left (the column keeps its own perspective).
-      const c = new DOMMatrix(t);
-      return Math.abs(c.m11 - 1) < 1e-3 && Math.abs(c.m13) < 1e-3 && Math.abs(c.m41) < 0.5;
-    };
-    const cols = [...document.querySelectorAll('[data-fork-col]')];
     return {
       rotateY: (Math.atan2(-m.m13, m.m11) * 180) / Math.PI,
       scale: m.m22,
       plane: $('[data-stage-figure] picture').style.transform,
       hero: effectiveOpacity($('[data-stage-hero]')),
       statement: effectiveOpacity($('.screen2-headline')),
-      forkTitle: effectiveOpacity($('.fork-title')),
-      cols: cols.map(effectiveOpacity),
-      colsFlat: cols.every(flat),
       figure: $('[data-stage-figure]').getBoundingClientRect().toJSON(),
       figureRest: { w: $('[data-stage-figure]').offsetWidth, h: $('[data-stage-figure]').offsetHeight },
       // Hidden at the hand-off (FD-97: visibility, swapped in one frame with the button).
@@ -119,7 +114,7 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
   for (const viewport of viewports) {
     const { width, height } = viewport;
 
-    test(`motion map at 0/20/40/65/72/100 % (${width}×${height})`, async ({ page }) => {
+    test(`motion map at 0/20/40/65/100 % (${width}×${height})`, async ({ page }) => {
       const errors = [];
       page.on('pageerror', (error) => errors.push(String(error)));
       await openStage(page, viewport);
@@ -131,8 +126,6 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
       expect(s.z).toBeCloseTo(0, 1);
       expect(s.hero).toBe(1);
       expect(s.statement).toBe(0);
-      expect(s.forkTitle).toBe(0);
-      expect(s.cols).toEqual([0, 0]);
       await expect(page.locator('.stage-cue')).toBeVisible();
       await expect(page.locator('.stage-cue')).toHaveAttribute('aria-hidden', 'true');
 
@@ -156,11 +149,10 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
       expect(s.z).toBeCloseTo(40, 1);
       expect(s.hero).toBe(0);
       expect(s.statement).toBe(1);
-      expect(s.forkTitle).toBe(0);
 
       // From 65 % (FD-97, FD-98): the figure is the back-to-top photo — 140 px tall,
       // lower-right corner on the button's (24 px insets) — and has handed over to it; screen
-      // 2 still stands, the Fork is about to come in.
+      // 2 still stands, and the stage ends here (FD-163).
       // (A hair past 65 %: the scroll position is whole pixels.)
       await goTo(page, 0.652);
       s = await readStage(page);
@@ -172,21 +164,10 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
       expect(s.figureOpacity).toBe(0);
       expect(s.statement).toBe(1);
 
-      // 72 %: screen 2 gone, the Fork seen, its columns still turning in.
-      await goTo(page, 0.72);
-      s = await readStage(page);
-      expect(s.statement).toBe(0);
-      expect(s.forkTitle).toBeGreaterThan(0.95);
-      for (const col of s.cols) expect(col).toBeGreaterThan(0.95);
-      expect(s.colsFlat).toBe(false);
-
       await goTo(page, 1);
       s = await readStage(page);
       expect(s.figureOpacity).toBe(0);
       expect(s.hero).toBe(0);
-      expect(s.forkTitle).toBe(1);
-      expect(s.cols).toEqual([1, 1]);
-      expect(s.colsFlat).toBe(true);
       expect(s.button.hidden).toBe(false);
       await expect(page.locator('[data-back-to-top]')).toHaveCSS('opacity', '0.7');
       // The same image at the same size and place (FD-54).
@@ -229,8 +210,9 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
           expect(state.opacity, state.name).toBeGreaterThan(0.999);
           expect(state.inView, state.name).toBe(true);
         }
-        // Hero CTAs (3), the two pillars, the two Fork CTAs; the six areas are text (FD-87).
-        expect(seen.filter((state) => state.inStage).length).toBe(7);
+        // Hero CTAs (3) and the two pillars (the Fork's two CTAs are gone, FD-163); the six areas
+        // are text (FD-87).
+        expect(seen.filter((state) => state.inStage).length).toBe(5);
       });
     }
 
@@ -302,32 +284,12 @@ test.describe('Home stage, desktop (≥ 992 px)', () => {
     }
   }
 
-  test('staged, the Fork keeps the full container width (FD-47)', async ({ page }) => {
-    await openStage(page, { width: 1440, height: 900 });
-    await goTo(page, 1);
-    const [fork, services] = await page.evaluate(() =>
-      ['.fork-row > :last-child .fork-card', '.home-services > :last-child .service'].map(
-        (selector) => document.querySelector(selector).getBoundingClientRect().right,
-      ),
-    );
-    expect(Math.abs(fork - services)).toBeLessThanOrEqual(1);
-  });
-
   for (const width of [1024, 1280, 1440, 1920]) {
     test(`no horizontal overflow through the stage at ${width}px`, async ({ page }) => {
       await openStage(page, { width, height: 900 });
       for (const p of [0, 0.3, 0.6, 0.62, 0.65, 0.8, 1]) {
         await goTo(page, p);
         expect((await readStage(page)).overflow, `at ${p}`).toBeLessThanOrEqual(0);
-        // The opening Fork columns stay inside the window (full-width Fork, FD-57).
-        const edges = await page
-          .locator('[data-fork-col]')
-          .evaluateAll((cards) => cards.map((card) => card.getBoundingClientRect()))
-          .then((rects) => rects.map((r) => ({ left: r.left, right: r.right })));
-        for (const edge of edges) {
-          expect(edge.left, `at ${p}`).toBeGreaterThanOrEqual(0);
-          expect(edge.right, `at ${p}`).toBeLessThanOrEqual(width);
-        }
       }
     });
   }
@@ -419,7 +381,7 @@ const recorder = () => {
       });
     }
   }).observe({ type: 'layout-shift', buffered: true });
-  // Every frame until the stage is built: is screen 2 or the Fork visible?
+  // Every frame until the stage is built: is screen 2 visible?
   const visible = (el) => {
     if (!el) return false;
     let value = 1;
@@ -432,12 +394,9 @@ const recorder = () => {
   const sample = () => {
     const stage = document.querySelector('[data-stage]');
     if (stage) {
-      const seen = [
-        '.screen2-headline',
-        '.screen2-grid li',
-        '.fork-title',
-        '[data-fork-col]',
-      ].filter((selector) => visible(document.querySelector(selector)));
+      const seen = ['.screen2-headline', '.screen2-grid li'].filter((selector) =>
+        visible(document.querySelector(selector)),
+      );
       if (seen.length) window.__seen.push([Math.round(performance.now()), ...seen]);
       if (stage.classList.contains('is-staged')) {
         window.__stagedAt = performance.now();
@@ -485,11 +444,9 @@ test.describe('Home stage, first paint (FD-66)', () => {
     await page.route('**/assets/stage-desktop-*.js', (route) => route.abort());
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/index.html');
-    // Pre-staged at first: the statement layer and the Fork are hidden (no focus, no pointer),
-    // the stage is tall.
+    // Pre-staged at first: the statement layer is hidden (no focus, no pointer), the stage is tall.
     await expect(page.locator('[data-stage-statement]')).toHaveCSS('opacity', '0');
     await expect(page.locator('[data-stage-statement]')).toHaveCSS('visibility', 'hidden');
-    await expect(page.locator('[data-stage-fork]')).toHaveCSS('visibility', 'hidden');
     // Tab goes from the hero's CTAs straight past the hidden layers, out of the stage.
     await page.locator('.hero-ctas a, .hero-ctas button').last().focus();
     await page.keyboard.press('Tab');
@@ -501,13 +458,7 @@ test.describe('Home stage, first paint (FD-66)', () => {
     );
     await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
     await page.waitForTimeout(4300);
-    const selectors = [
-      '[data-stage-figure]',
-      'h1',
-      '.screen2-headline',
-      '.screen2-areas',
-      '[data-stage-fork]',
-    ];
+    const selectors = ['[data-stage-figure]', 'h1', '.screen2-headline', '.screen2-areas'];
     const boxes = (target) =>
       target.evaluate(
         (list) =>
@@ -532,7 +483,7 @@ test.describe('Home stage, first paint (FD-66)', () => {
     await entranceDone(staticPage);
     await page.evaluate(() => document.fonts.ready);
     expect(await boxes(page)).toEqual(await boxes(staticPage));
-    for (const selector of ['[data-stage-statement]', '[data-stage-fork]']) {
+    for (const selector of ['[data-stage-statement]']) {
       await expect(page.locator(selector)).toHaveCSS('opacity', '1');
       await expect(page.locator(selector)).toHaveCSS('visibility', 'visible');
     }
@@ -653,12 +604,10 @@ test.describe('fonts (FD-65)', () => {
 // FD-70: back-to-top from anywhere on Home never plays the stage backwards.
 test.describe('back-to-top on Home (FD-70)', () => {
   // From far below the stage: Selected publications.
-  for (const from of ['Selected publications', 'the Fork (p = 1)']) {
-    test(`from ${from}: no frame shows screen 2 or the Fork; focus to the brand`, async ({
-      page,
-    }) => {
+  for (const from of ['Selected publications', 'the end of the stage (p = 1)']) {
+    test(`from ${from}: no frame shows screen 2; focus to the brand`, async ({ page }) => {
       await openStage(page, { width: 1440, height: 900 });
-      if (from.startsWith('the Fork')) await goTo(page, 1);
+      if (from.startsWith('the end')) await goTo(page, 1);
       else {
         await page.evaluate(() =>
           document
@@ -677,7 +626,7 @@ test.describe('back-to-top on Home (FD-70)', () => {
           const r = el.getBoundingClientRect();
           return r.bottom > 0 && r.top < innerHeight && r.width > 0;
         };
-        const layers = ['.screen2-headline', '.screen2-grid li', '.fork-title', '[data-fork-col]'];
+        const layers = ['.screen2-headline', '.screen2-grid li'];
         const sample = () => {
           window.__frames.push({
             y: Math.round(scrollY),
@@ -694,7 +643,7 @@ test.describe('back-to-top on Home (FD-70)', () => {
       await expect.poll(() => page.evaluate(() => window.__frames.length)).toBe(90);
       const frames = await page.evaluate(() => window.__frames);
       // Once the jump has started (the first frame away from the start), nothing of those
-      // layers is visible again; at the start the Fork may be (it fades out with the page).
+      // layers is visible again; at the start screen 2 may be (it fades out with the page).
       const moved = frames.findIndex(({ y }) => y !== startY);
       expect(moved).toBeGreaterThan(0);
       expect(frames.slice(moved).filter(({ y }) => y > 0)).toEqual([]);
@@ -958,28 +907,8 @@ test.describe('Home stage, edge cases', () => {
     await expect(button).toHaveCSS('pointer-events', 'auto');
   });
 
-  test('a mouse press on the Fork never moves the page', async ({ page }) => {
+  test('half-shown hero and screen 2 take no pointer', async ({ page }) => {
     await openStage(page, { width: 1440, height: 900 });
-    const cta = page.locator('[data-fork-col="portfolio"] a');
-    for (const p of [0.8, 0.95]) {
-      await goTo(page, p);
-      const box = await cta.boundingBox();
-      const before = await page.evaluate(() => window.scrollY);
-      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-      await page.mouse.down();
-      await page.waitForTimeout(100);
-      expect(await page.evaluate(() => window.scrollY), `at ${p}`).toBe(before);
-      // Release elsewhere so the link does not navigate.
-      await page.mouse.move(5, 300);
-      await page.mouse.up();
-    }
-  });
-
-  test('half-shown Fork, hero and screen 2 take no pointer', async ({ page }) => {
-    await openStage(page, { width: 1440, height: 900 });
-    await goTo(page, 0.8);
-    await expect(page.locator('[data-stage-fork]')).toHaveCSS('pointer-events', 'none');
-    await expect(page.locator('[data-stage-statement]')).toHaveCSS('pointer-events', 'none');
     await goTo(page, 0.12);
     await expect(page.locator('[data-stage-hero]')).toHaveCSS('pointer-events', 'none');
     await expect(page.locator('[data-stage-statement]')).toHaveCSS('pointer-events', 'none');
@@ -995,13 +924,11 @@ test.describe('Home stage, edge cases', () => {
     await goTo(page, 0);
     const ctas = await page.locator('.hero-ctas').boundingBox();
     expect(ctas.y + ctas.height).toBeLessThanOrEqual(720);
-    await goTo(page, 1);
-    const title = await page.locator('.fork-title').boundingBox();
-    expect(title.y).toBeGreaterThanOrEqual(header - 1);
-    for (const card of await page.locator('[data-fork-col]').all()) {
-      const box = await card.boundingBox();
-      expect(box.y + box.height).toBeLessThanOrEqual(720);
-    }
+    await goTo(page, 0.4);
+    const headline = await page.locator('.screen2-headline').boundingBox();
+    expect(headline.y).toBeGreaterThanOrEqual(header - 1);
+    const areas = await page.locator('.screen2-areas').boundingBox();
+    expect(areas.y + areas.height).toBeLessThanOrEqual(720);
   });
 
   test('in a window too short for the hero the stage stays the document, until it fits', async ({
@@ -1042,7 +969,7 @@ test.describe('Home stage, edge cases', () => {
       .locator('[data-stage] [style], [data-back-to-top][style]')
       .evaluateAll((els) => els.filter((el) => el.getAttribute('style')).length);
     expect(styled).toBe(0);
-    for (const selector of ['h1', '.screen2-headline', '[data-fork-col="blog"]']) {
+    for (const selector of ['h1', '.screen2-headline']) {
       await expect(page.locator(selector)).toHaveCSS('opacity', '1');
     }
     expect(errors).toEqual([]);
@@ -1105,14 +1032,8 @@ test.describe('Home stage, below 992 px', () => {
       const page = await context.newPage();
       await page.goto('/index.html');
       await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'mobile');
-      // Reveal targets below the fold start hidden, then end visible.
-      await expect(page.locator('.stage-reveal.is-pre').first()).toBeAttached();
-      for (const selector of [
-        '.screen2-headline',
-        '.screen2-grid li:last-child',
-        '[data-fork-col="portfolio"]',
-        '[data-fork-col="blog"]',
-      ]) {
+      // Reveal targets below the fold end visible.
+      for (const selector of ['.screen2-headline', '.screen2-grid li:last-child']) {
         const el = page.locator(selector);
         await el.scrollIntoViewIfNeeded();
         await expect(el).toHaveCSS('opacity', '1');
@@ -1158,17 +1079,6 @@ test.describe('Home stage, below 992 px', () => {
       expect(transforms.size).toBeGreaterThan(2);
     });
   }
-
-  test('a hidden Fork card shows at once when it takes keyboard focus', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/index.html');
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'mobile');
-    const card = page.locator('[data-fork-col="portfolio"]');
-    await expect(card).toHaveClass(/is-pre/);
-    await card.locator('a').focus();
-    await expect(card).not.toHaveClass(/is-pre/);
-    await expect(card).toHaveCSS('opacity', '1');
-  });
 });
 
 test.describe('Home stage, reduced motion', () => {
@@ -1200,8 +1110,6 @@ test.describe('Home stage, reduced motion', () => {
       '.hero-ctas',
       '.screen2-headline',
       '.screen2-areas',
-      '[data-stage-fork]',
-      '[data-fork-col="blog"]',
     ];
     const boxes = (target) =>
       target.evaluate(
@@ -1317,7 +1225,7 @@ test.describe('Home screen 2, desktop (FD-85)', () => {
     expect(s.firstY).toBeCloseTo(0, 3);
 
     await record(page);
-    await goTo(page, 0.7);
+    await goTo(page, 0.1);
     await expect(page.locator('[data-stage-statement]')).toHaveAttribute('data-screen2', 'hidden');
     frames = await stopRecording(page);
     const fading = firstAt(frames, (f) => f.layer < 1);
@@ -1341,7 +1249,7 @@ test.describe('Home screen 2, desktop (FD-85)', () => {
       await goTo(page, p);
       await page.waitForTimeout(400);
       const frames = await stopRecording(page);
-      const target = p >= 0.16 && p < 0.67;
+      const target = p >= 0.16;
       for (const [i, f] of frames.entries()) {
         const where = `at ${p}, frame ${i} (${f.state})`;
         if (f.state === 'hidden') expect(f.layer, where).toBe(0);
@@ -1409,8 +1317,10 @@ test.describe('Home screen 2, desktop (FD-85)', () => {
 });
 
 test.describe('Home screen 2, below 992 px (FD-85)', () => {
-  test('plays once when it comes into view, never fades out (390×844)', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+  // Round 5: 390×800, so screen 2 (from y 834) starts below the first screen, as the tests say; at
+  // 844 px its first lines are already on screen at load.
+  test('plays once when it comes into view, never fades out (390×800)', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 800 });
     await page.goto('/index.html');
     const layer = page.locator('[data-stage-statement]');
     await expect(layer).toHaveAttribute('data-screen2', 'hidden');
@@ -1426,7 +1336,7 @@ test.describe('Home screen 2, below 992 px (FD-85)', () => {
   });
 
   test('a hidden screen 2 shows at once when it takes keyboard focus', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width: 390, height: 800 });
     await page.goto('/index.html');
     const layer = page.locator('[data-stage-statement]');
     await expect(layer).toHaveAttribute('data-screen2', 'hidden');
@@ -1448,48 +1358,6 @@ test.describe('Home screen 2, reduced motion (FD-85)', () => {
         await expect(page.locator(selector).first()).toHaveCSS('opacity', '1');
       }
     }
-  });
-});
-
-// FD-96 (screen recording 2026-10-25, 1.5–8 s): the Fork buttons looked ready but took no click.
-test.describe('Fork clickable when visible (FD-96)', () => {
-  test('FD-96: from the first frame both cards are ≥ 0.95 opaque, the buttons take hover and click (1440×900)', async ({
-    page,
-  }) => {
-    test.setTimeout(120_000);
-    await openStage(page, { width: 1440, height: 900 });
-    const opacities = () =>
-      page
-        .locator('[data-fork-col]')
-        .evaluateAll((cols) => cols.map((col) => parseFloat(getComputedStyle(col).opacity)));
-    let first = null;
-    for (let step = 50; step <= 100; step += 1) {
-      await goTo(page, step / 100);
-      if ((await opacities()).every((value) => value >= 0.95)) {
-        first = step / 100;
-        break;
-      }
-    }
-    expect(first).not.toBeNull();
-    for (const col of ['portfolio', 'blog']) {
-      const hit = await page.locator(`[data-fork-col="${col}"] .fork-cta`).evaluate((cta) => {
-        const r = cta.getBoundingClientRect();
-        const el = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
-        return el === cta || cta.contains(el);
-      });
-      expect(hit, `${col} at ${first}`).toBe(true);
-    }
-    await page.screenshot({ path: 'tests/screenshots/stage/fork-clickable-1440-dark.png' });
-    // Hover: the follower takes the button state, not the stage circle (FD-82 amended).
-    const cta = page.locator('[data-fork-col="portfolio"] .fork-cta');
-    const box = await cta.boundingBox();
-    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
-    await page.mouse.move(box.x + box.width / 2 + 1, box.y + box.height / 2);
-    await expect(page.locator('.cursor-ring')).toHaveAttribute('data-state', 'button');
-    // A click navigates, through the seam wipe (FD-81).
-    await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
-    await expect(page.locator('.page-wipe')).toHaveClass(/is-leaving/);
-    await page.waitForURL(pageEnd('portfolio.html'));
   });
 });
 
@@ -1588,10 +1456,9 @@ test.describe('hand-off without a double image (FD-97)', () => {
   });
 });
 
-// FD-98 (screen recording: an empty stage between screens 2 and 3): at every 1 % from 50 % to
-// 100 %, screen 2's text or the Fork's content is at least half seen, and the portrait (the
-// stage figure, or the back-to-top photo once handed over) never lies over a Fork card's text
-// or actions while both can be seen (FD-88).
+// FD-98 (screen recording: an empty stage between screens 2 and 3), FD-163: the Fork is gone and the
+// stage ends at the hand-off. At every 1 % from 50 % to 100 % screen 2's text is seen in full and the
+// portrait (the stage figure, or the back-to-top photo once handed over) is never gone.
 test.describe('no empty stage (FD-98)', () => {
   for (const viewport of [
     { width: 1024, height: 768 },
@@ -1599,13 +1466,12 @@ test.describe('no empty stage (FD-98)', () => {
     { width: 1440, height: 900 },
     { width: 1920, height: 1080 },
   ]) {
-    test(`FD-98: every 1 % from 50 % to 100 % something is seen, the portrait clear of the Fork (${viewport.width}×${viewport.height})`, async ({
+    test(`FD-98: every 1 % from 50 % to 100 % screen 2 is seen, the portrait is never gone (${viewport.width}×${viewport.height})`, async ({
       page,
     }) => {
       test.setTimeout(150_000);
       await openStage(page, viewport);
       const shotsAt = viewport.width === 1440 ? [55, 60, 65, 70] : [];
-      const handover = [];
       for (let step = 50; step <= 100; step += 1) {
         await goTo(page, step / 100);
         const s = await page.evaluate(`(() => {
@@ -1617,46 +1483,24 @@ test.describe('no empty stage (FD-98)', () => {
               seen(document.querySelector(s)),
             ),
           );
-          const fork = Math.min(
-            ...['.fork-title', '[data-fork-col="portfolio"]', '[data-fork-col="blog"]'].map((s) =>
+          const portrait = Math.max(
+            ...['[data-stage-figure]', '[data-back-to-top] img'].map((s) =>
               seen(document.querySelector(s)),
             ),
           );
-          const portraits = ['[data-stage-figure]', '[data-back-to-top] img']
-            .map((s) => document.querySelector(s))
-            .filter((el) => seen(el) > 0.01)
-            .map((el) => el.getBoundingClientRect());
-          const parts = [...document.querySelectorAll(
-            '[data-fork-col] :is(.fork-chip, h3, .fork-text, .chip-row, .fork-cta)',
-          )].filter((el) => seen(el) > 0.01);
-          const hits = parts
-            .filter((el) => {
-              const e = el.getBoundingClientRect();
-              return portraits.some((f) =>
-                f.left < e.right && f.right > e.left && f.top < e.bottom && f.bottom > e.top);
-            })
-            .map((el) => el.closest('[data-fork-col]').dataset.forkCol + ' ' + el.className);
-          return { screen2, fork, hits };
+          return { screen2, portrait };
         })()`);
         const at = `at ${step} %`;
-        expect(Math.max(s.screen2, s.fork), at).toBeGreaterThanOrEqual(0.5);
-        expect(s.hits, at).toEqual([]);
-        // Never both at rest on top of each other.
-        expect(s.screen2 > 0.05 && s.fork > 0.05, `${at}: screen 2 under the Fork`).toBe(false);
-        // Hand-over: both partly seen, or neither in full.
-        if ((s.screen2 > 0.01 && s.fork > 0.01) || Math.max(s.screen2, s.fork) < 0.95) {
-          handover.push(step);
-        }
+        expect(s.screen2, at).toBeGreaterThanOrEqual(0.95);
+        expect(s.portrait, at).toBeGreaterThan(0.05);
         if (shotsAt.includes(step)) {
           await page.screenshot({
             path: `tests/screenshots/stage/stage-1440-${step}-dark.png`,
           });
         }
       }
-      expect(handover.length, `hand-over at ${handover} %`).toBeLessThanOrEqual(4);
-      // At the end: the Fork in full, the portrait handed over.
+      // At the end: the portrait handed over to the button.
       const s = await readStage(page);
-      expect(s.cols).toEqual([1, 1]);
       expect(s.figureOpacity).toBe(0);
       expect(s.button.hidden).toBe(false);
     });

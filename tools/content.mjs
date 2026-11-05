@@ -6,6 +6,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { blogFile } from './lists.mjs';
 import { isBracketed, readingMinutes, renderMarkdown } from './markdown.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -52,7 +53,7 @@ export function loadContent() {
 export const postSource = (slug) => join(postsDir, `${slug}.md`);
 
 // The Markdown body of each post, by slug (missing files are reported by validate-content).
-function loadPostBodies(blog) {
+export function loadPostBodies(blog) {
   return Object.fromEntries(
     blog
       .filter((post) => existsSync(postSource(post.slug)))
@@ -93,10 +94,52 @@ export const doiUrl = (doi) => `https://doi.org/${doi}`;
 export const projectFile = (id) => `project-${id}.html`;
 const postFile = (slug) => `post-${slug}.html`;
 const pad2 = (n) => String(n).padStart(2, '0');
+// "2026-11-04" → "4 November 2026" (P1).
+const longDate = (iso) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 
-// A featured project as its Home card: the card's tags.
-const homeCard = (project) =>
-  project && { ...project, cardTags: project.featured_tags ?? project.tags };
+// A featured project as its Home card (1.7.0: card_tags, exactly three, on every card).
+const homeCard = (project) => project && { ...project, cardTags: project.card_tags };
+
+// 1.7.0: the share image (1200 × 630) of a project or post, made at build time from its card image
+// (vite.config.js shareImages) and named after the page it belongs to.
+export const shareImagePath = (kind, key) => `/images/share/${kind}-${key}.jpg`;
+
+// The three figures of the hidden formatting test page (src/pages/format-test.html): any figures
+// the content has — project figures first, then post figures, then the first card image — each shown
+// once as narrow, once as normal and once as wide.
+function formatTestFigures(projectList, postList) {
+  const found = [
+    ...projectList.flatMap((project) => project.detail?.figures ?? []),
+    ...postList.flatMap((post) => post.figures ?? []),
+  ];
+  const source = (i) =>
+    found[i % found.length] ??
+    (projectList[0] && { ...projectList[0].card_image, caption: projectList[0].short_title });
+  return Object.fromEntries(
+    ['narrow', 'normal', 'wide'].map((size, i) => [size, { ...source(i), size }]),
+  );
+}
+
+// A project's text blocks (Overview, Methods, Results, Limitations) as HTML. They are Markdown
+// with "[Figure n]" lines; the figures are numbered in the order they appear on the page, so one
+// counter runs through all four blocks.
+function renderProjectText(detail) {
+  if (!detail) return null;
+  const options = { figures: detail.figures ?? [], counter: { n: 0 } };
+  const part = (key) => (detail[key] ? renderMarkdown(detail[key], options) : '');
+  return {
+    overview: part('overview'),
+    methods: part('methods'),
+    results: part('results_text'),
+    limitations: part('limitations'),
+  };
+}
 
 // A publication as a short row (Home FD-91, Portfolio FD-107): the first author and "et al.".
 const shortCitation = (pub) => ({
@@ -108,7 +151,7 @@ const shortCitation = (pub) => ({
 // Labels of the Portfolio profile counts (FD-107), keyed as in portfolio.profile.counts.
 const COUNT_LABELS = {
   publications: 'Publications',
-  projects: 'Research projects',
+  projects: 'Projects',
   awards: 'Awards',
 };
 
@@ -133,11 +176,13 @@ export function buildSite(
     ...project,
     number: pad2(i + 1),
     file: projectFile(project.id),
-    // FD-115, FD-116: the project's topic (label and line icon) and the Portfolio role line.
+    // FD-115, FD-116: the project's topic (label and line icon); 1.7.0: the role line is a field.
     topicLabel: topicById[project.topic]?.label,
     topicIcon: topicById[project.topic]?.icon,
-    roleLine: portfolio.projects.role_lines[project.id] ?? project.role,
+    roleLine: project.role_line,
     facts: projectFacts(project),
+    text: renderProjectText(project.detail),
+    shareImage: shareImagePath('project', project.id),
   }));
   projectList.forEach((project, i) => {
     const prev = projectList[i - 1];
@@ -172,16 +217,16 @@ export function buildSite(
     .filter((post) => !release || !post.draft)
     .toSorted((a, b) => (b.date ?? '').localeCompare(a.date ?? ''))
     .slice(0, 3);
-  // FD-112: while drafts are shown, the Blog says so ("Blog / Draft preview"); a count says
-  // "{n} drafts" only when every post it counts is a draft, otherwise "{n} posts".
+  // B1, B2 (1.6.0): the eyebrow is fixed ("Blog / Articles & notes"); a count says "{n} articles"
+  // ("1 article"). The public Blog lists published posts only, so it counts those; drafts exist in
+  // this preview build and in the owner's private preview.
   const drafts = postList.filter((post) => post.draft).length;
   const countText = (list) => {
     const n = list.length;
-    return n && list.every((post) => post.draft)
-      ? content.blogPage.count_label_draft
-          .replace('{count}', String(n))
-          .replace(/drafts$/, n === 1 ? 'draft' : 'drafts')
-      : `${n} ${n === 1 ? 'post' : 'posts'}`;
+    return (n === 1 ? content.blogPage.count_label_one : content.blogPage.count_label).replace(
+      '{count}',
+      String(n),
+    );
   };
   const categories = content.blogPage.categories.map((category) => {
     const posts = postList.filter((post) => post.category === category.id);
@@ -208,7 +253,7 @@ export function buildSite(
     release,
     postList,
     blogView: {
-      eyebrow: drafts ? content.blogPage.eyebrow_draft : 'Blog',
+      eyebrow: content.blogPage.eyebrow,
       drafts,
       countText: countText(postList),
     },
@@ -252,6 +297,7 @@ export function buildSite(
       profileName: profile.name,
     }),
     projectById,
+    formatTest: formatTestFigures(projectList, postList),
     // research.html (FD-115): the archive's cards, topics and count line.
     archive: archiveView(researchArchive, projectList),
     publicationYears,
@@ -260,8 +306,12 @@ export function buildSite(
     // Footer (FD-94): the profile links of each group, in the data's order, and the
     // affiliation on two lines (department, university) from affiliation_short.
     footerLinks: {
-      research: content.footer.research_profiles.map((id) => links.find((l) => l.id === id)),
-      connect: content.footer.connect_profiles.map((id) => links.find((l) => l.id === id)),
+      research: content.footer.research_profiles
+        .map((id) => links.find((l) => l.id === id))
+        .filter(Boolean),
+      connect: content.footer.connect_profiles
+        .map((id) => links.find((l) => l.id === id))
+        .filter(Boolean),
     },
     footerAffiliation: [
       profile.affiliation_short.replace(`, ${profile.institution}`, ''),
@@ -296,23 +346,22 @@ function portfolioView(portfolio, { pubs, projectById, projectList, counts, prof
     publicationsCta: fill(portfolio.publications.cta, counts.publications),
     projects: portfolio.projects.order.map((id) => ({
       ...projectById[id],
-      roleLine: portfolio.projects.role_lines[id],
       cardTitle: projectById[id].short_title,
-      cardSummary: projectById[id].short_summary,
-      cardTags: projectById[id].featured_tags ?? projectById[id].tags,
+      cardSummary: projectById[id].card_description,
+      cardTags: projectById[id].card_tags,
     })),
     projectsCta: fill(portfolio.projects.cta, counts.projects),
     // The "View all" pages' intro and meta description (FD-109), from the counts.
     publicationsIntro: `${counts.publications} publications: ${counts.journal} journal articles and ${counts.conference} conference papers, newest first.`,
     publicationsDescription: `${counts.publications} publications by ${profileName}: ${counts.journal} journal articles and ${counts.conference} conference papers, newest first.`,
-    researchDescription: `${counts.projects} research projects by ${profileName} — ${portfolio.projects.intro}`,
+    // FD-147: the projects archive's search description.
+    researchDescription: `${counts.projects} projects by ${profileName}: research and software, from IoT and edge AI to automation and applications.`,
     // research.html (FD-109): all projects as the same cards, full title and summary.
     allProjects: projectList.map((project) => ({
       ...project,
-      roleLine: project.role,
-      cardTitle: project.title,
-      cardSummary: project.contribution,
-      cardTags: project.tags,
+      cardTitle: project.short_title,
+      cardSummary: project.card_description,
+      cardTags: project.card_tags,
     })),
   };
 }
@@ -339,12 +388,9 @@ function archiveView(archive, projectList) {
   return {
     ...archive,
     total,
-    countText: archive.count_label
-      .replace('{shown}', String(total))
-      .replace('{total}', String(total)),
     cards: projectList.map((project) => ({
       ...project,
-      cardTags: (project.featured_tags ?? project.tags).slice(0, 2),
+      cardTags: project.card_tags,
       search: [project.title, project.short_title, ...project.tags].join(' ').toLowerCase(),
     })),
   };
@@ -366,11 +412,12 @@ function buildPosts({ blog, blogPage, profile }, { showDrafts, bodies, person })
       file: postFile(post.slug),
       draft: post.status === 'draft',
       categoryLabel: labels[post.category],
-      // FD-113: the cover illustration (an in-house line drawing) and its alt text.
-      cover: blogPage.covers?.[post.slug] ?? null,
       minutes,
+      shareImage: shareImagePath('post', post.slug),
       readingTime: `${minutes} min read`,
-      html: renderMarkdown(body),
+      // P1 (1.6.0): "Published 4 November 2026" (d Month yyyy); nothing while the post has no date.
+      dateLabel: post.date ? longDate(post.date) : null,
+      html: renderMarkdown(body, { figures: post.figures ?? [] }),
       description,
     };
   });
@@ -388,6 +435,21 @@ function buildPosts({ blog, blogPage, profile }, { showDrafts, bodies, person })
       ...others.filter((other) => other.category === post.category),
       ...others.filter((other) => other.category !== post.category),
     ].map(({ title, file, categoryLabel }) => ({ title, file, categoryLabel }));
+    // P3 (1.6.0): Previous / Next article — the neighbours in the list's order; a side is absent
+    // where there is none.
+    const i = list.indexOf(post);
+    const link = ({ title, short_title: shortTitle, file, categoryLabel }) => ({
+      title,
+      shortTitle,
+      file,
+      categoryLabel,
+    });
+    post.prev = i > 0 ? link(list[i - 1]) : null;
+    post.next = i < list.length - 1 ? link(list[i + 1]) : null;
+    // P4 (1.6.0): the breadcrumb's category links to the filtered Blog (Django: ?category=ID).
+    post.categoryHref = `/${blogFile({ category: post.category })}`;
+    // P2: the mobile "On this page" box needs three or more headings.
+    post.tocLong = post.toc.length >= 3;
     post.ld = postingLd(post, person);
   });
   return list;
@@ -407,6 +469,8 @@ function postingLd(post, person) {
   };
 }
 
+const IDEATRIUM = 'Ideatrium';
+
 // schema.org Person (FD-22), on every page.
 function personLd(profile, links, fields) {
   return {
@@ -414,12 +478,24 @@ function personLd(profile, links, fields) {
     '@type': 'Person',
     name: profile.name,
     alternateName: profile.full_name,
+    // FD-148, Phase 1: the main title and BAU as the affiliation; Ideatrium is a separate
+    // Organization the person founded, never part of BAU (Phase 2: jobTitle "Founder, Ideatrium",
+    // no BAU affiliation, set in Django).
     jobTitle: profile.position,
     affiliation: {
       '@type': 'Organization',
       name: profile.institution,
       department: { '@type': 'Organization', name: profile.department },
     },
+    ...(profile.second_role
+      ? {
+          worksFor: {
+            '@type': 'Organization',
+            name: IDEATRIUM,
+            founder: { '@type': 'Person', name: profile.name },
+          },
+        }
+      : {}),
     email: `mailto:${profile.email}`,
     sameAs: links.map((link) => link.url),
     // Research interests plus the one field label that is a skill area.

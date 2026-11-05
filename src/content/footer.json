@@ -1,13 +1,12 @@
 {
   "signature_by": "by Rasel Al Mamun",
-  "role_line": "Agricultural engineer · Researcher · Developer",
+  "role_line": "Agricultural engineer · Researcher · Software developer",
   "groups": {
     "explore": "Explore",
     "research": "Research profiles",
     "connect": "Connect"
   },
-  "research_profiles": ["orcid", "scholar", "scopus", "researchgate"],
+  "research_profiles": ["orcid", "scholar", "scopus", "wos", "researchgate"],
   "connect_profiles": ["linkedin", "github"],
-  "copyright_name": "Rasel Al Mamun",
-  "ai_portrait_note": "Some portrait images on this site are AI-generated from my own photos."
+  "copyright_name": "Rasel Al Mamun"
 }

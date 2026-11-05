@@ -2,13 +2,16 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { buildSite, loadContent } from '../tools/content.mjs';
-import { pages, revealAll, templatePages } from './pages.js';
+import { pages, revealAll, servedLink, templatePages } from './pages.js';
 
 // The default build: SHOW_DRAFTS unset, so the draft posts are built (FD-36).
 const site = buildSite(loadContent(), { showDrafts: true });
 
 test('dist/ holds the template pages plus one page per project and per post', () => {
-  const sources = readdirSync('src/pages').filter((file) => file.endsWith('.html'));
+  // The hidden formatting test page is built but outside the template pages (tests/format-test.spec.js).
+  const sources = readdirSync('src/pages').filter(
+    (file) => file.endsWith('.html') && file !== 'format-test.html',
+  );
   expect([...templatePages].sort()).toEqual(sources.sort());
   const generated = [
     ...loadContent().projects.map((project) => `project-${project.id}.html`),
@@ -89,7 +92,8 @@ for (const page of pages) {
         urls
           .map((url) => new URL(url, `${origin}/${page}`))
           .filter((url) => url.origin === origin)
-          .map((url) => url.pathname),
+          .map((url) => url.pathname)
+          .filter(servedLink),
       ),
     ];
     for (const path of internal) {
@@ -188,7 +192,10 @@ test('FD-130: images carry dimensions and load lazily below the first screen', (
   const eager = (file, img) =>
     (file === 'index.html' && img.includes('fetchpriority="high"')) ||
     (file === 'portfolio.html' && img.includes('avatar-512')) ||
-    (file === '404.html' && img.includes('P6-desktop'));
+    (file === '404.html' && img.includes('P6-desktop')) ||
+    // 1.7.0: the page-top card image of a project or post is the LCP.
+    (/^(project-|post-|portfolio-entry|blog-post).*\.html$/.test(file) &&
+      img.includes('fetchpriority="high"'));
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
     for (const [img] of html.matchAll(/<img\b[\s\S]*?>/g)) {
@@ -207,6 +214,18 @@ test('FD-130: images carry dimensions and load lazily below the first screen', (
 });
 
 // FD-139: the brand files. PNG size from its IHDR chunk; ICO sizes from its directory.
+// A JPEG's size from its first start-of-frame marker.
+const jpegSize = (buffer) => {
+  let i = 2;
+  while (i < buffer.length) {
+    const marker = buffer[i + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) {
+      return [buffer.readUInt16BE(i + 7), buffer.readUInt16BE(i + 5)];
+    }
+    i += 2 + buffer.readUInt16BE(i + 2);
+  }
+  return [0, 0];
+};
 const pngSize = (buffer) => [buffer.readUInt32BE(16), buffer.readUInt32BE(20)];
 const icoSizes = (buffer) =>
   Array.from({ length: buffer.readUInt16LE(4) }, (_, i) => {
@@ -280,12 +299,22 @@ test('FD-139: Open Graph and Twitter cards use the share image at its real size'
     expect(meta('og:site_name'), file).toBe('Ideatrium');
     expect(meta('og:title'), file).toMatch(/ — Ideatrium$/);
     expect(meta('twitter:title'), file).toBe(meta('og:title'));
-    expect(meta('og:image'), file).toBe('/images/brand/share-image-1200x630.png');
+    // 1.7.0: a project or post page has its own share image, a crop of its card image.
+    const own = /^(project-|post-|portfolio-entry|blog-post).*\.html$/.test(file);
+    if (own) {
+      expect(meta('og:image'), file).toMatch(/^\/images\/share\/(project|post)-[\w-]+\.jpg$/);
+      expect(meta('og:image:type'), file).toBe('image/jpeg');
+      expect(meta('og:image:alt'), file).not.toBe('Ideatrium — by Rasel Al Mamun');
+      expect(jpegSize(fromDist(meta('og:image'))), file).toEqual([1200, 630]);
+    } else {
+      expect(meta('og:image'), file).toBe('/images/brand/share-image-1200x630.png');
+      expect(meta('og:image:type'), file).toBe('image/png');
+      expect(meta('og:image:alt'), file).toBe('Ideatrium — by Rasel Al Mamun');
+    }
     expect(meta('twitter:image'), file).toBe(meta('og:image'));
-    expect(meta('og:image:type'), file).toBe('image/png');
-    expect(meta('og:image:alt'), file).toBe('Ideatrium — by Rasel Al Mamun');
     expect(meta('twitter:card'), file).toBe('summary_large_image');
-    const [width, height] = pngSize(fromDist(meta('og:image')));
+    expect(meta('og:description'), file).toBeTruthy();
+    const [width, height] = own ? [1200, 630] : pngSize(fromDist(meta('og:image')));
     expect([meta('og:image:width'), meta('og:image:height')], file).toEqual([
       String(width),
       String(height),
@@ -300,17 +329,14 @@ test('FD-139: Open Graph and Twitter cards use the share image at its real size'
 // footer note covers it. The real-photo avatar carries no such label.
 const AI_SUFFIX = '(AI-generated from my own photo)';
 
-test('FD-141: the AI-portrait note is in the footer of every page', () => {
+test('S1 (1.6.0): the footer carries no AI-portrait note, and no flag for one', () => {
   const { footer } = loadContent();
-  expect(footer.ai_portrait_note).toBe(
-    'Some portrait images on this site are AI-generated from my own photos.',
-  );
+  expect(footer.ai_portrait_note).toBeUndefined();
+  expect(footer.ai_portrait_shown).toBeUndefined();
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
-    const inFooter = html.slice(html.indexOf('<footer class="site-footer">'));
-    expect(inFooter, file).toContain(
-      `<p class="footer-ai-note mb-0">${footer.ai_portrait_note}</p>`,
-    );
+    expect(html, file).not.toContain('footer-ai-note');
+    expect(html, file).not.toContain('AI-generated from my own photos');
   }
 });
 
@@ -392,6 +418,6 @@ test('FD-141: P5 / P6 alt text is disclosed where descriptive; the avatar is not
       }
     }
   }
-  // Home (hero, Contact band), 404 and the back-to-top button on every page.
-  expect(figures).toBeGreaterThanOrEqual(templatePages.length + 3);
+  // Home (hero, Contact band) and the back-to-top photo on every page (the 404 has no portrait, N1).
+  expect(figures).toBeGreaterThanOrEqual(templatePages.length + 2);
 });

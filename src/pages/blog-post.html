@@ -2,11 +2,15 @@
 <html lang="en">
   <head>
     {{> shell/head title=post.title shortTitle=post.short_title description=post.description
-    ogType="article"}}
+    ogType="article" shareImage=post.shareImage shareAlt=post.card_image.alt}}
   </head>
   <body data-page="post">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
     <main id="main" tabindex="-1">
+      {{!-- FD-152: this template page shows the post body and, below it, the rich-text sample; each
+      numbers its scroll boxes from 1 (as Django's renderer does for one post), so on this one
+      noindex page two names repeat. Generated post pages carry one body and stay checked. --}}
+      {{#if richSamples}}<!-- [html-validate-disable unique-landmark -- two bodies on one template page] -->{{/if}}
       {{!-- FD-114: the article (~66 ch) and, from lg, a sticky sidebar — On this page (the h2s, the
       section in view marked by post.js), the author card, More posts. Below lg the author card and
       More posts follow the article. --}}
@@ -14,41 +18,56 @@
         <div class="row post-layout">
           <article class="col-lg-8 post">
             <header class="page-head">
-              <nav aria-label="Breadcrumb">
-                <ol class="list-unstyled breadcrumb-list mb-0">
-                  <li><a class="link" href="/blog.html">Blog</a></li>
-                  <li>{{post.categoryLabel}}</li>
-                </ol>
+              {{!-- P4, S5 (1.6.0): "← Blog / Category" — plain links with an underline on hover;
+              the category opens the Blog filtered to it. --}}
+              <nav class="back-nav back-crumb" aria-label="Breadcrumb">
+                <a class="back-link" href="/blog.html"
+                  ><svg
+                    class="icon"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M19 12H5M11 6l-6 6 6 6" /></svg
+                  ><span class="link">Blog</span></a
+                >
+                <span class="back-sep" aria-hidden="true">/</span>
+                <a class="back-category" href="{{post.categoryHref}}"
+                  ><span class="link">{{post.categoryLabel}}</span></a
+                >
               </nav>
               <h1 class="mb-0">{{post.title}}</h1>
               {{#if post.draft}}
               <div class="entry-status">{{> components/draft-chip}}</div>
-              {{/if}}
+              {{/if}} {{!-- P1 (1.6.0): "Published 4 November 2026 · 5 min read"; no date, no
+              "Published". --}}
               <p class="t-meta entry-meta mb-0">
-                {{#if post.date}}<time datetime="{{post.date}}">{{post.date}}</time>{{/if}}<span
-                  >{{post.readingTime}}</span
-                >
+                {{#if post.date}}<span
+                  >Published <time datetime="{{post.date}}">{{post.dateLabel}}</time></span
+                >{{/if}}<span>{{post.readingTime}}</span>
               </p>
             </header>
-            {{#if post.cover}}
+            {{!-- 1.7.0: the post's card image is the page-top image — 16:9, the article's full
+            width, with its alt text; the LCP, so eager. --}} {{#if post.card_image}}
             <div class="blog-cover post-cover">
-              {{#if post.cover.src}}
-              <picture>
-                {{#if post.cover.avif}}
-                <source type="image/avif" srcset="{{post.cover.avif}}" />
-                {{/if}}
-                <img
-                  src="{{post.cover.src}}"
-                  alt="{{post.cover.alt}}"
-                  width="{{post.cover.width}}"
-                  height="{{post.cover.height}}"
-                  loading="eager"
-                  decoding="async"
-                />
-              </picture>
-              {{else}} {{> icons/illustration name=post.cover.illustration alt=post.cover.alt}}
-              {{/if}}
+              {{> components/card-image image=post.card_image eager=true sizes="(min-width: 992px)
+              66vw, 100vw"}}
             </div>
+            {{/if}} {{!-- P2 (1.6.0): below lg (no sidebar) "On this page" is a collapsible box
+            under the cover, closed by default, only with three or more headings; a details element
+            works without JavaScript. --}} {{#if post.tocLong}}
+            <details class="post-toc-mobile d-lg-none">
+              <summary>{{postSidebar.toc_heading}}</summary>
+              <ol class="list-unstyled post-toc-list mb-0">
+                {{#each post.toc}}
+                <li>
+                  <a class="post-toc-link" href="#{{id}}"><span class="link">{{{label}}}</span></a>
+                </li>
+                {{/each}}
+              </ol>
+            </details>
             {{/if}}
             <div class="prose" data-post-body>
               <p
@@ -62,8 +81,17 @@
             </div>
             <footer class="post-foot">
               <p class="mb-0">
-                <a class="profile-link" href="/blog.html"
-                  ><span class="link">Back to the blog</span></a
+                <a class="back-link" href="/blog.html"
+                  ><svg
+                    class="icon"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M19 12H5M11 6l-6 6 6 6" /></svg
+                  ><span class="link">Back to all articles</span></a
                 >
               </p>
             </footer>
@@ -103,9 +131,9 @@
                   </picture>
                   <div>
                     <p class="author-name mb-0">{{profile.name}}</p>
-                    <p class="author-role mb-0">
-                      {{profile.position}} · {{profile.affiliation_short}}
-                    </p>
+                    {{#if profile.author_line}}
+                    <p class="author-role mb-0">{{{dots profile.author_line}}}</p>
+                    {{/if}}
                   </div>
                 </div>
                 <ul class="list-unstyled author-links mb-0">
@@ -140,7 +168,52 @@
             </div>
           </aside>
         </div>
-        {{#if post.ld}}
+        {{!-- P3 (1.6.0): Previous / Next article above the footer (title and category); a side is
+        absent where there is no such post. --}} {{#if (or post.prev post.next)}}
+        <nav class="project-pager post-pager" aria-label="More articles">
+          {{#if post.prev}}
+          <a class="card project-pager-link" href="/{{post.prev.file}}" rel="prev">
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M19 12H5M11 6l-6 6 6 6" />
+            </svg>
+            <span class="project-pager-text">
+              <span class="t-label">Previous article</span>
+              <span class="project-pager-title">{{post.prev.title}}</span>
+              <span class="post-pager-category">{{post.prev.categoryLabel}}</span>
+            </span>
+          </a>
+          {{/if}} {{#if post.next}}
+          <a
+            class="card project-pager-link project-pager-next"
+            href="/{{post.next.file}}"
+            rel="next"
+          >
+            <span class="project-pager-text">
+              <span class="t-label">Next article</span>
+              <span class="project-pager-title">{{post.next.title}}</span>
+              <span class="post-pager-category">{{post.next.categoryLabel}}</span>
+            </span>
+            <svg
+              class="icon"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </a>
+          {{/if}}
+        </nav>
+        {{/if}} {{#if post.ld}}
         <script type="application/ld+json">
           {{{jsonLd post.ld}}}
         </script>

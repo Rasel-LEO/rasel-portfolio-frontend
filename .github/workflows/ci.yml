@@ -45,6 +45,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # 1.7.0: the build draws the share images in Playwright's Chromium, so it comes first.
+      - name: Install Playwright browser
+        run: npx playwright install --with-deps chromium
+
       - name: Build
         run: npm run build
 
@@ -53,9 +57,6 @@ jobs:
 
       - name: Check the Django build
         run: node tools/check-django-build.mjs
-
-      - name: Install Playwright browser
-        run: npx playwright install --with-deps chromium
 
       - name: Test
         run: npm test

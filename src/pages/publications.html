@@ -1,7 +1,9 @@
 <!doctype html>
 <html lang="en">
   <head>
-    {{> shell/head title="Publications" description=portfolioView.publicationsDescription}}
+    {{> shell/head title=publicationsView.pageTitle
+    description=portfolioView.publicationsDescription relPrev=publicationsView.relPrev
+    relNext=publicationsView.relNext}}
   </head>
   <body data-page="publications">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
@@ -10,12 +12,7 @@
       tabs (Django /portfolio/publications/). --}}
       <div class="container pf-page">
         <header class="page-head">
-          <nav aria-label="Breadcrumb">
-            <ol class="list-unstyled breadcrumb-list mb-0">
-              <li><a class="link" href="/portfolio.html">Portfolio</a></li>
-              <li aria-current="page">Publications</li>
-            </ol>
-          </nav>
+          {{> components/back-link href="/portfolio.html" label="Portfolio"}}
           <h1 class="mb-0">Publications</h1>
           <p class="t-body-l page-intro mb-0">{{portfolioView.publicationsIntro}}</p>
         </header>
@@ -26,7 +23,9 @@
             {{#each items}} {{> sections/pf-pub tag="h3" full=true}} {{/each}}
           </ol>
         </section>
-        {{/each}}
+        {{/each}} {{#if publicationsView.pager}}
+        <p class="archive-count mb-0">{{publicationsView.countText}}</p>
+        {{/if}} {{> components/pagination pager=publicationsView.pager label="Publications pages"}}
       </div>
       {{> sections/articles-ld}}
     </main>

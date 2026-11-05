@@ -1,5 +1,5 @@
 // Author: Rasel Al Mamun
-// Hire me and Contact forms (FD-38) and the email Copy button: validation,
+// Hire me and Contact forms (FD-38): validation,
 // error wiring, the static-build status message, and the no-JS form.
 import { expect, test } from '@playwright/test';
 import { loadContent } from '../tools/content.mjs';
@@ -138,29 +138,17 @@ for (const form of forms) {
       expect(posted).toBe(false);
     });
 
-    test('Copy writes the email address and announces it', async ({ page, context, baseURL }) => {
-      await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseURL });
-      const status = page.locator('[data-copy-status]');
-      await expect(status).toHaveAttribute('role', 'status');
-      // Both live regions are in the accessibility tree before any text arrives.
-      for (const region of [status, page.locator('[data-form-status]')]) {
-        await expect(region).toBeEmpty();
-        await expect(region).not.toHaveCSS('display', 'none');
-      }
-      await page.getByRole('button', { name: 'Copy email address' }).click();
-      await expect(status).toHaveText('Email address copied');
-      expect(await page.evaluate(() => navigator.clipboard.readText())).toBe(profile.email);
-      await expect(page.locator('.email-text')).toHaveText([
-        profile.email,
-        profile.secondary_email,
-      ]);
+    // F3, C1 (1.6.0): no Direct card — no email address on either page.
+    test('no email card', async ({ page }) => {
+      await expect(page.locator('main a[href^="mailto:"]')).toHaveCount(0);
+      await expect(page.locator('main')).not.toContainText(profile.email);
     });
   });
 
   test.describe(`${form.page} without JavaScript`, () => {
     test.use({ javaScriptEnabled: false });
 
-    test('the form is labelled and complete; Copy is not offered', async ({ page }) => {
+    test('the form is labelled and complete', async ({ page }) => {
       await page.goto(`/${form.page}`);
       // FD-40: without JS the browser's own required/email checks stay on.
       await expect(page.locator('form[data-form]')).not.toHaveAttribute('novalidate', /.*/);
@@ -172,30 +160,21 @@ for (const form of forms) {
         await expect(page.locator(id(name))).toHaveAccessibleName(/.+/);
       }
       await expect(page.getByRole('button', { name: form.submit })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Copy email address' })).toBeHidden();
-      const links = page.locator('.email-text a');
-      await expect(links).toHaveCount(2);
-      await expect(links.nth(0)).toHaveAttribute('href', `mailto:${profile.email}`);
-      await expect(links.nth(1)).toHaveAttribute('href', `mailto:${profile.secondary_email}`);
     });
   });
 }
 
-test('Contact lists the profile links and the audiences in order', async ({ page }) => {
+test('Contact lists What to expect and the audiences in order (C1)', async ({ page }) => {
   const content = loadContent();
   await page.goto('/contact.html');
   const aside = page.locator('aside.form-aside');
-  const links = aside.locator('.profile-links .profile-link');
-  await expect(links).toHaveCount(content.links.length);
-  for (const [i, link] of content.links.entries()) {
-    await expect(links.nth(i)).toHaveAttribute('href', link.url);
-    await expect(links.nth(i)).toHaveAttribute('rel', /noopener/);
-    // FD-118, FD-76: icon, new tab, said to screen readers.
-    await expect(links.nth(i)).toHaveAttribute('target', '_blank');
-    await expect(links.nth(i).locator('svg.footer-icon')).toHaveCount(1);
-    await expect(links.nth(i)).toHaveAccessibleName(`${link.label} (opens in a new tab)`);
-  }
-  await expect(aside.locator('ol li')).toHaveText(content.contact.audiences);
+  // No Elsewhere card: the profile links are in the footer.
+  await expect(aside.getByRole('link')).toHaveCount(0);
+  const { expect: card } = content.contact;
+  await expect(aside.locator('.expect-box h2')).toHaveText(card.heading);
+  await expect(aside.locator('.expect-item dt')).toHaveText(card.items.map((item) => item.label));
+  await expect(aside.locator('.expect-item dd')).toHaveText(card.items.map((item) => item.value));
+  await expect(aside.locator('ul.plain-list li')).toHaveText(content.contact.audiences);
 });
 
 // FD-118 (implements FD-79): no decorative photo on Contact; nothing of P6 is fetched.
@@ -231,11 +210,11 @@ test('Hire me shows the services, steps and CV action from the data', async ({ p
   }
   await expect(page.locator('.step h3')).toHaveText(hire.process.map((step) => step.title));
   await expect(page.locator(`#hire-kind option`)).toHaveText(hire.form_kinds);
-  // FD-117: in the head and in the aside.
-  const cv = page.getByRole('link', { name: /Request CV|Download CV/ });
-  await expect(cv).toHaveCount(2);
+  // F2, F3 (1.6.0): only in the aside (the head has none).
+  const cv = page.getByRole('link', { name: 'Download CV (PDF)', exact: true });
+  await expect(cv).toHaveCount(1);
   for (const link of await cv.all()) {
-    await expect(link).toHaveAttribute('href', /^mailto:.+\?subject=CV%20request$/);
+    await expect(link).toHaveAttribute('href', '/cv/Rasel_Al_Mamun_CV.pdf');
   }
   await expect(page.getByRole('link', { name: 'See the portfolio first' })).toHaveAttribute(
     'href',
@@ -274,7 +253,7 @@ for (const form of forms) {
     const content = loadContent();
     const { privacy } = content;
     expect(privacy.form_line).toBe(
-      'Your details are used only to reply and are processed in the EU and US.',
+      'Your details are used only to reply to your inquiry and are never sold or used for marketing.',
     );
     expect(privacy.link_label).toBe('Privacy Policy');
     // The old keys are gone from the content and the old text from the page.

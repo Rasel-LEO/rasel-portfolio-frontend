@@ -1,11 +1,21 @@
 // Author: Rasel Al Mamun
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { basename, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig, normalizePath } from 'vite';
 import handlebars from 'vite-plugin-handlebars';
 import { buildSite, contentDir, doiUrl, loadContent, postsDir } from './tools/content.mjs';
-import { escapeHtml, isBracketed } from './tools/markdown.mjs';
+import {
+  blogState,
+  blogStates,
+  publicationsState,
+  publicationsStates,
+  researchState,
+  researchStates,
+  resolveState,
+} from './tools/lists.mjs';
+import { escapeHtml, figureHtml, isBracketed } from './tools/markdown.mjs';
+import { makeShareImages } from './tools/share-images.mjs';
 
 const root = dirname(fileURLToPath(import.meta.url));
 const pagesDir = resolve(root, 'src/pages');
@@ -38,7 +48,7 @@ const pageBackground = tokens.color.tokens.find((token) => token.name === 'bg-0'
 // emitted at the dist/ root as project-<id>.html (Django: /portfolio/<slug>/).
 const entryTemplate = resolve(pagesDir, 'portfolio-entry.html');
 const projectPages = new Map(site.projectList.map((project) => [project.file, project]));
-const templateProject = site.projectById['poultry-aiot-edge'];
+const templateProject = site.projectById['poultry-aiot-edge'] ?? site.projectList[0];
 
 // One page per visible blog post from blog-post.html, emitted as post-<slug>.html
 // (Django: /blog/<slug>/). The template page itself shows the first post, or a bracketed
@@ -47,8 +57,37 @@ const postTemplate = resolve(pagesDir, 'blog-post.html');
 const postPages = new Map(site.postList.map((post) => [post.file, post]));
 const templatePost = site.postList[0] ?? site.samplePost;
 
+// FD-154: the server-rendered states of the three list pages (page 2, a topic, a category, no
+// match), built as files for the static preview and the tests; Django renders the same markup
+// from the query. file → { template, context }. The first state of each list is the page itself.
+const listStates = new Map();
+for (const { file, state } of researchStates(site.archive)) {
+  const view = researchState(site.archive, state);
+  // The static no-match state shows an empty search box (the query is the visitor's).
+  listStates.set(file, {
+    template: 'research.html',
+    context: { archive: view.isEmpty ? { ...view, q: '' } : view },
+  });
+}
+for (const { file, state } of blogStates(site)) {
+  listStates.set(file, { template: 'blog.html', context: { blog: blogState(site, state) } });
+}
+for (const { file, state } of publicationsStates(site.publicationRows)) {
+  const view = publicationsState(site.publicationRows, state);
+  listStates.set(file, {
+    template: 'publications.html',
+    context: { publicationsView: view, publicationRows: view.rows },
+  });
+}
+const stateTemplates = new Map(
+  [...listStates]
+    .filter(([file]) => !pages.has(file))
+    .map(([file, { template }]) => [file, resolve(pagesDir, template)]),
+);
+
 // Generated page → the template it is rendered from.
 const generated = new Map([
+  ...stateTemplates,
   ...[...projectPages.keys()].map((file) => [file, entryTemplate]),
   ...[...postPages.keys()].map((file) => [file, postTemplate]),
 ]);
@@ -57,10 +96,11 @@ const generated = new Map([
 const pageNav = {
   'index.html': { nav: 'home', current: 'page' },
   'portfolio.html': { nav: 'portfolio', current: 'page' },
-  'portfolio-entry.html': { nav: 'portfolio', current: 'true' },
-  // FD-109: the "View all" pages sit under Portfolio.
+  // FD-170: Projects has its own navbar item; the archive is that page, a project page is under it.
+  'portfolio-entry.html': { nav: 'projects', current: 'true' },
+  // FD-109: the Publications "View all" page sits under Portfolio.
   'publications.html': { nav: 'portfolio', current: 'true' },
-  'research.html': { nav: 'portfolio', current: 'true' },
+  'research.html': { nav: 'projects', current: 'page' },
   'blog.html': { nav: 'blog', current: 'page' },
   'blog-post.html': { nav: 'blog', current: 'true' },
   'hire.html': { nav: 'hire', current: 'page' },
@@ -73,14 +113,20 @@ const pageNav = {
 // the Django mapping, never indexed and not in the sitemap.
 const templateOnly = new Set(['portfolio-entry.html', 'blog-post.html']);
 
+// 1.7.0: the formatting test page (every content element at every width) is built for the owner's
+// checks only: noindex, in no menu, not in the sitemap, and never in the public export
+// (left out by the export script).
+const hiddenPages = new Set(['format-test.html']);
+
 function pageContext(pagePath) {
   const file = basename(pagePath);
   const project = projectPages.get(file);
   const post = postPages.get(file);
-  const noindex = templateOnly.has(file);
+  const noindex = templateOnly.has(file) || hiddenPages.has(file);
+  const listState = listStates.get(file);
   // FD-142: the two template pages (never the generated ones) carry one sample of each rich
   // element, in Django's exact output (src/partials/samples/).
-  const richSamples = noindex;
+  const richSamples = templateOnly.has(file);
   const context = {
     ...site,
     siteUrl,
@@ -90,6 +136,9 @@ function pageContext(pagePath) {
     richSamples,
     pageBackground,
   };
+  if (listState) {
+    return { ...context, ...pageNav[listState.template], ...listState.context };
+  }
   if (project) return { ...context, ...pageNav['portfolio-entry.html'], project };
   if (file === 'portfolio-entry.html')
     return { ...context, ...pageNav[file], project: templateProject };
@@ -105,6 +154,8 @@ const helpers = {
     return key === nav ? ` aria-current="${current}"` : '';
   },
   eq: (a, b) => a === b,
+  // {{{figure entry 2}}}: a figure of the text (the formatting test page), numbered 2 on the page.
+  figure: (entry, number) => figureHtml(entry, number),
   and: (a, b) => Boolean(a && b),
   or: (a, b) => Boolean(a || b),
   not: (a) => !a,
@@ -126,6 +177,9 @@ const helpers = {
       (address) => `<a href="mailto:${address}">${address}</a>`,
     ),
   doiUrl,
+  // {{{dots text}}}: the text escaped, each " · " separator kept with the word before it (a no-break
+  // space), so no line starts with "·" (1.6.0). The characters read the same.
+  dots: (text) => escapeHtml(String(text ?? '')).replaceAll(' · ', '&nbsp;· '),
   // Placeholder copy (FD-19 content in [brackets]) gets the .is-placeholder style.
   isPlaceholder: isBracketed,
   isExternal: (href) => /^https?:\/\//i.test(href),
@@ -238,7 +292,14 @@ function sitemap() {
     generateBundle() {
       if (!siteUrl) return;
       const files = [...pages, ...generated.keys()]
-        .filter((file) => file !== '404.html' && !templateOnly.has(file))
+        .filter(
+          (file) =>
+            file !== '404.html' &&
+            !templateOnly.has(file) &&
+            !hiddenPages.has(file) &&
+            // FD-154: a filtered list is not a page of its own (a topic, a category, no match).
+            !/^(research|blog)-(topic|category|empty)/.test(file),
+        )
         .sort((a, b) => (a === 'index.html' ? -1 : b === 'index.html' ? 1 : a.localeCompare(b)));
       const xml = [
         '<?xml version="1.0" encoding="UTF-8"?>',
@@ -254,6 +315,101 @@ function sitemap() {
       if (!siteUrl) return;
       const robots = readFileSync(resolve(root, 'public/robots.txt'), 'utf8');
       writeFileSync(resolve(outDir, 'robots.txt'), `${robots}Sitemap: ${siteUrl}/sitemap.xml\n`);
+    },
+  };
+}
+
+// 1.7.0: share images — /images/share/<kind>-<id>.jpg, 1200 × 630, a centred crop of the page's card
+// image, made when the site is built (tools/share-images.mjs) and, on the dev and preview servers,
+// on the first request. Pages name them in og:image and twitter:image (shell/head.hbs).
+function shareImages() {
+  const items = [
+    ...site.projectList.map((project) => ({ project, key: project.shareImage })),
+    ...site.postList.map((post) => ({ project: post, key: post.shareImage })),
+  ].map(({ project, key }) => ({
+    name: key.slice(1),
+    file: resolve(root, 'src', project.card_image.src.slice(1)),
+  }));
+  let made;
+  const all = () => (made ??= makeShareImages(items));
+  const serve = async (req, res, next) => {
+    const name = req.url?.split('?')[0].slice(1);
+    if (!items.some((item) => item.name === name)) return next();
+    try {
+      res.setHeader('Content-Type', 'image/jpeg');
+      res.end((await all()).get(name));
+    } catch (error) {
+      next(error);
+    }
+  };
+  return {
+    name: 'share-images',
+    configureServer(server) {
+      server.middlewares.use(serve);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(serve);
+    },
+    async generateBundle() {
+      for (const [name, source] of await all()) {
+        this.emitFile({ type: 'asset', fileName: name, source });
+      }
+    },
+  };
+}
+
+// FD-154: the list pages answer `?q=&topic=&category=&page=` in Django. The dev and preview servers
+// stand in for it: a query on research.html, blog.html or publications.html is answered by the
+// built state file it maps to (tools/lists.mjs resolveState); free-text search is not run here.
+function listQueries() {
+  const listPages = new Set(['research.html', 'blog.html', 'publications.html']);
+  const rewrite = (req, _res, next) => {
+    const [path, query = ''] = (req.url ?? '').split('?');
+    const file = path.slice(1);
+    if (query && listPages.has(file)) {
+      req.url = `/${resolveState(file, new URLSearchParams(query), site)}`;
+    }
+    next();
+  };
+  return {
+    name: 'list-queries',
+    configureServer(server) {
+      server.middlewares.use(rewrite);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(rewrite);
+    },
+  };
+}
+
+// FD-146: the CV is a direct link to /cv/Rasel_Al_Mamun_CV.pdf, a file Django serves; the real PDF
+// is not in this repository. For the frontend's own preview and tests a placeholder PDF
+// (tools/preview/cv/) is served by the dev and preview servers and written into dist/ by the
+// static build. The Django build (--mode django) never contains it, and the public export
+// excludes tools/preview/ and fails its scan on any PDF, so the public copy builds without it.
+const cvPreview = resolve(root, 'tools/preview/cv/Rasel_Al_Mamun_CV.pdf');
+const cvUrl = '/cv/Rasel_Al_Mamun_CV.pdf';
+function cvPlaceholder() {
+  let django = false;
+  const serve = (req, res, next) => {
+    if (req.url?.split('?')[0] !== cvUrl || !existsSync(cvPreview)) return next();
+    res.setHeader('Content-Type', 'application/pdf');
+    res.end(readFileSync(cvPreview));
+  };
+  return {
+    name: 'cv-placeholder',
+    config(_config, { mode }) {
+      django = mode === 'django';
+    },
+    configureServer(server) {
+      server.middlewares.use(serve);
+    },
+    configurePreviewServer(server) {
+      server.middlewares.use(serve);
+    },
+    generateBundle() {
+      if (django || !existsSync(cvPreview)) return;
+      this.emitFile({ type: 'asset', fileName: cvUrl.slice(1), source: readFileSync(cvPreview) });
     },
   };
 }
@@ -329,6 +485,9 @@ export default defineConfig({
   appType: 'mpa',
   plugins: [
     djangoTarget(),
+    listQueries(),
+    cvPlaceholder(),
+    shareImages(),
     generatedPages(),
     handlebars({
       partialDirectory: resolve(root, 'src/partials'),

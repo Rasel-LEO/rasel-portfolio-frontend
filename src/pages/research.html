@@ -1,7 +1,8 @@
 <!doctype html>
 <html lang="en">
   <head>
-    {{> shell/head title="Research projects" description=portfolioView.researchDescription}}
+    {{> shell/head title=archive.pageTitle description=portfolioView.researchDescription
+    relPrev=archive.relPrev relNext=archive.relNext noindexPage=archive.noindex}}
   </head>
   <body data-page="research">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
@@ -12,31 +13,18 @@
       is shown. No Status filter until statuses exist. --}}
       <div class="container pf-page archive">
         <header class="page-head">
-          <p class="mb-0">
-            <a class="back-link" href="/portfolio.html"
-              ><svg
-                class="icon"
-                viewBox="0 0 24 24"
-                width="20"
-                height="20"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path d="M19 12H5M11 6l-6 6 6 6" /></svg
-              ><span class="link">{{archive.back_label}}</span></a
-            >
-          </p>
+          {{> components/back-link href="/portfolio.html" label=archive.back_label}}
           <h1 class="mb-0">{{archive.heading}}</h1>
           <p class="t-body-l page-intro mb-0">{{archive.intro}}</p>
         </header>
 
         <form
-          class="archive-filter js-only"
+          class="archive-filter"
           role="search"
-          aria-label="Filter research projects"
+          aria-label="Filter projects"
           action="/research.html"
           method="get"
-          data-archive-filter
+          data-list-form
         >
           <div class="field archive-search">
             <label class="field-label" for="archive-q">{{archive.search_label}}</label>
@@ -57,48 +45,58 @@
                 id="archive-q"
                 name="q"
                 type="search"
+                value="{{archive.q}}"
                 placeholder="{{archive.search_placeholder}}"
                 autocomplete="off"
-                data-archive-q
               />
             </div>
           </div>
           <div class="field archive-topic-field">
             <label class="field-label" for="archive-topic">{{archive.topic_label}}</label>
-            <select class="field-control" id="archive-topic" name="topic" data-archive-topic>
+            <select class="field-control" id="archive-topic" name="topic" data-list-auto>
               <option value="">{{archive.topic_all}}</option>
-              {{#each archive.topics}}
+              {{#each archive.topics}} {{#if (eq id @root.archive.topic)}}
+              <option value="{{id}}" selected>{{label}}</option>
+              {{else}}
               <option value="{{id}}">{{label}}</option>
-              {{/each}}
+              {{/if}} {{/each}}
             </select>
           </div>
+          <button class="btn btn-secondary archive-submit" type="submit">
+            {{archive.search_button}}
+          </button>
         </form>
 
-        <p
-          class="archive-count mb-0"
-          aria-live="polite"
-          data-archive-count
-          data-label="{{archive.count_label}}"
-        >
-          <span data-count-text>{{archive.countText}}</span
-          ><span class="visually-hidden" data-count-empty></span>
-        </p>
-
-        <ul class="list-unstyled row pf-cards archive-cards mb-0" data-archive-list>
-          {{#each archive.cards}}
-          <li
-            class="col-md-6 col-lg-4"
-            data-project-card
-            data-topic="{{topic}}"
-            data-search="{{search}}"
+        {{!-- FD-154: the results — what Django renders for ?q=&topic=&page= and what the script
+        swaps after a change (focus to the heading, the status announces the count). --}}
+        <div class="archive-results" data-list-results>
+          <h2 class="visually-hidden" id="results-title" tabindex="-1" data-results-heading>
+            {{archive.results_heading}}
+          </h2>
+          <p
+            class="archive-count mb-0{{#if archive.isEmpty}} visually-hidden{{/if}}"
+            data-results-status
           >
-            {{> sections/archive-card tag="h2"}}
-          </li>
-          {{/each}}
-        </ul>
-        <div class="empty-state" data-archive-empty hidden>
-          <p class="mb-0">{{archive.empty}}</p>
+            {{archive.countText}}
+          </p>
+          {{#if archive.isEmpty}}
+          <div class="empty-state">
+            <p class="mb-0">{{archive.empty}}</p>
+            <a class="profile-link" href="{{archive.clearHref}}"
+              ><span class="link">{{archive.clear_label}}</span></a
+            >
+          </div>
+          {{else}}
+          <ul class="list-unstyled row pf-cards archive-cards mb-0" data-archive-list>
+            {{#each archive.cards}}
+            <li class="col-md-6 col-lg-4" data-project-card>
+              {{> sections/archive-card tag="h3"}}
+            </li>
+            {{/each}}
+          </ul>
+          {{/if}} {{> components/pagination pager=archive.pager label="Projects pages"}}
         </div>
+        <p class="visually-hidden" role="status" data-list-announce></p>
       </div>
     </main>
     {{> shell/footer}} {{> shell/back-to-top}}

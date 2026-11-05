@@ -9,12 +9,19 @@
     "contribution": "Developing an IoT-based monitoring and control system with AI-edge computing for poultry farm optimisation: real-time data collection, control-algorithm development, and collaboration with stakeholders to meet industry standards.",
     "tags": ["IoT", "Edge AI", "Poultry", "Control systems"],
     "short_title": "Poultry farm monitoring with edge AI",
-    "short_summary": "IoT-based monitoring and control with AI-edge computing.",
     "featured_order": 1,
-    "featured_tags": ["IoT", "Edge AI", "Control systems"],
     "featured_large": true,
-    "featured_role_line": "Research Assistant · M.S. thesis project",
-    "topic": "poultry"
+    "topic": "poultry",
+    "card_description": "IoT-based monitoring and control with AI-edge computing.",
+    "role_line": "Research Assistant · M.S. thesis",
+    "card_tags": ["IoT", "Edge AI", "Control systems"],
+    "card_image": {
+      "src": "/images/projects/trial-card-1.webp",
+      "avif": "/images/projects/trial-card-1.avif",
+      "alt": "[Trial card image: Poultry farm monitoring with edge AI]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "poultry-iot-undergrad",
@@ -26,8 +33,17 @@
     "contribution": "Designed and implemented an IoT-based monitoring system for poultry farms; integrated sensors and devices for tracking and monitoring; data analysis and report writing.",
     "tags": ["IoT", "Sensors", "Poultry"],
     "topic": "poultry",
-    "short_title": "Real-time poultry farm monitoring & control",
-    "short_summary": "IoT monitoring system for poultry farms (B.Sc. thesis)."
+    "short_title": "Real-time poultry monitoring & control",
+    "card_description": "IoT monitoring system for poultry farms (B.Sc. thesis).",
+    "role_line": "Undergraduate research (B.Sc. thesis)",
+    "card_tags": ["IoT", "Sensors", "Poultry"],
+    "card_image": {
+      "src": "/images/projects/trial-card-2.webp",
+      "avif": "/images/projects/trial-card-2.avif",
+      "alt": "[Trial card image: Real-time poultry farm monitoring & control]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "biofloc-iot",
@@ -39,9 +55,7 @@
     "contribution": "Planning, system development, hardware design, data collection, data analysis, manuscript writing and reviewing the paper.",
     "tags": ["IoT", "Aquaculture", "Biofloc", "Automation"],
     "short_title": "Biofloc monitoring & control",
-    "short_summary": "IoT monitoring and control for aquaculture.",
     "featured_order": 2,
-    "featured_tags": ["IoT", "Aquaculture", "Automation"],
     "topic": "aquaculture",
     "detail": {
       "summary_line": "Real-time water-quality monitoring and automated control for biofloc aquaculture.",
@@ -89,7 +103,52 @@
           "text": "Relays switch the heater, water pump and air pump when readings leave their target ranges."
         }
       ],
-      "context": "Study context: mono-sex Nile tilapia (Oreochromis niloticus). See the paper for details."
+      "context": "Study context: mono-sex Nile tilapia (Oreochromis niloticus). See the paper for details.",
+      "methods": "[Methods paragraph: how the system was built and tested.]\n\n- [First method point]\n- [Second method point]\n\n[Figure 1]\n\n[Closing methods sentence.]",
+      "results_text": "[Results paragraph with **bold** and *italic* text.]\n\n[Figure 2]\n\n[Second results paragraph.]\n\n[Figure 3]",
+      "limitations": "[Limitations paragraph: what the study could not show.]",
+      "figures": [
+        {
+          "n": 1,
+          "src": "/images/projects/trial-fig-normal.webp",
+          "avif": "/images/projects/trial-fig-normal.avif",
+          "alt": "[Alt text of figure 1]",
+          "width": 1200,
+          "height": 800,
+          "caption": "[Caption of figure 1]",
+          "size": "normal"
+        },
+        {
+          "n": 2,
+          "src": "/images/projects/trial-fig-wide.webp",
+          "avif": "/images/projects/trial-fig-wide.avif",
+          "alt": "[Alt text of figure 2]",
+          "width": 1600,
+          "height": 700,
+          "caption": "[Caption of figure 2]",
+          "size": "wide"
+        },
+        {
+          "n": 3,
+          "src": "/images/projects/trial-fig-narrow.webp",
+          "avif": "/images/projects/trial-fig-narrow.avif",
+          "alt": "[Alt text of figure 3]",
+          "width": 600,
+          "height": 1000,
+          "caption": "[Caption of figure 3]",
+          "size": "narrow"
+        }
+      ]
+    },
+    "card_description": "IoT monitoring and control for aquaculture.",
+    "role_line": "Research team",
+    "card_tags": ["IoT", "Aquaculture", "Automation"],
+    "card_image": {
+      "src": "/images/projects/trial-card-3.webp",
+      "avif": "/images/projects/trial-card-3.avif",
+      "alt": "[Trial card image: Biofloc monitoring & control]",
+      "width": 1600,
+      "height": 900
     }
   },
   {
@@ -103,7 +162,16 @@
     "tags": ["IoT", "Edge AI", "Farm machinery", "Software"],
     "topic": "machinery",
     "short_title": "Farm machinery tracking & hiring",
-    "short_summary": "IoT and edge AI for tracking and hiring agricultural machinery."
+    "card_description": "IoT and edge AI for tracking and hiring agricultural machinery.",
+    "role_line": "Research team",
+    "card_tags": ["IoT", "Edge AI", "Farm machinery"],
+    "card_image": {
+      "src": "/images/projects/trial-card-4.webp",
+      "avif": "/images/projects/trial-card-4.avif",
+      "alt": "[Trial card image: Farm machinery tracking & hiring]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "solar-irrigation",
@@ -115,9 +183,7 @@
     "contribution": "System development, hardware design, data collection, manuscript writing and reviewing the paper.",
     "tags": ["IoT", "Solar energy", "Irrigation", "Precision agriculture"],
     "short_title": "Solar-powered smart irrigation",
-    "short_summary": "IoT-enabled irrigation for precision agriculture.",
     "featured_order": 3,
-    "featured_tags": ["IoT", "Solar energy", "Irrigation"],
     "topic": "irrigation",
     "detail": {
       "summary_line": "Solar-powered IoT monitoring and automatic pump control for precision irrigation.",
@@ -146,7 +212,7 @@
         }
       ],
       "system_note": "Simplified system overview · Based on the published study",
-      "overview": "Field substations measure soil moisture and climate and report to a solar-powered base station, which switches the irrigation pump automatically and lets farmers monitor and control it remotely.",
+      "overview": "Field substations measure soil moisture and climate and report to a solar-powered base station, which switches the irrigation pump automatically and lets farmers monitor and control it remotely.\n\n[Figure 1]",
       "contribution": [
         "System development",
         "Hardware design",
@@ -165,7 +231,42 @@
           "text": "A 20 W panel and a 12 V, 7.5 Ah battery run the pump for at least two hours at night."
         }
       ],
-      "context": null
+      "context": null,
+      "methods": "[Methods paragraph: sensors, base station and pump control.]\n\n1. [First step]\n2. [Second step]",
+      "results_text": "[Results paragraph.]\n\n[Figure 2]",
+      "limitations": "[Limitations paragraph.]",
+      "figures": [
+        {
+          "n": 1,
+          "src": "/images/projects/trial-fig-normal.webp",
+          "avif": "/images/projects/trial-fig-normal.avif",
+          "alt": "[Alt text of figure 1]",
+          "width": 1200,
+          "height": 800,
+          "caption": "[Caption of figure 1]",
+          "size": "wide"
+        },
+        {
+          "n": 2,
+          "src": "/images/projects/trial-fig-narrow.webp",
+          "avif": "/images/projects/trial-fig-narrow.avif",
+          "alt": "[Alt text of figure 2]",
+          "width": 600,
+          "height": 1000,
+          "caption": "[Caption of figure 2]",
+          "size": "narrow"
+        }
+      ]
+    },
+    "card_description": "IoT-enabled irrigation for precision agriculture.",
+    "role_line": "Research team",
+    "card_tags": ["IoT", "Solar energy", "Irrigation"],
+    "card_image": {
+      "src": "/images/projects/trial-card-1.webp",
+      "avif": "/images/projects/trial-card-1.avif",
+      "alt": "[Trial card image: Solar-powered smart irrigation]",
+      "width": 1600,
+      "height": 900
     }
   },
   {
@@ -179,7 +280,16 @@
     "tags": ["IoT", "Aquaculture", "Machine design", "Solar energy"],
     "topic": "aquaculture",
     "short_title": "Solar-powered fish feed spreader",
-    "short_summary": "Modification and evaluation of an IoT-based automated fish feeder."
+    "card_description": "Modification and evaluation of an IoT-based automated fish feeder.",
+    "role_line": "Research team",
+    "card_tags": ["IoT", "Aquaculture", "Machine design"],
+    "card_image": {
+      "src": "/images/projects/trial-card-2.webp",
+      "avif": "/images/projects/trial-card-2.avif",
+      "alt": "[Trial card image: Solar-powered fish feed spreader]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "potato-grading-nn",
@@ -192,7 +302,16 @@
     "tags": ["Machine vision", "Neural networks", "Post-harvest"],
     "topic": "crop",
     "short_title": "Potato volume & size grading",
-    "short_summary": "Neural-network prediction from two-dimensional RGB images."
+    "card_description": "Neural-network prediction from two-dimensional RGB images.",
+    "role_line": "Research team",
+    "card_tags": ["Machine vision", "Neural networks", "Post-harvest"],
+    "card_image": {
+      "src": "/images/projects/trial-card-3.webp",
+      "avif": "/images/projects/trial-card-3.avif",
+      "alt": "[Trial card image: Potato volume & size grading]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "power-tiller-ergonomics",
@@ -205,7 +324,16 @@
     "tags": ["Farm machinery", "Ergonomics", "Data analysis"],
     "topic": "machinery",
     "short_title": "Power tiller ergonomics by age",
-    "short_summary": "Ergonomic performance of power tiller operators of different ages."
+    "card_description": "Ergonomic performance of power tiller operators of different ages.",
+    "role_line": "Research team",
+    "card_tags": ["Farm machinery", "Ergonomics", "Data analysis"],
+    "card_image": {
+      "src": "/images/projects/trial-card-4.webp",
+      "avif": "/images/projects/trial-card-4.avif",
+      "alt": "[Trial card image: Power tiller ergonomics by age]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "biofloc-winter",
@@ -218,7 +346,16 @@
     "tags": ["Aquaculture", "Biofloc", "Hardware"],
     "topic": "aquaculture",
     "short_title": "Biofloc system for winter",
-    "short_summary": "Modifying a biofloc system for the winter season."
+    "card_description": "Modifying a biofloc system for the winter season.",
+    "role_line": "Research team",
+    "card_tags": ["Aquaculture", "Biofloc", "Hardware"],
+    "card_image": {
+      "src": "/images/projects/trial-card-1.webp",
+      "avif": "/images/projects/trial-card-1.avif",
+      "alt": "[Trial card image: Biofloc system for winter]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "egg-incubator",
@@ -231,7 +368,16 @@
     "tags": ["Machine design", "Poultry", "Automation"],
     "topic": "poultry",
     "short_title": "Low-cost egg incubator",
-    "short_summary": "Semi-automated incubator for homestead egg hatching."
+    "card_description": "Semi-automated incubator for homestead egg hatching.",
+    "role_line": "Research team",
+    "card_tags": ["Machine design", "Poultry", "Automation"],
+    "card_image": {
+      "src": "/images/projects/trial-card-2.webp",
+      "avif": "/images/projects/trial-card-2.avif",
+      "alt": "[Trial card image: Low-cost egg incubator]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "hydroponics-led",
@@ -244,7 +390,16 @@
     "tags": ["Controlled environment agriculture", "Hydroponics", "Data analysis"],
     "topic": "cea",
     "short_title": "LED lighting for hydroponic lettuce",
-    "short_summary": "Effect of coloured LED combinations in a hydroponic system."
+    "card_description": "Effect of coloured LED combinations in a hydroponic system.",
+    "role_line": "Research team",
+    "card_tags": ["Controlled environment agriculture", "Hydroponics", "Data analysis"],
+    "card_image": {
+      "src": "/images/projects/trial-card-3.webp",
+      "avif": "/images/projects/trial-card-3.avif",
+      "alt": "[Trial card image: LED lighting for hydroponic lettuce]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "multi-nozzle-sprayer",
@@ -254,10 +409,19 @@
     "status": null,
     "featured": false,
     "contribution": "Data analysis and manuscript writing.",
-    "tags": ["Farm machinery", "Crop protection"],
+    "tags": ["Farm machinery", "Crop protection", "Agricultural engineering"],
     "topic": "machinery",
     "short_title": "Walking-type multi-nozzle sprayer",
-    "short_summary": "Design and development of a multi-nozzle sprayer."
+    "card_description": "Design and development of a multi-nozzle sprayer.",
+    "role_line": "Research team",
+    "card_tags": ["Farm machinery", "Crop protection", "Agricultural engineering"],
+    "card_image": {
+      "src": "/images/projects/trial-card-4.webp",
+      "avif": "/images/projects/trial-card-4.avif",
+      "alt": "[Trial card image: Walking-type multi-nozzle sprayer]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "rice-germination",
@@ -267,10 +431,19 @@
     "status": null,
     "featured": false,
     "contribution": "Planning, system development and data collection.",
-    "tags": ["Precision agriculture", "Rice"],
+    "tags": ["Precision agriculture", "Rice", "Agricultural engineering"],
     "topic": "crop",
     "short_title": "Precision rice seed germination",
-    "short_summary": "Sustainable and conventional approaches compared."
+    "card_description": "Sustainable and conventional approaches compared.",
+    "role_line": "Research team",
+    "card_tags": ["Precision agriculture", "Rice", "Agricultural engineering"],
+    "card_image": {
+      "src": "/images/projects/trial-card-1.webp",
+      "avif": "/images/projects/trial-card-1.avif",
+      "alt": "[Trial card image: Precision rice seed germination]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "solar-irrigation-ai",
@@ -283,7 +456,16 @@
     "tags": ["IoT", "AI", "Irrigation", "Solar energy"],
     "topic": "irrigation",
     "short_title": "Solar & AI smart irrigation",
-    "short_summary": "IoT irrigation with solar power and AI decision making."
+    "card_description": "IoT irrigation with solar power and AI decision making.",
+    "role_line": "Research team",
+    "card_tags": ["IoT", "AI", "Irrigation"],
+    "card_image": {
+      "src": "/images/projects/trial-card-2.webp",
+      "avif": "/images/projects/trial-card-2.avif",
+      "alt": "[Trial card image: Solar & AI smart irrigation]",
+      "width": 1600,
+      "height": 900
+    }
   },
   {
     "id": "ice-storage-boxes",
@@ -296,6 +478,15 @@
     "tags": ["Fisheries", "Post-harvest", "Design"],
     "topic": "aquaculture",
     "short_title": "Insulated ice boxes for fisheries",
-    "short_summary": "Sustainable ice storage boxes for marine fisheries compared."
+    "card_description": "Sustainable ice storage boxes for marine fisheries compared.",
+    "role_line": "Research team",
+    "card_tags": ["Fisheries", "Post-harvest", "Design"],
+    "card_image": {
+      "src": "/images/projects/trial-card-3.webp",
+      "avif": "/images/projects/trial-card-3.avif",
+      "alt": "[Trial card image: Insulated ice boxes for fisheries]",
+      "width": 1600,
+      "height": 900
+    }
   }
 ]

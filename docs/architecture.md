@@ -38,10 +38,10 @@ src/
                 posts/<slug>.md (post bodies, Markdown; FD-37)
   partials/
     shell/        head header drawer footer back-to-top page-wipe
-    components/   cv-button draft-chip email-box field pf-tabs project-image status-chip
+    components/   card-image cv-button draft-chip field pf-tabs status-chip
                   tag-pills
     sections/     archive-card articles-ld blog-card blog-empty home-pub latest-card pf-card
-                  pf-pub profile-links related-pub service work-card
+                  pf-pub related-pub service work-card
     icons/        area-icon footer-icon illustration line-icon pf-icon; logo, logo-mark
                   and logo-symbols (the Ideatrium logo, FD-139)
     samples/      rich-post rich-overview (Django's rich-content output, on the two
@@ -142,7 +142,9 @@ Navigation state: `vite.config.js` maps each page to a nav key; the `{{{ariaCurr
 helper writes `aria-current="page"` (or `"true"` on detail pages) in the header, drawer and
 footer. Django replaces it with a template tag.
 
-## Motion map (FD-69, FD-85, FD-97, FD-98, FD-100; progress of the 360 svh pinned stage, scrub smoothing 0.8 s)
+## Motion map (FD-69, FD-85, FD-97, FD-98, FD-100, FD-163; the pinned stage, scrub smoothing 0.8 s)
+
+1.6.0 round 4 (FD-163): the Fork is gone and the stage ends at the hand-off (65 %): 234 svh of pinned scrolling = 65 % of v1.5.1's 360 svh, with the timeline in v1.5.1's own coordinates (progress below is v1.5.1's; everything after "hand-off at 65 %" — the Fork and screen 2's exit — no longer exists, and screen 2 stands to the end of the stage). The back-to-top button is the photo again.
 
 hero hold 0–8 % (scroll cue fades) → hero out 8–16 % → plane turns −9°, approaches 40 px,
 scales 1.10 about the face 8–26 % → screen 2 16–65.8 %, **played, not scrubbed** (FD-85,

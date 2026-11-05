@@ -43,7 +43,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   }
 }
 
-// Stage: hero + screen 2 + Fork (text columns 1–7, figure 8–12).
+// Stage: hero + screen 2 (text columns 1–7, figure 8–12).
 // The top space sits on the container, which the desktop stage pins, so pinning
 // never moves it.
 // From lg the photo's empty right edge may pass the window (FD-83): clipped, never scrolled.
@@ -55,6 +55,15 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 
 .stage > .container {
   padding-top: clamp(var(--s-5), 5vw, var(--s-8));
+}
+
+// Round 5 (FD-172): below lg the stage is the stacked document, and "Three ways" (the Hire me band)
+// follows the Areas of work: the standard Home section gap between them. From lg the pinned stage
+// has its own height.
+.stage {
+  @include media-breakpoint-down(lg) {
+    padding-bottom: var(--home-gap);
+  }
 }
 
 // The figure box is sized in CSS from the photo's ratio, so nothing shifts when it loads.
@@ -194,12 +203,28 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 
 .stage-hero {
   display: grid;
+
+  // The one track is as wide as the column (a max-content line never widens it, FD-156).
+  grid-template-columns: minmax(0, 1fr);
   gap: var(--s-4);
   justify-items: start;
 }
 
+// FD-156: two balanced lines on phones, one line from 1200 px (the text column is wide enough there).
 .hero-eyebrow {
   max-width: 60ch;
+  text-wrap: balance;
+
+  // From 1200 px the line is as wide as its text, up to the column (the text is 79 characters; a
+  // longer one still wraps instead of reaching the figure). 1200–1399: tighter tracking.
+  @media (width >= 1200px) {
+    width: max-content;
+    max-width: 100%;
+  }
+
+  @media (1200px <= width < 1400px) {
+    letter-spacing: 0.04em;
+  }
 }
 
 // display-xl at width 88; below 400 px the name may take three lines but its
@@ -220,8 +245,15 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 .hero-role {
   max-width: 40ch;
   color: var(--fg-1);
+  text-wrap: balance;
 
   @include clear-rail(40ch);
+
+  // FD-156: one line on desktop (as wide as its text, up to the column).
+  @media (width >= 1200px) {
+    width: max-content;
+    max-width: 100%;
+  }
 }
 
 .hero-ctas,
@@ -234,6 +266,22 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 
 .hero-ctas {
   margin-top: var(--s-2);
+
+  // FD-156: phones — Hire me and Portfolio side by side, Download CV (PDF) full width below.
+  @include media-breakpoint-down(md) {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-self: stretch;
+    width: 100%;
+
+    .btn {
+      justify-content: center;
+    }
+
+    > :nth-child(3) {
+      grid-column: 1 / -1;
+    }
+  }
 }
 
 // Screen 2 (FD-84): intro, pillars and the Areas-of-work grid, one stage layer.
@@ -409,71 +457,10 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   font-weight: 500;
 }
 
-// Fork: two cards of identical size and weight; a 2 px accent seam between
-// them from lg (decorative).
-.fork {
-  padding-block: var(--section-pad);
-}
-
-.fork-title {
-  margin-bottom: var(--s-6);
-}
-
-.fork-cols {
-  position: relative;
-}
-
-.fork-row {
-  --bs-gutter-y: var(--s-4);
-
-  @include media-breakpoint-up(lg) {
-    --bs-gutter-x: var(--s-7);
-  }
-}
-
-.fork-card {
-  display: grid;
-  grid-template-rows: auto auto 1fr auto auto;
-  gap: var(--s-3);
-  height: 100%;
-  padding: var(--s-5);
-  background: var(--bg-1);
-  border: 1px solid var(--line);
-  border-radius: var(--r-2);
-}
-
-.fork-chip {
-  justify-self: start;
-}
-
-.fork-text {
-  max-width: 48ch;
-  color: var(--fg-1);
-}
-
-.fork-cta {
-  justify-self: start;
-  margin-top: var(--s-2);
-}
-
-.fork-seam {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 50%;
-  display: none;
-  width: 2px;
-  background: var(--accent);
-  transform: translateX(-50%);
-
-  @include media-breakpoint-up(lg) {
-    display: block;
-  }
-}
-
-// Sections after the stage.
+// Sections after the stage (H8, 1.6.0): one medium gap above and below every section, from one token
+// (--home-gap), so the sections read as one page.
 .home-section {
-  padding-block: var(--section-pad);
+  padding-block: var(--home-gap);
 }
 
 .band {
@@ -491,20 +478,51 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   color: var(--fg-1);
 }
 
-.band-head {
-  --bs-gutter-y: var(--s-5);
-
-  align-items: end;
+// H5 (1.6.0): the Home Hire me band — the title and the Hire me button on one row at every width; the
+// title may wrap, the button never does.
+.hire-band-head {
+  display: flex;
+  gap: var(--s-4) var(--s-5);
+  align-items: center;
+  justify-content: space-between;
 }
 
-.band-aside {
-  display: grid;
-  gap: var(--s-3);
+.hire-band-title {
+  min-width: 0;
+}
+
+.hire-band-action {
+  flex: none;
+  white-space: nowrap;
 }
 
 .band-text {
   max-width: 62ch;
   color: var(--fg-1);
+}
+
+// FD-153: Hire me's availability line with its yes / no dot (the line's own words say the state; the
+// dot only repeats it).
+.availability {
+  display: flex;
+  gap: var(--s-2);
+  align-items: baseline;
+  overflow-wrap: anywhere;
+  color: var(--fg-2);
+}
+
+.availability-dot {
+  flex: none;
+  width: var(--s-3);
+  height: var(--s-3);
+  border-radius: var(--r-full);
+  background: var(--success);
+  transform: translateY(-1px);
+
+  [data-available="no"] > & {
+    background: transparent;
+    border: 2px solid var(--fg-2);
+  }
 }
 
 .band-actions {
@@ -732,11 +750,15 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 // FD-102: one large card (about 7/12) and the other two stacked beside it from lg; one column
 // below, large first. The action on each card's bottom.
 .work-cards {
+  --work-cover-h: 56px;
+
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--s-4);
 
   @include media-breakpoint-up(lg) {
+    --work-cover-h: 96px;
+
     grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
     gap: var(--s-5);
   }
@@ -754,23 +776,44 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 }
 
 .work-card-large {
-  gap: var(--s-4);
+  // Round 5 (FD-172): the card is as tall as v1.5.1's. Its cover is a short full-width band at the
+  // top, inside that height (the text below is set tighter by the body), never the 16:9 frame.
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
 
-  @include media-breakpoint-up(lg) {
-    padding: var(--s-7) var(--s-6);
-  }
+  // 1.7.0: below lg the whole card image at 16:9 above the text; from lg the band as before.
+  .work-cover {
+    flex: none;
+    height: auto;
+    aspect-ratio: 16 / 9;
 
-  // "Poultry farm monitoring / with edge AI", as in the design specification: a measure that holds the
-  // first three words (11.1em) but not the fourth, filled greedily (not balanced).
-  .card-title {
-    max-width: 12.5em;
-    text-wrap: wrap;
-  }
-
-  @include media-breakpoint-up(lg) {
-    .work-link {
-      padding-top: var(--s-4);
+    // From lg the card is as tall as the two small cards stacked beside it; the band takes the
+    // height the text leaves over, so the card never grows and has no empty area.
+    @include media-breakpoint-up(lg) {
+      flex: 1 1 var(--work-cover-h);
+      height: auto;
+      min-height: var(--work-cover-h);
+      aspect-ratio: auto;
     }
+  }
+
+  // The line drawing fills the band as a cover would (a slice of it, never a tiny picture).
+  .work-cover > svg {
+    width: 100%;
+    height: 100%;
+  }
+}
+
+.work-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+
+  @include media-breakpoint-up(lg) {
+    padding: var(--s-5) var(--s-6);
   }
 }
 
@@ -851,34 +894,9 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   }
 }
 
-.latest-card .work-link {
-  .link {
-    padding-block: 0;
-    background: none;
-  }
-
-  &:is(:hover, :focus-visible),
-  &:is(:hover, :focus-visible) .link {
-    color: var(--accent);
-  }
-}
-
-// FD-92: Latest posts — three cards from lg, stacked below; the action on each card's bottom.
+// FD-92, H6 (1.6.0): Latest posts — the Blog's own cards (cover on top), three from lg.
 .latest-cards {
   --bs-gutter-y: var(--s-4);
-}
-
-.latest-card {
-  display: flex;
-  flex-direction: column;
-}
-
-.latest-category {
-  color: var(--accent);
-}
-
-.latest-excerpt {
-  color: var(--fg-1);
 }
 
 // Contact band: the seated P6 photograph, decorative (FD-72). FD-72: from md as tall as the
@@ -886,26 +904,29 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
 // under the action (FD-93, below). Its settle (scale and slide, home-motion.js) never widens the
 // page.
 .contact-band-row {
-  --bs-gutter-y: var(--s-6);
+  --bs-gutter-y: var(--s-5);
 
   align-items: end;
 
   .band-text {
-    margin-top: var(--s-4);
+    margin-top: var(--s-3);
   }
 }
 
-.contact-band-email {
-  margin-top: var(--s-2);
-  overflow-wrap: anywhere;
-}
-
-.contact-band-email-2 {
-  margin-top: var(--s-1);
-}
-
 .contact-band-figure-col {
+  // 1.6.0 round 6 (FD-174): the figure's picture has transparent margins — 30.4 % above the head,
+  // 2.2 % below the shoes (the P6 source) — so from md its box is let out of the row by those
+  // shares: the row is as tall as the text, "Contact" starts as far below the band's top as the
+  // eyebrows of the other sections (--home-gap), and the visible figure keeps its place beside
+  // the text (feet level with it). The margins are transparent and take no pointer.
+  --cband-h: clamp(360px, 6vw + 280px, 420px);
+
   justify-content: center;
+  pointer-events: none;
+
+  @include media-breakpoint-up(md) {
+    margin-block: calc(var(--cband-h) * -0.304) calc(var(--cband-h) * -0.022);
+  }
 }
 
 .contact-band {
@@ -916,7 +937,7 @@ $rail-beside: "(width >= 1200px) and (height >= 600px)";
   display: block;
   width: auto;
   max-width: 100%;
-  height: clamp(360px, 6vw + 280px, 420px);
+  height: var(--cband-h);
   filter: drop-shadow(0 10px 10px var(--figure-shadow));
 }
 

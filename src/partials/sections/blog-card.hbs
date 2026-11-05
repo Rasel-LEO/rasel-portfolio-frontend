@@ -1,25 +1,18 @@
 {{!-- Author: Rasel Al Mamun --}}
-{{!-- Blog image card (FD-112, FD-113). Context: a post from tools/content.mjs; `tag` is the title's
-heading level. Cover on top (16:9): the in-house line drawing now, a real photo (cover.src,
-WebP + AVIF) later in the same frame. The cover is decorative here (the card's link names the post; the
-post page names it). Category (amber mono) · Draft (only while drafts are
-shown; a hidden ", " separates the two for screen readers, and the link name ends with "(draft)",
-1.5.0), title, standfirst as the excerpt, "Read article →" stretched over the card. --}}
+{{!-- Blog image card (FD-112, 1.7.0). Context: a post from tools/content.mjs; `tag` is the title's
+heading level. The post's card image on top (16:9, object-fit: cover, centred), decorative here (the
+card's link names the post; the post page carries the alt text). Category (amber mono) · Draft (only
+while drafts are shown; a hidden ", " separates the two for screen readers, and the link name ends with
+"(draft)", 1.5.0), title, the card description as the excerpt (not the standfirst), "Read article →"
+stretched over the card. --}}
 <article class="card blog-card" data-reveal>
   <div class="blog-cover">
-    {{#if cover.src}}
-    <picture>
-      {{#if cover.avif}}<source type="image/avif" srcset="{{cover.avif}}" />{{/if}}
-      <img src="{{cover.src}}" alt="" width="{{cover.width}}" height="{{cover.height}}" loading="lazy" decoding="async" />
-    </picture>
-    {{else if cover.illustration}}
-    {{> icons/illustration name=cover.illustration}}
-    {{/if}}
+    {{> components/card-image image=card_image decorative=true sizes="(min-width: 992px) 33vw, (min-width: 768px) 50vw, 100vw"}}
   </div>
   <div class="blog-card-body">
     <p class="blog-card-meta mb-0"><span class="t-label blog-card-category">{{categoryLabel}}</span>{{#if draft}}<span class="visually-hidden">, </span><span class="blog-card-draft" data-draft-label>Draft</span>{{/if}}</p>
     <{{tag}} class="t-h3 blog-card-title mb-0">{{title}}</{{tag}}>
-    <p class="blog-card-excerpt mb-0{{#if (isPlaceholder standfirst)}} is-placeholder{{/if}}">{{standfirst}}</p>
+    <p class="blog-card-excerpt mb-0{{#if (isPlaceholder card_description)}} is-placeholder{{/if}}">{{card_description}}</p>
     <a class="blog-card-link stretched-link" href="/{{file}}" aria-label="Read article: {{title}}{{#if draft}} (draft){{/if}}"><span>Read article</span><svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg></a>
   </div>
 </article>

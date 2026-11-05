@@ -32,9 +32,11 @@
               <li><strong>{{label}}</strong> {{text}}</li>
               {{/each}}
             </ul>
-            {{/if}} {{#if table}}
+            {{/if}} {{#if table}} {{!-- V1 (1.6.0): below 600 px each row is a stacked block and
+            every value carries its column's name (data-label, from the header row); Django's
+            rich-text table renderer sets the same labels at render time. --}}
             <div class="prose-table" tabindex="0" role="region" aria-labelledby="{{id}}">
-              <table>
+              <table data-stack>
                 <thead>
                   <tr>
                     {{#each table.columns}}
@@ -48,7 +50,7 @@
                     {{#each this}} {{#if @first}}
                     <th scope="row">{{this}}</th>
                     {{else}}
-                    <td>{{this}}</td>
+                    <td data-label="{{lookup ../../table.columns @index}}">{{this}}</td>
                     {{/if}} {{/each}}
                   </tr>
                   {{/each}}

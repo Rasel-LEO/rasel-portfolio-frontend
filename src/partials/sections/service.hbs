@@ -5,13 +5,15 @@ page of this site, ↗ for another site (a new tab, FD-76). --}}
 <article class="service" data-reveal>
   <p class="t-label service-number mb-0" aria-hidden="true">{{n}}</p>
   <{{tag}} class="t-h3 service-title mb-0">{{title}}</{{tag}}>
-  <p class="service-summary mb-0">{{summary}}</p>
+  {{#if summary}}<p class="service-summary mb-0">{{summary}}</p>{{/if}}
+  {{#if items.length}}
   <ul class="plain-list service-items mb-0">
     {{#each items}}
     <li>{{this}}</li>
     {{/each}}
   </ul>
-  {{#if (isExternal evidence.href)}}
+  {{/if}}
+  {{#if (and evidence.href evidence.label)}} {{#if (isExternal evidence.href)}}
   <a
     class="profile-link service-evidence"
     href="{{evidence.href}}"
@@ -42,5 +44,5 @@ page of this site, ↗ for another site (a new tab, FD-76). --}}
     >
       <path d="M5 12h14M13 6l6 6-6 6" /></svg
   ></a>
-  {{/if}}
+  {{/if}} {{/if}}
 </article>

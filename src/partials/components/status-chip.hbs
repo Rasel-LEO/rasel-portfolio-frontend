@@ -1,8 +1,11 @@
 {{!-- Author: Rasel Al Mamun --}}
-{{!-- Project status (FD-110): the label always present, colour never the only
-signal. "In progress": an --info dot and text; "Done": a --success tick and text. No border. --}}
+{{!-- Project status (FD-110, FD-157): the label always present, colour never the only signal.
+"In progress": an --info dot and text; "Completed" (R1, 1.6.0; the data value stays `done`): a --success tick and text; "Planned": a hollow
+(dashed) dot and text. A project with no status shows no badge at all (never a placeholder). --}}
 {{#if (eq status "in-progress")}}
 <span class="status status-progress"><span class="dot" aria-hidden="true"></span>In progress</span>
 {{else if (eq status "done")}}
-<span class="status status-done"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5 12l4 4L19 6" /></svg>Done</span>
+<span class="status status-done"><svg class="icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M5 12l4 4L19 6" /></svg>Completed</span>
+{{else if (eq status "planned")}}
+<span class="status status-planned"><span class="dot" aria-hidden="true"></span>Planned</span>
 {{/if}}

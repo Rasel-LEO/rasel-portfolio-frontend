@@ -1,11 +1,25 @@
 {
   "heading": "Get in touch",
-  "intro": "For research collaborations, projects or questions, email me directly or use the form.",
+  "intro": "Have an idea or a problem to solve? Email me directly or use the form.",
+  "expect": {
+    "heading": "What to expect",
+    "items": [
+      { "label": "Response time", "value": "Within 24–48 hours" },
+      { "label": "Location", "value": "Mymensingh, Bangladesh (UTC+6)" },
+      { "label": "Languages", "value": "English, Bengali" }
+    ]
+  },
   "audiences": [
-    "Research collaborators and supervisors",
-    "Companies and organisations in agri-tech and IoT",
-    "Clients for web, app and software projects",
-    "Students"
+    "Research collaborators",
+    "Employers and recruiters",
+    "Clients for IoT, software and web projects",
+    "Students and companies needing project support"
   ],
-  "subjects": ["Research collaboration", "Project or consulting", "Speaking or teaching", "Other"]
+  "subjects": [
+    "Research collaboration",
+    "Job opportunity",
+    "Project or consulting",
+    "Speaking or teaching",
+    "Other"
+  ]
 }

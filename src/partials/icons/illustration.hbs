@@ -4,7 +4,7 @@ container sets --fg-2) and .la in --accent — on the --bg-1 of their frame, so 
 theme. The same language as the project system icons (line-icon.hbs). Named for screen readers
 with the content's alt text; decorative (aria-hidden) when there is none.
 Usage: {{> icons/illustration name="sensor-node" alt=cover.alt}} — sensor-node, two-boards,
-notebook-journal. --}}
+notebook-journal; disconnected-node (the 404 page, N1). --}}
 <svg class="line-art illustration" viewBox="0 0 320 180" width="320" height="180" focusable="false"{{#if alt}} role="img" aria-label="{{alt}}"{{else}} aria-hidden="true"{{/if}}>
   {{#if (eq name "sensor-node")}}
   <path d="M0,152H320" />
@@ -47,6 +47,22 @@ notebook-journal. --}}
   <g class="la">
     <path d="M240,62H280M240,72H268" />
     <path d="M140,156L136,166L148,162" />
+  </g>
+  {{else if (eq name "disconnected-node")}}
+  <path d="M16,160H304" />
+  <rect x="28" y="72" width="64" height="64" rx="4" />
+  <rect x="42" y="86" width="36" height="26" rx="2" />
+  <path d="M42,124H70M92,104H134M92,118H122" />
+  <path d="M40,136V152M60,136V152M80,136V152" />
+  <path d="M176,104H206" stroke-dasharray="1 5" />
+  <rect x="206" y="72" width="76" height="64" rx="4" />
+  <circle cx="244" cy="104" r="12" />
+  <path d="M230,136V152M258,136V152M282,92H296V76" />
+  <circle cx="296" cy="70" r="2.5" />
+  <g class="la">
+    <path d="M134,104L142,92L150,116L158,92L166,116L174,104" />
+    <path d="M122,118L134,132" />
+    <path d="M276,38L292,54M292,38L276,54" />
   </g>
   {{/if}}
 </svg>

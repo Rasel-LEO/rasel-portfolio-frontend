@@ -5,7 +5,37 @@
     "title": "Edge AI on the poultry farm: why decisions belong next to the sensor",
     "short_title": "Edge AI on the poultry farm",
     "standfirst": "Exploring local processing for farm monitoring and control.",
-    "status": "draft"
+    "status": "draft",
+    "card_description": "Why farm decisions belong next to the sensor, not in a distant cloud service.",
+    "card_image": {
+      "src": "/images/posts/trial-card-1.webp",
+      "avif": "/images/posts/trial-card-1.avif",
+      "alt": "[Trial card image: Edge AI on the poultry farm]",
+      "width": 1600,
+      "height": 900
+    },
+    "figures": [
+      {
+        "n": 1,
+        "src": "/images/posts/trial-fig-wide.webp",
+        "avif": "/images/posts/trial-fig-wide.avif",
+        "alt": "[Alt text of figure 1]",
+        "width": 1600,
+        "height": 700,
+        "caption": "[Caption of figure 1]",
+        "size": "wide"
+      },
+      {
+        "n": 2,
+        "src": "/images/posts/trial-fig-narrow.webp",
+        "avif": "/images/posts/trial-fig-narrow.avif",
+        "alt": "[Alt text of figure 2]",
+        "width": 600,
+        "height": 1000,
+        "caption": "[Caption of figure 2]",
+        "size": "narrow"
+      }
+    ]
   },
   {
     "slug": "esp32-vs-raspberry-pi-farm-iot",
@@ -13,7 +43,27 @@
     "title": "ESP32 or Raspberry Pi for farm IoT? A practical comparison",
     "short_title": "ESP32 or Raspberry Pi for farm IoT?",
     "standfirst": "A practical guide to choosing a controller for farm IoT.",
-    "status": "draft"
+    "status": "draft",
+    "card_description": "A practical comparison of two controllers for farm IoT, with the trade-offs.",
+    "card_image": {
+      "src": "/images/posts/trial-card-2.webp",
+      "avif": "/images/posts/trial-card-2.avif",
+      "alt": "[Trial card image: ESP32 or Raspberry Pi for farm IoT?]",
+      "width": 1600,
+      "height": 900
+    },
+    "figures": [
+      {
+        "n": 1,
+        "src": "/images/posts/trial-fig-normal.webp",
+        "avif": "/images/posts/trial-fig-normal.avif",
+        "alt": "[Alt text of figure 1]",
+        "width": 1200,
+        "height": 800,
+        "caption": "[Caption of figure 1]",
+        "size": "normal"
+      }
+    ]
   },
   {
     "slug": "thesis-to-journal-paper",
@@ -21,6 +71,26 @@
     "title": "From undergraduate thesis to journal paper: what publishing taught me",
     "short_title": "From thesis to journal paper",
     "standfirst": "Lessons from turning a research project into a journal article.",
-    "status": "draft"
+    "status": "draft",
+    "card_description": "What turning an undergraduate thesis into a journal paper taught me about publishing.",
+    "card_image": {
+      "src": "/images/posts/trial-card-3.webp",
+      "avif": "/images/posts/trial-card-3.avif",
+      "alt": "[Trial card image: From thesis to journal paper]",
+      "width": 1600,
+      "height": 900
+    },
+    "figures": [
+      {
+        "n": 1,
+        "src": "/images/posts/trial-fig-normal.webp",
+        "avif": "/images/posts/trial-fig-normal.avif",
+        "alt": "[Alt text of figure 1]",
+        "width": 1200,
+        "height": 800,
+        "caption": "[Caption of figure 1]",
+        "size": "normal"
+      }
+    ]
   }
 ]

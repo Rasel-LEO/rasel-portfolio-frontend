@@ -12,34 +12,16 @@
       "variant": "secondary"
     },
     {
-      "label": "CV",
-      "href": "cv",
+      "label": "Download CV (PDF)",
+      "href": "cv/Rasel_Al_Mamun_CV.pdf",
       "variant": "secondary-small"
     }
   ],
-  "fork": {
-    "heading": "Two sides of this site",
-    "portfolio": {
-      "title": "Portfolio",
-      "text": "Research projects, peer-reviewed publications and awards — the evidence behind the work.",
-      "tags": ["Publications", "Research", "Awards"],
-      "cta": "Open the portfolio",
-      "href": "portfolio.html"
-    },
-    "blog": {
-      "title": "Blog",
-      "text": "Notes on agricultural engineering, technology reviews and learning through research.",
-      "tags": ["Agricultural engineering", "Tech review", "Education"],
-      "cta": "Read the blog",
-      "href": "blog.html"
-    }
-  },
-  "hire_intro": "Research, software development and AI engineering. Send a short brief to discuss the scope.",
   "selected": {
     "eyebrow": "Portfolio",
     "heading": "Selected work",
     "intro": "Featured research projects.",
-    "cta": "Full portfolio",
+    "cta": "All projects",
     "large_eyebrow": "Featured project"
   },
   "latest": {
@@ -68,7 +50,7 @@
       {
         "label": "Development",
         "lines": ["Dependable web, apps", "& software"],
-        "href": "portfolio.html#research"
+        "href": "hire.html"
       }
     ],
     "areas_label": "Areas of work",
@@ -79,6 +61,6 @@
     "eyebrow": "Research",
     "heading": "Selected publications",
     "intro": "First-author papers",
-    "cta": "Full portfolio"
+    "cta": "All publications"
   }
 }

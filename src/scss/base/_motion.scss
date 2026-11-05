@@ -40,14 +40,13 @@ $wipe-seam: 200ms;
 // Card tilt (FD-62): the lift is `translate` (hover, and focus within without
 // tilt); motion.js sets the tilt as `rotate` about an axis in the card's plane. Zero
 // specificity, so a reveal's transition (.reveal, .stage-reveal) wins while it runs.
-:where(.fork-card, .service) {
+:where(.service) {
   transition:
     translate var(--d-base) var(--e-out),
     rotate var(--d-base) var(--e-out);
 }
 
 @media #{$fine} and #{$motion} {
-  .fork-card,
   .service {
     &:hover,
     &:has(:focus-visible) {
@@ -56,7 +55,6 @@ $wipe-seam: 200ms;
   }
 
   .card,
-  .fork-card,
   .service {
     &.is-tilting {
       rotate: var(--tilt-x) var(--tilt-y) 0 var(--tilt);
@@ -343,6 +341,15 @@ html.lenis body {
 @media print {
   .js .page-wipe {
     display: none;
+  }
+
+  // Whatever the scroll story has hidden or moved (inline opacity, transforms, visibility) prints in
+  // place, in full.
+  main *,
+  .site-footer * {
+    visibility: visible !important;
+    opacity: 1 !important;
+    transform: none !important;
   }
 }
 

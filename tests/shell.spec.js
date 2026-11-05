@@ -13,9 +13,10 @@ const PHONE = { width: 390, height: 844 };
 const current = {
   'index.html': [pagePath('index.html'), 'page'],
   'portfolio.html': [pagePath('portfolio.html'), 'page'],
-  'portfolio-entry.html': [pagePath('portfolio.html'), 'true'],
+  // FD-171: Projects has its own item; the archive is that page, a project page is under it.
+  'portfolio-entry.html': [pagePath('research.html'), 'true'],
   'publications.html': [pagePath('portfolio.html'), 'true'],
-  'research.html': [pagePath('portfolio.html'), 'true'],
+  'research.html': [pagePath('research.html'), 'page'],
   'blog.html': [pagePath('blog.html'), 'page'],
   'blog-post.html': [pagePath('blog.html'), 'true'],
   'hire.html': [pagePath('hire.html'), 'page'],
@@ -424,10 +425,9 @@ test.describe('focus is never dropped to <body>', () => {
     await expect(logo).toBeVisible();
     await expect(logo).toHaveAttribute('aria-hidden', 'true');
     await expect(drawer.locator('.drawer-title')).not.toContainText(content.profile.name);
-    await expect(drawer.getByRole('link', { name: 'Request CV' })).toHaveAttribute(
-      'href',
-      'mailto:hello@ideatrium.com?subject=CV%20request',
-    );
+    await expect(
+      drawer.getByRole('link', { name: 'Download CV (PDF)', exact: true }),
+    ).toHaveAttribute('href', '/cv/Rasel_Al_Mamun_CV.pdf');
   });
 
   test('closing the drawer by resizing to lg focuses the brand', async ({ page }) => {
@@ -452,14 +452,16 @@ test.describe('footer (FD-94)', () => {
       await expect(signature).toHaveAttribute('href', pagePath('index.html'));
       await expect(signature.locator('.footer-by')).toHaveText(content.footer.signature_by);
       await expect(signature.locator('svg.logo')).toHaveAttribute('aria-hidden', 'true');
-      await expect(footer.locator('.footer-role')).toHaveText(content.footer.role_line);
+      await expect(footer.locator('.footer-role')).toHaveText(content.profile.role_line);
       await expect(footer.locator('.footer-affiliation span')).toHaveText([
         'Farm Power and Machinery',
         content.profile.institution,
       ]);
       const email = footer.getByRole('link', { name: content.profile.email });
       await expect(email).toHaveAttribute('href', `mailto:${content.profile.email}`);
-      await expect(email.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+      // FD-155: one envelope icon for the group of both addresses.
+      await expect(footer.locator('.footer-emails > svg')).toHaveAttribute('aria-hidden', 'true');
+      await expect(footer.locator('.footer-emails a')).toHaveCount(2);
 
       const { groups } = content.footer;
       const explore = footer.getByRole('navigation', { name: groups.explore });
@@ -507,13 +509,8 @@ test.describe('footer (FD-94)', () => {
       await expect(footer.locator('.footer-copyright')).toHaveText(
         `© ${new Date().getFullYear()} ${content.footer.copyright_name}`,
       );
-      // FD-141: the AI-portrait disclosure, small text, visible on every page.
-      const note = footer.locator('.footer-ai-note');
-      await expect(note).toHaveText(content.footer.ai_portrait_note);
-      await expect(note).toBeVisible();
-      expect(parseFloat(await note.evaluate((el) => getComputedStyle(el).fontSize))).toBeLessThan(
-        16,
-      );
+      // S1 (1.6.0): no AI-portrait note.
+      await expect(footer.locator('.footer-ai-note')).toHaveCount(0);
       // FD-143: the Privacy Policy link, on every page, with a 44 px touch target; on its own page
       // it is marked current.
       const privacy = footer.getByRole('link', { name: content.privacy.link_label, exact: true });
@@ -621,13 +618,14 @@ test.describe('back-to-top portrait (FD-104)', () => {
       );
       const button = page.locator('[data-back-to-top]');
       await expect(button).toBeVisible();
-      // (At 1440 px the stage's scrub, 0.8 s, hands the portrait over first, FD-97.)
+      // (At 1440 px the stage's scrub, 0.8 s, hands the portrait over first, FD-97.) H9 (1.6.0): the
+      // Contact band's photo is hidden below 768 px.
       await expect
         .poll(async () => {
           const s = await state(page);
           return [s.portrait, s.shown, s.clickable];
         })
-        .toEqual([true, true, true]);
+        .toEqual([size.width >= 768, true, true]);
       if (size === DESKTOP) {
         // After the page's entry wipe (FD-81).
         await page.waitForTimeout(800);
@@ -692,11 +690,12 @@ test.describe('back-to-top portrait (FD-104)', () => {
       const s = await state(page);
       expect([s.shown, s.clickable], `at ${y}`).toEqual([true, true]);
     }
-    // No space reserved under the footer beyond the button's own inset.
+    // Round 5 (FD-172): on phones the page end has room for the photo under the footer row (its height
+    // 96 px, its 24 px inset and a 16 px gap), so it never covers the row.
     const pad = await page
       .locator('.site-footer')
       .evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
-    expect(pad).toBe(24);
+    expect(pad).toBe(136);
   });
 
   test('keyboard: reachable after the footer, shown when focused, Enter goes to the top', async ({
