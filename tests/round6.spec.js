@@ -6,11 +6,50 @@ import { expect, test } from './fixtures.js';
 
 // ---- item 1: the hand-off glide (FD-173) --------------------------------------------------
 
-// The most the visible image (the figure or the button's photo) may move between two consecutive
-// frames, in px (per 16.7 ms), as its lower-right corner or its height. The snap this replaces was 833 px at
-// 1440 × 900; the largest steps measured now are about 120 px, which is what the eased 320 ms
-// glide needs at its fastest and what the scrubbed shrink itself does at its fastest (103 px).
+// The most the visible image (the figure or the button's photo) may move per 1/60 s (16.7 ms),
+// as its lower-right corner or its height. The snap this replaces was 833 px at 1440 × 900; the
+// largest steps measured now are about 120 px, which is what the eased 320 ms glide needs at its
+// fastest and what the scrubbed shrink itself does at its fastest (103 px).
+// v1.7.2 (FD-180): the speed is measured per elapsed time, not per captured frame, on the clock
+// the motion runs on: GSAP places the image from performance.now() at the start of its ticker
+// callback, so each sample is timed by the start of the latest ticker callback before it
+// (a test-only requestAnimationFrame wrapper; the page code is unchanged). On a busy runner a
+// frame is skipped or a callback starts late, and one sample then holds more than one frame of
+// movement. The speed is taken over each pair of consecutive intervals (samples i - 2 to i), which
+// evens out the few milliseconds of start-time jitter; a snap still shows in full.
 const STEP_LIMIT = 130;
+const FRAME_MS = 1000 / 60;
+// For the check to stay meaningful the motion must be sampled densely: at least MIN_MOVING
+// windows in which the image moves, and none of them longer than MAX_WINDOW_FRAMES frames (the
+// 833 px snap spread over 6 frames is still 139 px per 16.7 ms, above the limit).
+const MIN_MOVING = 12;
+const MAX_WINDOW_FRAMES = 6;
+
+// Optional, for local proof runs only: GLIDE_CPU_THROTTLE=4 slows Chromium's CPU fourfold (CDP),
+// as on a busy shared CI runner. Off by default and in CI.
+const THROTTLE = Number(process.env.GLIDE_CPU_THROTTLE) || 0;
+
+// Before the page's own scripts: note when GSAP's ticker callback starts on each frame, so a
+// sample knows the time its picture was computed for. The ticker is the callback requested on
+// every frame since load, so it is the one called most often (the cursor's own loop runs only
+// while the pointer settles; the sampler is left out).
+const FRAME_CLOCK = () => {
+  const raf = window.requestAnimationFrame.bind(window);
+  const calls = new Map();
+  let ticker = null;
+  let most = 0;
+  window.__frameStart = 0;
+  window.requestAnimationFrame = (callback) =>
+    raf((time) => {
+      if (!callback.__sampler) {
+        const n = (calls.get(callback) ?? 0) + 1;
+        calls.set(callback, n);
+        if (n >= most) [most, ticker] = [n, callback];
+        if (callback === ticker) window.__frameStart = performance.now();
+      }
+      return callback(time);
+    });
+};
 
 // On every animation frame: which image is visible (the stage figure or the back-to-top photo),
 // its lower-right corner and height, and whether the figure's frame is carried by the page.
@@ -29,7 +68,7 @@ const TRACKER = `(() => {
     const buttonShown = !button.hidden && bs.visibility !== 'hidden' && parseFloat(bs.opacity) > 0.05;
     const img = (figureShown ? figure : button).querySelector('img').getBoundingClientRect();
     window.__frames.push({
-      t: performance.now(),
+      t: window.__frameStart,
       y: window.scrollY,
       figureShown,
       buttonShown,
@@ -42,11 +81,17 @@ const TRACKER = `(() => {
     });
     if (!window.__stop) requestAnimationFrame(sample);
   };
+  sample.__sampler = true;
   requestAnimationFrame(sample);
 })()`;
 
 async function openHome(page) {
   await page.setViewportSize({ width: 1440, height: 900 });
+  if (THROTTLE > 1) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
+  }
+  await page.addInitScript(FRAME_CLOCK);
   await page.goto('/index.html');
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'desktop');
   await page.evaluate(() => document.fonts.ready);
@@ -54,9 +99,16 @@ async function openHome(page) {
   await page.evaluate(TRACKER);
 }
 
+const moved = (a, b) =>
+  Math.max(
+    Math.abs(b.right - a.right),
+    Math.abs(b.bottom - a.bottom),
+    Math.abs(b.height - a.height),
+  );
+
 // The proof: exactly one image visible on every frame once the stage is on screen (never none,
-// never two), never carried by the page, and the visible one never moves more than STEP_LIMIT
-// between two frames.
+// never two), never carried by the page, and the visible one never moves faster than STEP_LIMIT
+// per 16.7 ms over two consecutive intervals, timed on the motion's own frame clock.
 async function judge(page, upTo) {
   const { frames: all, end } = await page.evaluate(() => {
     window.__stop = true;
@@ -65,29 +117,48 @@ async function judge(page, upTo) {
   const frames = upTo ? all.slice(0, upTo) : all;
   let maxStep = 0;
   let worst = null;
+  let moving = 0;
+  let maxWindow = 0;
   const bad = [];
   frames.forEach((f, i) => {
     if (f.figureShown === f.buttonShown && f.y > 1) bad.push({ i, y: f.y, why: 'shown count' });
     if (f.carried) bad.push({ i, y: f.y, why: 'figure carried by the page' });
-    if (i === 0) return;
-    const prev = frames[i - 1];
-    // Per nominal 60 Hz frame: a slow frame (a busy test machine) moves the eased glide
-    // further, so its step is scaled to 16.7 ms; a snap in one frame stays a snap.
-    const slow = Math.max(f.t - prev.t, 1000 / 60) / (1000 / 60);
-    const step =
-      Math.max(
-        Math.abs(f.right - prev.right),
-        Math.abs(f.bottom - prev.bottom),
-        Math.abs(f.height - prev.height),
-      ) / slow;
+    if (i < 2) return;
+    const from = frames[i - 2];
+    const px = moved(from, f);
+    if (px <= 0.5) return;
+    const elapsed = f.t - from.t;
+    if (!(elapsed > 0)) {
+      bad.push({ i, y: f.y, px, why: `moved with no frame between (${elapsed} ms)` });
+      return;
+    }
+    moving += 1;
+    maxWindow = Math.max(maxWindow, elapsed / FRAME_MS);
+    // px per 1/60 s over the time that really passed.
+    const step = (px * FRAME_MS) / elapsed;
     if (step > maxStep) {
       maxStep = step;
-      worst = { i, y: f.y, from: prev.figureShown ? 'figure' : 'button', step };
+      worst = { i, y: f.y, from: from.figureShown ? 'figure' : 'button', px, elapsed, step };
     }
   });
   const glideFrames = frames.filter((f) => f.gliding).length;
-  return { frames, end, maxStep, worst, bad, glideFrames };
+  return { frames, end, maxStep, worst, bad, glideFrames, moving, maxWindow };
 }
+
+// The judged motion was sampled densely enough for the per-time limit to catch a snap.
+function expectDense({ moving, maxWindow }) {
+  expect(moving, 'windows in which the image moves').toBeGreaterThanOrEqual(MIN_MOVING);
+  expect(maxWindow, 'longest moving window, in 16.7 ms frames').toBeLessThanOrEqual(
+    MAX_WINDOW_FRAMES,
+  );
+}
+
+const report = (name, r) =>
+  console.log(
+    `${name}: ${r.frames.length} frames, ${r.moving} moving, longest window ` +
+      `${r.maxWindow.toFixed(1)} frames, max ${r.maxStep.toFixed(1)} px / 16.7 ms`,
+    r.worst,
+  );
 
 test.describe('hand-off glide (item 1, FD-173)', () => {
   test.describe.configure({ timeout: 90_000 });
@@ -120,11 +191,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
       const mark = await page.evaluate(() => window.__frames.length);
       await wheelUp(page, delta, pause);
       await page.waitForTimeout(1200);
-      const { frames, maxStep, worst, bad, glideFrames } = await judge(page, mark);
-      if (kind === 'fast') expect(glideFrames, 'frames of the glide').toBeGreaterThan(8);
-      console.log(`${kind}: ${frames.length} frames, max step ${maxStep.toFixed(1)} px`, worst);
-      expect(bad).toEqual([]);
-      expect(maxStep, `largest step between two frames: ${JSON.stringify(worst)}`).toBeLessThan(
+      const r = await judge(page, mark);
+      report(kind, r);
+      if (kind === 'fast') expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
+      expectDense(r);
+      expect(r.bad).toEqual([]);
+      expect(r.maxStep, `fastest movement per 16.7 ms: ${JSON.stringify(r.worst)}`).toBeLessThan(
         STEP_LIMIT,
       );
     });
@@ -143,11 +215,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
     const mark = await page.evaluate(() => window.__frames.length);
     await page.keyboard.press('Home');
     await page.waitForTimeout(1500);
-    const { frames, maxStep, worst, bad, glideFrames } = await judge(page, mark);
-    expect(glideFrames, 'frames of the glide').toBeGreaterThan(8);
-    console.log(`keys: ${frames.length} frames, max step ${maxStep.toFixed(1)} px`, worst);
-    expect(bad).toEqual([]);
-    expect(maxStep, `largest step between two frames: ${JSON.stringify(worst)}`).toBeLessThan(
+    const r = await judge(page, mark);
+    report('keys', r);
+    expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
+    expectDense(r);
+    expect(r.bad).toEqual([]);
+    expect(r.maxStep, `fastest movement per 16.7 ms: ${JSON.stringify(r.worst)}`).toBeLessThan(
       STEP_LIMIT,
     );
   });
@@ -165,11 +238,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
       await page.waitForTimeout(16);
     }
     await page.waitForTimeout(1500);
-    const { frames, maxStep, worst, bad, glideFrames } = await judge(page);
-    expect(glideFrames, 'frames of the glide').toBeGreaterThan(8);
-    console.log(`flick: ${frames.length} frames, max step ${maxStep.toFixed(1)} px`, worst);
-    expect(bad).toEqual([]);
-    expect(maxStep, `largest step between two frames: ${JSON.stringify(worst)}`).toBeLessThan(
+    const r = await judge(page);
+    report('flick', r);
+    expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
+    expectDense(r);
+    expect(r.bad).toEqual([]);
+    expect(r.maxStep, `fastest movement per 16.7 ms: ${JSON.stringify(r.worst)}`).toBeLessThan(
       STEP_LIMIT,
     );
   });

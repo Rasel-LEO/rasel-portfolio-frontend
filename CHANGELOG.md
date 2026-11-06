@@ -5,6 +5,21 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.7.2 — 2026-11-06
+
+- Includes everything in 1.7.1.
+- The back-to-top glide test (FD-180, tests only) now measures how fast the image moves per unit of time, on the same clock the animation uses, instead of per captured frame. On a busy test machine a frame is sometimes skipped or starts late, and the old test then counted that as one big jump. The limit is the same, 130 px per 1/60 s, and the test still catches a real jump.
+- Development tools: minimatch, used only by ESLint, is updated to a fixed version (FD-179, Dependabot alert #9).
+- Motion and the approved design are unchanged.
+
+## 1.7.1 — 2026-11-06
+
+- 14 new icons, ready for Django and not yet used by any content: briefcase, handshake, government, chart-up, team, graduation, book, globe, bulb, megaphone, shield and heart join the Area icons, the topic icons (now 36) and the Portfolio expertise icons; star and certificate join the Portfolio award icons.
+- List limits (FD-178): the most Portfolio awards (9), education rows (4), expertise groups (4), items per expertise group (12), certifications (2) and bullets per role (3) are written once in the content check, which fails the build above them, and the layout test builds every list empty, with one item and at its maximum. A section stays within 3 phone screens, and within 2 screens from 768 px up.
+- Two Django tests corrected (tests only): the Blog's empty text and the 404 page's code and four actions as they are since 1.7.0.
+- A dev-only icon sheet (`tools/preview/icon-sheet.mjs`) shows every icon set by name. It is not in the build, the sitemap or the public export.
+- Motion and the approved design are unchanged.
+
 ## 1.7.0 — 2026-11-05
 
 - Card images (FD-177): every project and post has one card image (1600 × 900, with alt text). It shows on the Home large card, the Projects list, the Blog list and Latest posts, and at the top of its own page.

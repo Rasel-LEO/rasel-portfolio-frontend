@@ -469,7 +469,8 @@ the profile data from there.
 Every row is a **slot**: it renders from one value, **hides cleanly when the value is empty** and
 holds its **maximum length** at 320, 390 and 1440 px in both themes, without overflow, clipping or
 overlap. Lengths are characters; `tests/slots.spec.js` builds the site with empty, one-item and
-maximum samples (the constants `MAX` and `MANY` in that file are this table). Words, not unbroken
+maximum samples (the constants `MAX` and `MANY` in that file are this table; 1.7.1 adds 768 and
+1024 px, and the Portfolio list maxima, which `tools/validate-content.mjs` `LIST_MAX` enforces). Words, not unbroken
 strings, are assumed except for emails and URLs, which break anywhere.
 
 | Key (JSON path)                                                                                        | Slot                                                        | Page(s)                             | Max length                                                                               | Empty →                                                                        |
@@ -494,6 +495,11 @@ strings, are assumed except for emails and URLs, which break anywhere.
 | `portfolio.experience.roles[]` title, period, unit, institution, text, bullets                         | experience roles                                            | Portfolio                           | title 40, period 30, unit 40, institution 50, text 160, 3 bullets of 60; 0 / 1 / 5 roles | column hidden at 0; an empty `unit` hides the unit line                        |
 | `contact.subjects[]`, `hire.form_kinds[]`                                                              | form options                                                | Contact, Hire me                    | 30 / 40 each; 0 / 1 / 8 options                                                          | the select is omitted at 0                                                     |
 | `contact.intro`, `contact.audiences[]`                                                                 | Contact intro and audiences                                 | Contact                             | intro 120; audience 60 each; 0 / 1 / 6 audiences                                         | intro or list hidden                                                           |
+| `portfolio.awards.items[]` (shown awards)                                                              | Awards & honours                                            | Portfolio                           | 0 / 1 / 9 awards (1.7.1; 3 or 4 read best)                                               | —                                                                              |
+| `portfolio.experience.education[]`                                                                     | education rows                                              | Portfolio                           | 0 / 1 / 4 rows (1.7.1; 2–3 read best)                                                    | column hidden at 0                                                             |
+| `portfolio.expertise.groups[]`, `items[]`                                                              | expertise groups and their items                            | Portfolio                           | 0 / 1 / 4 groups (one full row of four from 992 px); 12 items per group (5 read best)    | —                                                                              |
+| `portfolio.expertise.training[]` (shown certifications)                                                | Selected training                                           | Portfolio                           | 0 / 1 / 2 certificates (one row of two from 992 px)                                      | —                                                                              |
+| `portfolio.experience.roles[].bullets[]`                                                               | role bullets                                                | Portfolio                           | 3 bullets per role (1.7.1; 2 read best)                                                  | list hidden at 0                                                               |
 | page `<title>` and search descriptions (`meta.*`, `profile.summary`, the projects archive description) | `<head>`                                                    | every page                          | title ≤ 60, description ≤ 160                                                            | —                                                                              |
 | `footer.ai_portrait_shown` (bool)                                                                      | AI-portrait note                                            | footer (every page)                 | —                                                                                        | note hidden when false (true now; false once no AI-generated portrait is left) |
 | `profile.cv.href`                                                                                      | "Download CV (PDF)" links, with a download icon             | Home, Portfolio, Hire me, drawer    | —                                                                                        | every CV link hidden when empty                                                |
@@ -615,11 +621,29 @@ not run in the preview (a search with no match shows the empty state, any other 
 
 ### 15.2 Project-topic icons
 
-`src/partials/icons/line-icon.hbs`, 24 keys; Django offers exactly this list as the topic icon choice:
+`src/partials/icons/line-icon.hbs`, 36 keys; Django offers exactly this list as the topic icon choice:
 `hen`, `fish`, `sun-water`, `tractor`, `leaf`, `greenhouse` (the agriculture set), `software`, `web`,
 `mobile`, `ai`, `robotics`, `data`, `cloud`, `security`, `energy`, `water`, `environment`, `health`,
-`education`, `research`, `hardware`, `automation`, `iot`, and `general`, the fallback (any other
-name draws it). 48 px grid, 1.5 px strokes, accent parts as `.la`.
+`education`, `research`, `hardware`, `automation`, `iot`, the twelve keys added in 1.7.1
+(`briefcase`, `handshake`, `government`, `chart-up`, `team`, `graduation`, `book`, `globe`, `bulb`,
+`megaphone`, `shield`, `heart`), and `general`, the fallback (any other name draws it). 48 px grid,
+1.5 px strokes, accent parts as `.la`. Near twins (offer the clearer one): `shield` / `security`,
+`heart` / `health`, `graduation` / `education`.
+
+### 15.2a Area, expertise and award icons (1.7.1)
+
+The icon choice Django offers per list is exactly the validator's list (`tools/validate-content.mjs`):
+
+- **Areas of work** (`fields[].icon`, `icons/area-icon.hbs`, 24 px): `sprout`, `network`, `camera`,
+  `tractor`, `code`, `document`, `chip`, `gear`, and the twelve 1.7.1 keys above.
+- **Expertise groups** (`portfolio.expertise.groups[].icon`, `icons/pf-icon.hbs`): `chip`,
+  `network`, `code`, `gear`, and the twelve 1.7.1 keys (`graduation` draws the `mortarboard`
+  drawing, `briefcase` the existing Experience icon).
+- **Awards** (`portfolio.awards.items[].icon`, `icons/pf-icon.hbs`): `trophy`, `medal`, `ribbon`,
+  `star`, `certificate`.
+
+`tools/preview/icon-sheet.mjs` (working repository only, never built or exported) renders every
+icon of each set, named, at its real size and at 3×, in both themes.
 
 ### 15.3 Covers
 

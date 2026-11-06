@@ -33,16 +33,18 @@ affiliations) in `src/`, `docs/content/` and `dist/`. The full CV is never commi
 
 ### Overrides (`package.json` `overrides`)
 
-All sit in the dev-only tree of `@lhci/cli` 0.15.1, the latest release, which pins
-`lighthouse` 12.6.1 and has not adopted these fixes. Each was kept only after `npm run lhci`
-and the full test suite passed with it.
+All are dev-only. The first four sit in the tree of `@lhci/cli` 0.15.1, the latest release,
+which pins `lighthouse` 12.6.1 and has not adopted these fixes; `minimatch` sits under `eslint`
+(FD-179). Each was kept only after `npm run lhci`, `npm run lint` and the full test suite passed
+with it.
 
-| Override                                                 | Advisory                                                                         | Reason                                                                                                                                   |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `tmp` 0.2.7                                              | GHSA-ph9p-34f9-6g65 (high), GHSA-52f5-9888-hmc6 (low)                            | `@lhci/cli` and `external-editor` ask for 0.1 / 0.0.x; 0.2.7 keeps the same API with the path checks fixed                               |
-| `uuid` 11.1.1                                            | GHSA-w5hq-g745-h8pq (moderate)                                                   | `@lhci/cli` asks for ^8 and only calls `v4()`, unchanged in 11 (CommonJS build kept)                                                     |
-| `basic-ftp` 6.2.3                                        | GHSA-c475-qrg2-pj4r (high)                                                       | `get-uri` (via `proxy-agent`) asks for ^5; only reached for `ftp:` proxy-script URLs, which this project never sets                      |
-| `@puppeteer/browsers` 3.2.6 (scoped to `puppeteer-core`) | GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3 (`extract-zip`, high, no fixed release) | 3.x drops `extract-zip`; `puppeteer-core` 24.43.1 launches and connects to Chromium with it (checked), Lighthouse only connects over CDP |
+| Override                                                 | Advisory                                                                         | Reason                                                                                                                                                                                                                                                                                                    |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tmp` 0.2.7                                              | GHSA-ph9p-34f9-6g65 (high), GHSA-52f5-9888-hmc6 (low)                            | `@lhci/cli` and `external-editor` ask for 0.1 / 0.0.x; 0.2.7 keeps the same API with the path checks fixed                                                                                                                                                                                                |
+| `uuid` 11.1.1                                            | GHSA-w5hq-g745-h8pq (moderate)                                                   | `@lhci/cli` asks for ^8 and only calls `v4()`, unchanged in 11 (CommonJS build kept)                                                                                                                                                                                                                      |
+| `basic-ftp` 6.2.3                                        | GHSA-c475-qrg2-pj4r (high)                                                       | `get-uri` (via `proxy-agent`) asks for ^5; only reached for `ftp:` proxy-script URLs, which this project never sets                                                                                                                                                                                       |
+| `@puppeteer/browsers` 3.2.6 (scoped to `puppeteer-core`) | GHSA-jmr9-qjv8-65gv, GHSA-7pqw-9j4j-h8q3 (`extract-zip`, high, no fixed release) | 3.x drops `extract-zip`; `puppeteer-core` 24.43.1 launches and connects to Chromium with it (checked), Lighthouse only connects over CDP                                                                                                                                                                  |
+| `minimatch` 11.0.4 (scoped to `eslint`)                  | GHSA-g3hv-75wg-m249 (moderate; Dependabot #9)                                    | `eslint` 10.13.0 and `@eslint/config-array` ask for ^10.2; the fix is 11.0.1, with the same exports. Lint passes with it. The `minimatch` 3.1.5 under `glob` 7 (`@lhci/cli`) is outside the affected range and unchanged. New dev-only dependency `@isaacs/nonrecursive-glob-match` 1.1.0 (BlueOak-1.0.0) |
 
 ### Accepted residual findings
 

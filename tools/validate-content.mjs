@@ -27,14 +27,40 @@ const isListOf = (check) => (value) =>
   Array.isArray(value) && value.length > 0 && value.every((item) => item && check(item));
 const isStep = (v) => /^\d{2}$/.test(v.n) && isText(v.title);
 const CTA_VARIANTS = ['primary', 'secondary', 'secondary-small'];
+// 1.7.1: the twelve icons added to the area, topic and expertise sets (not used by the content yet).
+export const ADDED_ICONS = [
+  'briefcase',
+  'handshake',
+  'government',
+  'chart-up',
+  'team',
+  'graduation',
+  'book',
+  'globe',
+  'bulb',
+  'megaphone',
+  'shield',
+  'heart',
+];
 // The in-house line icons of the Areas-of-work grid (FD-84, src/partials/icons/area-icon.hbs).
-const AREA_ICONS = ['sprout', 'network', 'camera', 'tractor', 'code', 'document', 'chip', 'gear'];
+export const AREA_ICONS = [
+  'sprout',
+  'network',
+  'camera',
+  'tractor',
+  'code',
+  'document',
+  'chip',
+  'gear',
+  ...ADDED_ICONS,
+];
 const isPillar = (v) => isText(v?.label) && isTextList(v.lines) && isText(v.href);
 
 // Portfolio (FD-107, FD-108): in-house line icons (src/partials/icons/pf-icon.hbs), the section ids
 // the profile's section nav may link to, and the counts the profile may show.
-const AWARD_ICONS = ['trophy', 'medal', 'ribbon'];
-const EXPERTISE_ICONS = ['chip', 'network', 'code', 'gear'];
+// 1.7.1: star and certificate join the award set, the twelve added icons the expertise set.
+export const AWARD_ICONS = ['trophy', 'medal', 'ribbon', 'star', 'certificate'];
+export const EXPERTISE_ICONS = ['chip', 'network', 'code', 'gear', ...ADDED_ICONS];
 const PORTFOLIO_SECTIONS = ['#publications', '#research', '#awards', '#experience', '#expertise'];
 const PORTFOLIO_COUNTS = ['publications', 'projects', 'awards'];
 // FD-108: removed from the site; never shown again.
@@ -82,6 +108,8 @@ export const TOPIC_ICONS = [
   'hardware',
   'automation',
   'iot',
+  // 1.7.1: the twelve added keys.
+  ...ADDED_ICONS,
   'general',
 ];
 // A real photograph (FD-35): WebP under /images/, optional AVIF twin, alt text, intrinsic size,
@@ -160,6 +188,16 @@ const LIMITS = {
   roleLine: 50,
   blogTitle: 80,
   blogDescription: 110,
+};
+// 1.7.1: the most items each Portfolio list may hold (measured at 320 – 1440 px, tests/slots.spec.js
+// MANY; docs/handover-django.md § 14.1). More fails the build.
+export const LIST_MAX = {
+  awards: 9,
+  education: 4,
+  expertiseGroups: 4,
+  expertiseItems: 12,
+  certifications: 2,
+  bullets: 3,
 };
 // The soft limits: a warning, not a failure (fewer words than this reads as thin).
 const MIN_WORDS = {
@@ -758,6 +796,26 @@ function checkPortfolio(content, projectIds) {
       (award) => award.year === item.year && plain(award.title).startsWith(plain(item.title)),
     );
     if (!record) problems.push(`portfolio.awards: "${item.title}" is not in awards.json`);
+  }
+  // 1.7.1: the list maxima.
+  const counts = [
+    ['portfolio.awards.items', portfolio.awards.items, LIST_MAX.awards],
+    ['portfolio.experience.education', portfolio.experience.education, LIST_MAX.education],
+    ['portfolio.expertise.groups', portfolio.expertise.groups, LIST_MAX.expertiseGroups],
+    ['portfolio.expertise.training', portfolio.expertise.training, LIST_MAX.certifications],
+    ...portfolio.expertise.groups.map((group) => [
+      `portfolio.expertise.groups "${group.title}" items`,
+      group.items,
+      LIST_MAX.expertiseItems,
+    ]),
+    ...portfolio.experience.roles.map((role) => [
+      `portfolio.experience.roles "${role.title}" bullets`,
+      role.bullets,
+      LIST_MAX.bullets,
+    ]),
+  ];
+  for (const [where, list, most] of counts) {
+    if (list.length > most) problems.push(`${where}: ${list.length} items (max ${most})`);
   }
   const removed = JSON.stringify(content).match(REMOVED_TERMS);
   if (removed) problems.push(`content: "${removed[0]}" was removed from the site (FD-108)`);

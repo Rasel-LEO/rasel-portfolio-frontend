@@ -13,6 +13,7 @@ import { createServer } from 'node:http';
 import { extname, join, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { loadContent } from '../tools/content.mjs';
+import { LIST_MAX, validateContent } from '../tools/validate-content.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const slotsDir = join(root, '.slots');
@@ -56,6 +57,14 @@ export const MANY = {
   footerLinks: 8,
   options: 8,
   audiences: 6,
+  // 1.7.1: the Portfolio lists, measured at 320, 390, 768, 1024 and 1440 px (docs/handover-django.md
+  // § 14.1): the largest count that keeps every layout rule — the validator's LIST_MAX.
+  awards: LIST_MAX.awards,
+  education: LIST_MAX.education,
+  expertiseGroups: LIST_MAX.expertiseGroups,
+  expertiseItems: LIST_MAX.expertiseItems,
+  certifications: LIST_MAX.certifications,
+  bullets: LIST_MAX.bullets,
 };
 
 const WORDS = 'research hardware software sensors robotics analysis systems field data edge'.split(
@@ -70,9 +79,12 @@ const text = (n, seed = 0) => {
 const email = (n) => `${'long.address.name'.padEnd(n - '@example.org'.length, 'x')}@example.org`;
 
 const PAGES = ['index', 'portfolio', 'hire', 'contact', 'blog-post', 'privacy'];
+// 1.7.1: 768 and 1024 px as well, where the Portfolio grids change their columns.
 const SIZES = [
   { width: 320, height: 700 },
   { width: 390, height: 800 },
+  { width: 768, height: 1024 },
+  { width: 1024, height: 768 },
   { width: 1440, height: 900 },
 ];
 const THEMES = ['dark', 'light'];
@@ -161,6 +173,32 @@ function variantContent(name) {
   if (empty) xp.roles = [];
   else if (one) xp.roles = pick(xp.roles, 1);
   else if (max) xp.roles = Array.from({ length: MANY.roles }, (_, i) => role(i));
+
+  // 1.7.1: the Portfolio lists at 0, 1 and their maximum, repeating the real items (no new copy).
+  const repeat = (list, n) =>
+    Array.from({ length: n }, (_, i) => structuredClone(list[i % list.length]));
+  const sized = (list, key) =>
+    empty ? [] : one ? pick(list, 1) : max ? repeat(list, MANY[key]) : list;
+  const pf = c.portfolio;
+  pf.awards.items = sized(pf.awards.items, 'awards');
+  xp.education = sized(xp.education, 'education');
+  pf.expertise.training = sized(pf.expertise.training, 'certifications');
+  const allItems = pf.expertise.groups.flatMap((group) => group.items);
+  pf.expertise.groups = sized(pf.expertise.groups, 'expertiseGroups').map((group, k) => ({
+    ...group,
+    items: max
+      ? Array.from(
+          { length: MANY.expertiseItems },
+          (_, j) => allItems[(k * 3 + j) % allItems.length],
+        )
+      : group.items,
+  }));
+  xp.roles = xp.roles.map((r) => ({
+    ...r,
+    bullets: max
+      ? Array.from({ length: MANY.bullets }, (_, k) => text(MAX.role_bullet, k))
+      : r.bullets,
+  }));
 
   c.contact.intro = t('contact_intro', c.contact.intro);
   c.contact.audiences = empty
@@ -288,6 +326,24 @@ const scan = () => {
       }
     }
   }
+  // 1.7.1: a balanced grid — every row of the Expertise and Certifications grids starts at the
+  // list's edge with the first item's padding (no stray divider or indent on a wrapped row).
+  for (const list of document.querySelectorAll('.pf-groups, .pf-certs')) {
+    const items = [...list.children];
+    if (!items.length) continue;
+    const edge = list.getBoundingClientRect().left;
+    const inset = (li) =>
+      parseFloat(getComputedStyle(li).paddingLeft) +
+      parseFloat(getComputedStyle(li).borderLeftWidth);
+    items.forEach((li, i) => {
+      const left = li.getBoundingClientRect().left;
+      const rowStart =
+        i === 0 || Math.abs(left - edge) < 2 || left < items[i - 1].getBoundingClientRect().left;
+      if (rowStart && (Math.abs(left - edge) > 1 || Math.abs(inset(li) - inset(items[0])) > 1)) {
+        problems.push(`unbalanced grid: ${label(list)} item ${i}`);
+      }
+    });
+  }
   return problems;
 };
 
@@ -358,6 +414,23 @@ for (const name of names) {
       await expectCount('contact', '#contact-subject option', size('options'));
       await expectCount('hire', '#hire-kind option', size('options'));
       await expectCount('contact', '.form-aside ul.plain-list li', size('audiences'));
+      // 1.7.1: the Portfolio lists.
+      await expectCount('portfolio', '.pf-award', size('awards'));
+      await expectCount('portfolio', '#experience li.pf-entry', size('education'));
+      await expectCount('portfolio', '.pf-group', size('expertiseGroups'));
+      await expectCount('portfolio', '.pf-cert', size('certifications'));
+      if (many) {
+        await expectCount(
+          'portfolio',
+          '.pf-group:first-child .pf-group-items li',
+          MANY.expertiseItems,
+        );
+        await expectCount(
+          'portfolio',
+          '#experience article:first-of-type .pf-bullets li',
+          MANY.bullets,
+        );
+      }
       // The availability dot repeats the yes / no state.
       if (name !== 'empty') {
         await page.goto(`${site.url}/hire.html`);
@@ -369,3 +442,39 @@ for (const name of names) {
     });
   });
 }
+
+// 1.7.1: one item over a Portfolio list maximum fails the content check.
+test('the validator holds the Portfolio list maxima', () => {
+  const over = (change) => {
+    const c = structuredClone(loadContent());
+    change(c.portfolio, (list, n) =>
+      Array.from({ length: n + 1 }, (_, i) => list[i % list.length]),
+    );
+    return validateContent(c).join(' | ');
+  };
+  expect(validateContent(loadContent())).toEqual([]);
+  expect(over((p, more) => (p.awards.items = more(p.awards.items, LIST_MAX.awards)))).toContain(
+    'portfolio.awards.items',
+  );
+  expect(
+    over((p, more) => (p.experience.education = more(p.experience.education, LIST_MAX.education))),
+  ).toContain('portfolio.experience.education');
+  expect(
+    over((p, more) => (p.expertise.groups = more(p.expertise.groups, LIST_MAX.expertiseGroups))),
+  ).toContain('portfolio.expertise.groups');
+  expect(
+    over((p, more) => (p.expertise.training = more(p.expertise.training, LIST_MAX.certifications))),
+  ).toContain('portfolio.expertise.training');
+  expect(
+    over(
+      (p, more) =>
+        (p.expertise.groups[0].items = more(p.expertise.groups[0].items, LIST_MAX.expertiseItems)),
+    ),
+  ).toContain('items');
+  expect(
+    over(
+      (p, more) =>
+        (p.experience.roles[0].bullets = more(p.experience.roles[0].bullets, LIST_MAX.bullets)),
+    ),
+  ).toContain('bullets');
+});

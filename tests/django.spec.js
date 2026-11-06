@@ -39,7 +39,8 @@ test.describe('Blog empty state', () => {
     await page.goto(pagePath('blog.html'));
     await expect(page.locator('[data-post-category]')).toHaveCount(0);
     await expect(page.locator('[data-blog-empty]')).toBeVisible();
-    await expect(page.locator('[data-empty-all]')).toHaveText(site.blogPage.empty);
+    // 1.7.0: the empty state is one line and a link (sections/blog-empty.hbs); [data-empty-all] is gone.
+    await expect(page.locator('[data-blog-empty] p')).toHaveText(site.blogPage.empty);
   });
 
   test('a draft post URL answers 404', async ({ page }) => {
@@ -54,9 +55,16 @@ test.describe('404 page', () => {
   test('an unknown path answers 404 with the 404 page', async ({ page }) => {
     const response = await page.goto(pagePath('404.html'));
     expect(response.status()).toBe(404);
-    await expect(page.locator('main .eyebrow')).toHaveText('404');
+    // 1.7.0 (N1, N2): the large code is .not-found-code, not an eyebrow, and the four actions are
+    // Home, Projects, Blog and Contact.
+    await expect(page.locator('main .not-found-code')).toHaveText('404');
     await expect(page.locator('h1')).toHaveText('Page not found');
-    await expect(page.locator('.not-found-actions a')).toHaveText(['Home', 'Portfolio', 'Blog']);
+    await expect(page.locator('.not-found-actions a')).toHaveText([
+      'Home',
+      'Projects',
+      'Blog',
+      'Contact',
+    ]);
   });
 
   test('a mistyped project URL answers 404', async ({ page }) => {
