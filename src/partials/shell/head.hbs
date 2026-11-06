@@ -8,9 +8,16 @@ social cards. --}}
 <title>{{#if isHome}}{{profile.name}}{{else if shortTitle}}{{shortTitle}}{{else}}{{title}}{{/if}} — Ideatrium</title>
 <meta name="description" content="{{description}}" />
 <meta name="author" content="Rasel Al Mamun" />
-{{#if @root.noindex}}
+{{#if (or @root.noindex noindexPage)}}
 {{!-- FD-131: the two template pages repeat a generated page; search engines skip them. --}}
 <meta name="robots" content="noindex" />
+{{/if}}
+{{!-- FD-154: a list page's neighbours (Django: the same URL with ?page=N). --}}
+{{#if relPrev}}
+<link rel="prev" href="{{relPrev}}" />
+{{/if}}
+{{#if relNext}}
+<link rel="next" href="{{relNext}}" />
 {{/if}}
 {{#if siteUrl}}
 <link rel="canonical" href="{{siteUrl}}/{{pageFile}}" />
@@ -21,17 +28,17 @@ social cards. --}}
 <meta property="og:title" content="{{#if isHome}}{{profile.name}}{{else}}{{title}}{{/if}} — Ideatrium" />
 <meta property="og:description" content="{{description}}" />
 <meta property="og:type" content="{{#if ogType}}{{ogType}}{{else}}website{{/if}}" />
-{{!-- FD-139: the share image (public/, unhashed); absolute once SITE_URL is set (flat-pages). --}}
-<meta property="og:image" content="/images/brand/share-image-1200x630.png" />
+{{!-- FD-139: the share image (public/, unhashed); absolute once SITE_URL is set (flat-pages). 1.7.0: a project or post page passes its own, 1200 × 630, made from its card image at build time. --}}
+<meta property="og:image" content="{{#if shareImage}}{{shareImage}}{{else}}/images/brand/share-image-1200x630.png{{/if}}" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
-<meta property="og:image:type" content="image/png" />
-<meta property="og:image:alt" content="Ideatrium — by Rasel Al Mamun" />
+<meta property="og:image:type" content="{{#if shareImage}}image/jpeg{{else}}image/png{{/if}}" />
+<meta property="og:image:alt" content="{{#if shareAlt}}{{shareAlt}}{{else}}Ideatrium — by Rasel Al Mamun{{/if}}" />
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="{{#if isHome}}{{profile.name}}{{else}}{{title}}{{/if}} — Ideatrium" />
 <meta name="twitter:description" content="{{description}}" />
-<meta name="twitter:image" content="/images/brand/share-image-1200x630.png" />
-<meta name="twitter:image:alt" content="Ideatrium — by Rasel Al Mamun" />
+<meta name="twitter:image" content="{{#if shareImage}}{{shareImage}}{{else}}/images/brand/share-image-1200x630.png{{/if}}" />
+<meta name="twitter:image:alt" content="{{#if shareAlt}}{{shareAlt}}{{else}}Ideatrium — by Rasel Al Mamun{{/if}}" />
 {{!-- FD-139: the icons and the manifest are root files (public/), served at the site root. --}}
 <link rel="icon" href="/favicon.ico" sizes="32x32" />
 <link rel="icon" href="/favicon.svg" type="image/svg+xml" />

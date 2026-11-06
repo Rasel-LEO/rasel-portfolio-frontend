@@ -132,6 +132,10 @@
   }
 
   &:nth-child(3) {
+    --nav-text: 3.6em; // Projects
+  }
+
+  &:nth-child(4) {
     --nav-text: 3.7em; // Contact
   }
 
@@ -153,6 +157,21 @@
   @include media-breakpoint-up(lg) {
     margin-left: var(--s-3);
   }
+}
+
+// S4 (1.6.0): on the Hire me page the header's button is the current page — outlined (gold border,
+// no fill, gold text; --accent is AA on --bg-0 in both themes), aria-current="page"; everywhere
+// else it is the filled gold button.
+.hire-cta[aria-current="page"] {
+  --bs-btn-color: var(--accent);
+  --bs-btn-bg: transparent;
+  --bs-btn-border-color: var(--accent);
+  --bs-btn-hover-color: var(--accent);
+  --bs-btn-hover-bg: var(--accent-soft);
+  --bs-btn-hover-border-color: var(--accent);
+  --bs-btn-active-color: var(--accent);
+  --bs-btn-active-bg: var(--accent-soft);
+  --bs-btn-active-border-color: var(--accent);
 }
 
 .hire-cta-text {
@@ -283,6 +302,12 @@
   @include t-small;
 
   color: var(--fg-2);
+
+  // Phones: room under the bottom row for the photo itself (its height, its distance from the window's
+  // bottom and a gap), so at the page end it stands below the row, never over it.
+  @include media-breakpoint-down(md) {
+    padding-bottom: calc(var(--btt-h) + var(--btt-bottom) + var(--s-4));
+  }
 }
 
 .site-footer-main {
@@ -318,10 +343,19 @@
   color: var(--accent);
 }
 
+// FD-156: balanced lines on phones; one line from 1200 px, in small text (the brand column is
+// 416 px wide there).
 .footer-role {
   font-size: var(--type-body-size);
   line-height: var(--type-body-line-height);
   color: var(--fg-1);
+  text-wrap: balance;
+
+  @media (width >= 1200px) {
+    width: max-content;
+    max-width: calc(100% + var(--s-7));
+    font-size: var(--t-small);
+  }
 }
 
 .footer-affiliation {
@@ -380,15 +414,45 @@
   }
 }
 
-.footer-email {
-  margin-top: var(--s-2);
-  max-width: 100%;
-  overflow-wrap: anywhere;
+// FD-155: both addresses in one tight group under one envelope icon. Each row is 36 px high with a
+// 4 px hit area above and below (so the touch target stays 44 px); the text lines sit 12 px apart.
+.footer-emails {
+  display: flex;
+  gap: var(--s-3);
+  align-items: flex-start;
+  margin-top: var(--s-4);
+
+  .footer-icon {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    margin-top: var(--s-2);
+    color: var(--fg-1);
+  }
+
+  ul {
+    display: grid;
+    gap: 0;
+    min-width: 0;
+  }
 }
 
-// FD-145: the second address sits directly under the first.
-.footer-email-2 {
-  margin-top: var(--s-1);
+.footer-email {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  min-height: 36px;
+  color: var(--fg-0);
+  text-decoration: none;
+  overflow-wrap: anywhere;
+
+  &::after {
+    position: absolute;
+    inset-block: -4px;
+    inset-inline: 0;
+    content: "";
+  }
 }
 
 // Phones: LinkedIn and GitHub on one line.
@@ -415,23 +479,26 @@
   padding-right: max(0px, calc(var(--btt-slot) - (100vw - 100%) / 2));
   border-top: 1px solid var(--line);
 
+  // S2 (1.6.0): on phones too one row — the copyright with the Privacy Policy under it on the left,
+  // the Theme button on the right, centred on the row's height.
+  // Round 5 (FD-172): the row has its whole width; the always-shown photo never covers it because the
+  // page end has room for the photo below the row (.site-footer, below).
   @include media-breakpoint-down(md) {
-    flex-direction: column-reverse;
-    align-items: flex-start;
-    justify-content: center;
+    flex-wrap: nowrap;
+    gap: var(--s-4);
+    min-height: 0;
+    padding-right: 0;
   }
 }
 
-// FD-141: the AI-portrait disclosure under the copyright, small text.
+.footer-copyright {
+  white-space: nowrap;
+}
+
+// The copyright, with the Privacy Policy under it.
 .footer-legal {
   display: grid;
   gap: var(--s-1);
-}
-
-.footer-ai-note {
-  @include t-small;
-
-  color: var(--fg-2);
 }
 
 // FD-143: the Privacy Policy link in the legal block, small text with the 44 px touch target.
@@ -439,7 +506,7 @@
   font-size: var(--type-small-size);
 }
 
-.footer-theme {
+.theme-button {
   display: inline-flex;
   gap: var(--s-2);
   align-items: center;
@@ -492,7 +559,9 @@
   // fades, so it and the figure swap in one frame; before the hand-off (.is-held) the figure
   // is the portrait and the button is hidden and takes no pointer. Keyboard focus still shows
   // it at once, fully.
-  &.is-handoff {
+  // FD-173: .is-gliding while the hand-off glide writes its opacity and transform (stage-desktop.js).
+  &.is-handoff,
+  &.is-gliding {
     transition: none;
   }
 

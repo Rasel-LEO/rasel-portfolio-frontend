@@ -8,7 +8,6 @@
 // and the JSON answer is shown in place; when the background send cannot complete, the browser
 // posts the form instead. The server-rendered errors and status are kept on load, and a
 // status is brought into view. The Django templates add the action, CSRF and sending.
-// Also: the email Copy button.
 import { scrollToY } from '../core/scroll.js';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,7 +45,9 @@ function setError(control, message) {
 function mailtoHref(form, email) {
   const field = (name) => form.elements.namedItem(name)?.value.trim() ?? '';
   const subject =
-    form.dataset.form === 'hire' ? `Brief: ${field('kind')}` : field('subject') || 'Message';
+    form.dataset.form === 'hire'
+      ? ['Brief', field('kind')].filter(Boolean).join(': ')
+      : field('subject') || 'Message';
   const lines = [
     field('brief') || field('message'),
     '',
@@ -222,25 +223,19 @@ function initForm(form) {
   form.addEventListener('change', recheck);
 }
 
-function initCopy(button) {
-  const status = button.parentElement.querySelector('[data-copy-status]');
-  button.addEventListener('click', async () => {
-    let message = 'Email address copied';
-    try {
-      await navigator.clipboard.writeText(button.dataset.copyEmail);
-    } catch {
-      message = 'Copy did not work; select the address above.';
-    }
-    if (!status) return;
-    // Clear first so a second copy is announced again.
-    status.textContent = '';
-    requestAnimationFrame(() => {
-      status.textContent = message;
-    });
-  });
+// FD-156: "Start a brief" (top of Hire me) scrolls to the form (the browser, or Lenis) and moves focus
+// to its first field.
+function initStartBrief() {
+  const link = document.querySelector('[data-start-brief]');
+  const first = document.getElementById('hire-name');
+  if (!link || !first) return;
+  // After the jump (native or Lenis) has had its turn with the target.
+  link.addEventListener('click', () =>
+    requestAnimationFrame(() => requestAnimationFrame(() => first.focus({ preventScroll: true }))),
+  );
 }
 
 export function init() {
+  initStartBrief();
   for (const form of document.querySelectorAll('form[data-form]')) initForm(form);
-  for (const button of document.querySelectorAll('[data-copy-email]')) initCopy(button);
 }

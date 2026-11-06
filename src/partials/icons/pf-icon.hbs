@@ -5,8 +5,8 @@ monochrome iD icon (filled, currentColor), used only to link to the author's ORC
 brand guidelines allow; path data from Simple Icons (CC0-1.0), see docs/security.md. LinkedIn and
 GitHub are the footer's official marks (footer-icon.hbs).
 Usage: {{> icons/pf-icon name="pin"}} — pin, external, trophy, medal, ribbon, briefcase,
-mortarboard, chip, network, code, gear, document, orcid, scholar, scopus, researchgate, linkedin,
-github. `size` sets the box (default 24). --}}
+mortarboard, chip, network, code, gear, document, orcid, scholar, scopus, researchgate, wos, linkedin,
+github, download, link (the generic icon for any link type without its own, FD-151). `size` sets the box (default 24). --}}
 {{#if (or (eq name "linkedin") (eq name "github"))}}
 {{> icons/footer-icon name=name}}
 {{else if (eq name "orcid")}}
@@ -50,6 +50,13 @@ github. `size` sets the box (default 24). --}}
   <circle cx="9" cy="8" r="3.5" />
   <circle cx="16.5" cy="8.5" r="2.5" />
   <path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6M17 14c2.6.3 4.5 2.4 4.5 5.5" />
+  {{else if (eq name "wos")}}
+  <circle cx="12" cy="12" r="9" />
+  <path d="M3 12h18M12 3c2.5 2.5 3.5 5.5 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-5.5-3.5-9s1-6.5 3.5-9z" />
+  {{else if (eq name "download")}}
+  <path d="M12 4v11M7 11l5 5 5-5M5 20h14" />
+  {{else}}
+  <path d="M10 14a4 4 0 0 0 5.7 0l3-3a4 4 0 0 0-5.7-5.7l-1 1M14 10a4 4 0 0 0-5.7 0l-3 3a4 4 0 0 0 5.7 5.7l1-1" />
   {{/if}}
 </svg>
 {{/if}}

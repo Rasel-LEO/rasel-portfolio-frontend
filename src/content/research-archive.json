@@ -1,13 +1,15 @@
 {
-  "back_label": "Back to Portfolio",
-  "heading": "Research projects",
-  "intro": "IoT, automation and applied AI for agriculture.",
+  "back_label": "Portfolio",
+  "heading": "Projects",
+  "intro": "Research and software projects: IoT, edge AI, automation and applications.",
   "search_label": "Search projects",
   "search_placeholder": "Search by title or keyword…",
   "topic_label": "Topic",
   "topic_all": "All topics",
-  "count_label": "Showing {shown} of {total} projects",
-  "empty": "No project matches. Try another keyword or topic.",
+  "search_button": "Search",
+  "results_heading": "Project results",
+  "clear_label": "Clear filters",
+  "empty": "No projects match your search.",
   "topics": [
     {
       "id": "poultry",

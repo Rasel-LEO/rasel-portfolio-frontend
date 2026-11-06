@@ -1,35 +1,35 @@
 {{!-- Author: Rasel Al Mamun --}}
-{{!-- Home "Selected work" card (FD-102). Context: a featured project from tools/content.mjs;
-`tag` is the title's heading level. `large` makes it the one large card: the amber `eyebrow`
-("Featured project"), the role line, a larger title and summary, the period. Small cards show
-the role as their label. Short title, summary and tags (pills, FD-110; `cardTags`: featured_tags or all tags)
-here; the full ones are on the project page.
-The action is stretched over the card. --}}
+{{!-- Home "Selected work" card (FD-102, 1.7.0). Context: a featured project from tools/content.mjs;
+`tag` is the title's heading level. `large` makes it the one large card: the project's card image on
+top (a band of the 16:9 image, object-fit: cover, centred: the subject sits in the centre band), then the
+amber `eyebrow` ("Featured project"), the role line, the title and the card description, the period.
+Small cards show the role line as their label and have no image, as in 1.6.0. Title, description and
+the three card tags (pills, FD-110; `cardTags`) here; the full ones are on the project page. The
+action is stretched over the card. --}}
 <article class="card work-card{{#if large}} work-card-large{{/if}}" data-reveal>
   {{#if large}}
-  <p class="t-label work-eyebrow mb-0">{{eyebrow}}</p>
-  <p class="t-meta work-role-line mb-0">{{featured_role_line}}</p>
-  <{{tag}} class="t-h2 card-title mb-0">{{short_title}}</{{tag}}>
-  <p class="t-body-l work-summary mb-0">{{short_summary}}</p>
+  <div class="blog-cover work-cover">
+    {{> components/card-image image=card_image decorative=true sizes="(min-width: 992px) 58vw, 100vw"}}
+  </div>
+  <div class="work-card-body">
+    <p class="t-label work-eyebrow mb-0">{{eyebrow}}</p>
+    <p class="t-meta work-role-line mb-0">{{role_line}}</p>
+    <{{tag}} class="t-h3 card-title mb-0">{{short_title}}</{{tag}}>
+    <p class="work-summary mb-0">{{card_description}}</p>
+    {{#if period}}
+    <p class="t-meta work-period mb-0">{{period}}</p>
+    {{/if}}
+    {{> components/tag-pills tags=cardTags withStatus=true}}
+    {{> sections/work-link}}
+  </div>
   {{else}}
-  <p class="t-label work-role mb-0">{{role}}</p>
+  <p class="t-label work-role mb-0">{{role_line}}</p>
   <{{tag}} class="t-h3 card-title mb-0">{{short_title}}</{{tag}}>
-  <p class="work-summary mb-0">{{short_summary}}</p>
-  {{/if}}
+  <p class="work-summary mb-0">{{card_description}}</p>
   {{#if period}}
   <p class="t-meta work-period mb-0">{{period}}</p>
   {{/if}}
   {{> components/tag-pills tags=cardTags withStatus=true}}
-  <a class="work-link stretched-link" href="/{{file}}" aria-label="View project: {{short_title}}"
-    ><span class="link">View project</span
-    ><svg
-      class="icon icon-arrow"
-      viewBox="0 0 24 24"
-      width="20"
-      height="20"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <path d="M5 12h14M13 6l6 6-6 6" /></svg
-  ></a>
+  {{> sections/work-link}}
+  {{/if}}
 </article>

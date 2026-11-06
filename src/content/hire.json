@@ -1,6 +1,7 @@
 {
   "heading": "Three ways to work with me",
-  "availability": "Open to research collaborations and selected projects.",
+  "availability": "Available for new projects and research collaborations.",
+  "available": true,
   "services": [
     {
       "n": "01",
@@ -32,7 +33,7 @@
       "summary": "Technical guidance and applied AI.",
       "items": ["Technical consulting", "AI model development", "AI agent development"],
       "evidence": {
-        "label": "View research projects",
+        "label": "View projects",
         "href": "portfolio.html#research"
       }
     }

@@ -11,11 +11,12 @@
   </div>
   <nav aria-label="Menu">
     <ul class="list-unstyled mb-0 drawer-links">
-      <li><a href="/index.html"{{{ariaCurrent "home"}}}>Home<span class="drawer-sub" aria-hidden="true">01</span></a></li>
+      <li><a href="/index.html"{{{ariaCurrent "home"}}}>Home<span class="drawer-sub">Overview</span></a></li>
       <li><a href="/portfolio.html"{{{ariaCurrent "portfolio"}}}>Portfolio<span class="drawer-sub">Publications · Projects · Awards</span></a></li>
-      <li><a href="/blog.html"{{{ariaCurrent "blog"}}}>Blog<span class="drawer-sub">Tech · Agri engineering · Education</span></a></li>
+      <li><a href="/blog.html"{{{ariaCurrent "blog"}}}>Blog<span class="drawer-sub">Agri engineering · Tech review · Education</span></a></li>
+      <li><a href="/research.html"{{{ariaCurrent "projects"}}}>Projects<span class="drawer-sub">Research · Software</span></a></li>
       <li><a href="/hire.html"{{{ariaCurrent "hire"}}}>Hire me<span class="drawer-sub">Services</span></a></li>
-      <li><a href="/contact.html"{{{ariaCurrent "contact"}}}>Contact<span class="drawer-sub" aria-hidden="true">05</span></a></li>
+      <li><a href="/contact.html"{{{ariaCurrent "contact"}}}>Contact<span class="drawer-sub">Email · Form</span></a></li>
     </ul>
   </nav>
   <div class="drawer-tools">
@@ -23,7 +24,7 @@
       Hire me
       <svg class="icon icon-arrow" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M5 12h14M13 6l6 6-6 6" /></svg>
     </a>
-    {{> components/cv-button variant="btn-secondary"}}
-    <button type="button" class="btn btn-secondary js-only" data-theme-toggle aria-label="Theme: dark">Theme</button>
+    {{> components/cv-button variant="btn-secondary" icon=true}}
+    {{> components/theme-button state=true}}
   </div>
 </div>

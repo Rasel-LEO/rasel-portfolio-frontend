@@ -37,7 +37,7 @@ test.describe('Blog list', () => {
       );
       const link = item.getByRole('link', { name: post.title });
       await expect(link).toHaveAttribute('href', pagePath(post.file));
-      await expect(item.locator('.blog-card-excerpt')).toHaveText(post.standfirst);
+      await expect(item.locator('.blog-card-excerpt')).toHaveText(post.card_description);
     }
     await expect(page.locator('[data-blog-empty]')).toBeHidden();
   });
@@ -47,56 +47,40 @@ test.describe('Blog list', () => {
       isDjango,
       'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
     );
-    const group = page.getByRole('group', { name: 'Filter posts by category' });
+    const group = page.getByRole('navigation', { name: 'Blog categories' });
     await expect(group).toBeVisible();
-    const count = page.locator('[data-category-count]');
-    await expect(count).toHaveAttribute('aria-live', 'polite');
-    await expect(count).toHaveText('3 drafts');
+    const count = page.locator('.blog-count');
+    await expect(count).toHaveText('3 articles');
 
     for (const category of site.categories) {
-      const button = group.getByRole('button', { name: category.label });
+      const button = group.getByRole('link', { name: category.label });
       await button.click();
-      await expect(button).toHaveAttribute('aria-pressed', 'true');
-      await expect(group.getByRole('button', { name: 'All' })).toHaveAttribute(
-        'aria-pressed',
-        'false',
+      await expect(button).toHaveAttribute('aria-current', 'page');
+      await expect(group.getByRole('link', { name: 'All' })).not.toHaveAttribute(
+        'aria-current',
+        'page',
       );
-      await expect(count).toHaveText(`1 draft in ${category.label}`);
+      await expect(count).toHaveText(`1 article in ${category.label}`);
       const visible = page.locator('[data-post-category]:visible');
       await expect(visible).toHaveCount(1);
       await expect(visible).toHaveAttribute('data-post-category', category.id);
     }
-    await group.getByRole('button', { name: 'All' }).click();
+    await group.getByRole('link', { name: 'All' }).click();
     await expect(page.locator('[data-post-category]:visible')).toHaveCount(3);
-    await expect(count).toHaveText('3 drafts');
-  });
-
-  test('a category without posts shows the empty state', async ({ page }) => {
-    test.skip(
-      isDjango,
-      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
-    );
-    // The data has one post per category, so take one out of the page for this check.
-    await page.locator('[data-post-category="education"]').evaluate((el) => el.remove());
-    await page.getByRole('button', { name: 'Education' }).click();
-    const empty = page.locator('[data-blog-empty]');
-    await expect(empty).toBeVisible();
-    await expect(empty).toContainText(site.blogPage.empty_category);
-    await page.getByRole('button', { name: 'All' }).click();
-    await expect(empty).toBeHidden();
+    await expect(count).toHaveText('3 articles');
   });
 });
 
 test.describe('Blog without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('every post is listed with its category label; no filter buttons', async ({ page }) => {
+  test('every post is listed with its category label; the tabs are links', async ({ page }) => {
     test.skip(
       isDjango,
       'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
     );
     await page.goto('/blog.html');
-    await expect(page.locator('[data-category-filter]')).toBeHidden();
+    await expect(page.getByRole('navigation', { name: 'Blog categories' })).toBeVisible();
     await expect(page.locator('[data-post-category]:visible')).toHaveCount(3);
     for (const post of posts) {
       await expect(page.getByRole('link', { name: post.title })).toBeVisible();
@@ -118,19 +102,24 @@ test.describe('Post pages', () => {
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.locator('h1')).toHaveText(post.title);
 
+      // P4, S5 (1.6.0): "← Blog / Category" — the category opens the filtered Blog.
       const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
       await expect(crumbs.getByRole('link', { name: 'Blog' })).toHaveAttribute(
         'href',
         pagePath('blog.html'),
       );
-      await expect(crumbs).toContainText(post.categoryLabel);
+      await expect(crumbs.getByRole('link', { name: post.categoryLabel })).toHaveAttribute(
+        'href',
+        pagePath(`blog-category-${post.category}.html`),
+      );
       await expect(page.locator('.entry-meta')).toHaveText(`${post.minutes} min read`);
       await expect(page.locator('.page-head .chip-draft')).toHaveText('Draft');
       await expect(page.locator('.prose .standfirst')).toHaveText(post.standfirst);
       await expect(page.locator('.prose h2')).toHaveCount(2);
       await expect(page.locator('.prose pre.prose-code code')).toHaveCount(1);
-      await expect(page.locator('.prose figure .media-ph-caption')).toHaveText(/^\[Figure: .+\]$/);
-      await expect(page.getByRole('link', { name: 'Back to the blog' })).toHaveAttribute(
+      await expect(page.locator('.prose figure.fig figcaption')).toHaveCount(post.figures.length);
+      await expect(page.locator('.prose figure.fig .fig-label').first()).toHaveText('Figure 1.');
+      await expect(page.getByRole('link', { name: 'Back to all articles' })).toHaveAttribute(
         'href',
         pagePath('blog.html'),
       );
@@ -138,7 +127,16 @@ test.describe('Post pages', () => {
       // FD-114: the sidebar's More posts replaces the previous / next pager.
       const more = page.getByRole('navigation', { name: 'More posts' });
       await expect(more.getByRole('link')).toHaveCount(posts.length - 1);
-      await expect(page.locator('[rel="prev"], [rel="next"]')).toHaveCount(0);
+      // P3 (1.6.0): Previous / Next article above the footer; a side is absent where there is none.
+      const index = posts.indexOf(post);
+      const pager = page.getByRole('navigation', { name: 'More articles' });
+      await expect(page.locator('a[rel="prev"]')).toHaveCount(index > 0 ? 1 : 0);
+      await expect(page.locator('a[rel="next"]')).toHaveCount(index < posts.length - 1 ? 1 : 0);
+      if (index > 0) {
+        await expect(pager.locator('a[rel="prev"]')).toContainText('Previous article');
+        await expect(pager.locator('a[rel="prev"]')).toContainText(posts[index - 1].title);
+        await expect(pager.locator('a[rel="prev"]')).toContainText(posts[index - 1].categoryLabel);
+      }
 
       await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
       // FD-39: the standfirst once written (FD-103), else a generic line.
@@ -219,21 +217,21 @@ test.describe('Markdown (FD-37)', () => {
   test('code and tables are named regions that scroll inside the measure', () => {
     const html = renderMarkdown('```js\nx\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |');
     expect(html).toContain(
-      '<pre class="prose-code" tabindex="0" role="region" aria-label="Code sample (js)">',
+      '<pre class="prose-code" tabindex="0" role="region" aria-label="Code block 1, scrollable">',
     );
     expect(html).toContain(
-      '<div class="prose-table" tabindex="0" role="region" aria-label="Table 1"><table>',
+      '<div class="prose-table" tabindex="0" role="region" aria-label="Table 1, scrollable"><table>',
     );
     expect(html).toContain('</table></div>');
     // 1.5.0: each table region has its own name, numbered in the post (no repeated "Table"); a
     // new post starts at 1 again.
     const table = '| a | b |\n|---|---|\n| 1 | 2 |';
     const two = renderMarkdown(`${table}\n\ntext\n\n${table}`);
-    expect(two).toContain('aria-label="Table 1"><table>');
-    expect(two).toContain('aria-label="Table 2"><table>');
+    expect(two).toContain('aria-label="Table 1, scrollable"><table>');
+    expect(two).toContain('aria-label="Table 2, scrollable"><table>');
     expect(two).not.toContain('aria-label="Table"');
     expect(two.match(/<\/table><\/div>/g)).toHaveLength(2);
-    expect(renderMarkdown(table)).toContain('aria-label="Table 1"');
+    expect(renderMarkdown(table)).toContain('aria-label="Table 1, scrollable"');
   });
 
   test('links other than http(s), mailto and site paths fail the build', () => {
@@ -266,8 +264,8 @@ test.describe('Drafts (FD-36)', () => {
     const one = buildSite(published, { showDrafts: false });
     expect(one.postList.map((post) => post.slug)).toEqual([content.blog[1].slug]);
     expect(one.postList[0].draft).toBe(false);
-    expect(one.postList[0].prev).toBeUndefined();
-    expect(one.postList[0].next).toBeUndefined();
+    expect(one.postList[0].prev).toBeNull();
+    expect(one.postList[0].next).toBeNull();
   });
 
   test('a SHOW_DRAFTS=false build has an empty Blog and no post pages', () => {
@@ -290,7 +288,6 @@ test.describe('Drafts (FD-36)', () => {
       expect(blog).not.toMatch(/data-blog-empty\s+hidden/);
       expect(blog).not.toContain('data-category-filter');
       expect(blog).not.toContain('data-draft-label');
-      expect(blog).not.toContain(site.blogPage.eyebrow_draft);
 
       // No draft title, page link or BlogPosting anywhere in the release build.
       for (const file of files) {

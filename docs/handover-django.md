@@ -2,7 +2,7 @@
 
 Author: Rasel Al Mamun
 
-This document describes how the static frontend (v1.5.1) becomes the templates and static
+This document describes how the static frontend (v1.6.0) becomes the templates and static
 files of the Django site. The frontend stays the reference: the Django pages should render
 the same HTML as `dist/` for the same content, apart from the template tags listed here.
 Decision ids (FD-xx) refer to `docs/decisions.md`.
@@ -87,17 +87,15 @@ parameters become `with` arguments (`{{> components/field id="hire-name" …}}` 
 | `shell/page-wipe`, `shell/header`, `shell/drawer`, `shell/footer`, `shell/back-to-top`           | every page                                                                                                                                                                            |
 | `components/cv-button`                                                                           | Home, Portfolio, Hire me, drawer                                                                                                                                                      |
 | `components/field`                                                                               | Hire me, Contact (label, control, hint, error region)                                                                                                                                 |
-| `components/email-box`                                                                           | Hire me, Contact (email + Copy button)                                                                                                                                                |
 | `components/pf-tabs`                                                                             | Portfolio, publications                                                                                                                                                               |
 | `components/status-chip`, `components/tag-pills`                                                 | project cards, archive cards, project page                                                                                                                                            |
-| `components/project-image`                                                                       | project page                                                                                                                                                                          |
+| `components/card-image`                                                                          | project and post cards, page-top image (1.7.0)                                                                                                                                        |
 | `components/draft-chip`                                                                          | post page (draft builds only)                                                                                                                                                         |
 | `sections/work-card`, `sections/home-pub`, `sections/latest-card`, `sections/service`            | Home (service also Hire me)                                                                                                                                                           |
 | `sections/pf-card`, `sections/pf-pub`, `sections/articles-ld`                                    | Portfolio (pf-pub and articles-ld also publications)                                                                                                                                  |
 | `sections/archive-card`                                                                          | research                                                                                                                                                                              |
 | `sections/related-pub`                                                                           | project page                                                                                                                                                                          |
 | `sections/blog-card`, `sections/blog-empty`                                                      | Blog                                                                                                                                                                                  |
-| `sections/profile-links`                                                                         | Contact                                                                                                                                                                               |
 | `samples/rich-post`, `samples/rich-overview`                                                     | the two template pages only (FD-142): Django's own rich-content output, the parity reference; no Django include                                                                       |
 | `icons/area-icon`, `icons/line-icon`, `icons/pf-icon`, `icons/footer-icon`, `icons/illustration` | inline SVG icons by name; in Django one include per icon set with an `{% if name == … %}` chain, or a template tag                                                                    |
 | `icons/logo-symbols` (in `shell/header`), `icons/logo`, `icons/logo-mark`                        | every page: the Ideatrium logo geometry once per page as `<symbol>`s, drawn by `<use>` in the header, drawer and footer (FD-139); keep the fixed `width` / `height` and `aria-hidden` |
@@ -115,31 +113,38 @@ text "(opens in a new tab)", FD-76); `authors` (the site author in `<strong>`) �
 `src/content/*.json` is the content model. Proposed Django models (fields as in the JSON;
 `*` optional):
 
-| Model                  | Fields                                                                                                                                                                                                                          | Source                                                       |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `Profile` (single)     | name, full_name, citation_names (list), position, department, institution, location, affiliation_short, eyebrow, role_line, statement, summary, email, secondary_email, languages (list), cv (file*), research_interests (list) | `profile.json`                                               |
-| `Link`                 | key (`id`), label, handle, url, order                                                                                                                                                                                           | `links.json`                                                 |
-| `Publication`          | key, year, type (journal / conference), first_author (bool), title, venue, details, display_details*, doi, project (FK Project*)                                                                                                | `publications.json`                                          |
-| `PublicationAuthor`    | publication (FK), name, is_me (bool), order                                                                                                                                                                                     | `publications.json` `authors`                                |
-| `Project`              | slug (`id`), title, short_title, short_summary, role, period, status, topic (FK Topic), contribution, featured (bool), featured_order*, featured_large*, featured_role_line*, tags (M2M Tag), featured_tags (M2M Tag*)          | `projects.json`                                              |
-| `ProjectDetail`        | project (1:1), summary_line, facts (role, institution, unit, technology, output), system_note, overview, context; contribution items (ordered list)                                                                             | `projects.json` `detail`                                     |
-| `ProjectBlock`         | project (FK), kind (system / result), icon, title, text, order                                                                                                                                                                  | `detail.system`, `detail.results`                            |
-| `Topic`                | key, label, icon                                                                                                                                                                                                                | `research-archive.json` `topics`                             |
-| `Award`                | year, title, by; Portfolio card: kind, highlight, icon                                                                                                                                                                          | `awards.json`, `portfolio.json` `awards.items`               |
-| `Education`            | year, degree, institution, thesis                                                                                                                                                                                               | `education.json`, `portfolio.json` `experience.education`    |
-| `Role` (experience)    | title, period, unit, institution, text, bullets (list), order                                                                                                                                                                   | `portfolio.json` `experience.roles`                          |
-| `Certification`        | title, by                                                                                                                                                                                                                       | `certifications.json`, `portfolio.json` `expertise.training` |
-| `SkillGroup`           | group, icon*, items (list), order                                                                                                                                                                                               | `skills.json`, `portfolio.json` `expertise.groups`           |
-| `Post`                 | slug, title, short_title, standfirst, category (FK Category), status (draft / published), date* (published), body (Markdown), cover (illustration key + alt, later an image)                                                    | `blog.json`, `posts/<slug>.md`, `blog-page.json` `covers`    |
-| `Category`             | key, label, order                                                                                                                                                                                                               | `blog-page.json` `categories`                                |
-| `Service`              | number, title, summary, items (list), evidence label + url                                                                                                                                                                      | `hire.json` `services`                                       |
-| `Field` (area of work) | label, target, icon, order                                                                                                                                                                                                      | `fields.json`                                                |
-| Page copy              | one settings-style model (or a JSON field) per block: home, portfolio, blog page, post sidebar, research archive, hire, contact, footer, meta descriptions, memberships, activities                                             | the remaining files                                          |
+| Model                  | Fields                                                                                                                                                                                                                                                                                  | Source                                                       |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `Profile` (single)     | name, full_name, citation_names (list), position, second_role, department, institution, location, location_line, affiliation_short, eyebrow, eyebrow_short, role_line, author_line, statement, summary, email, secondary_email, languages (list), cv (file*), research_interests (list) | `profile.json`                                               |
+| `Link`                 | key (`id`), label, handle, url, order                                                                                                                                                                                                                                                   | `links.json`                                                 |
+| `Publication`          | key, year, type (journal / conference), first_author (bool), title, venue, details, display_details*, doi, project (FK Project*)                                                                                                                                                        | `publications.json`                                          |
+| `PublicationAuthor`    | publication (FK), name, is_me (bool), order                                                                                                                                                                                                                                             | `publications.json` `authors`                                |
+| `Project`              | slug (`id`), title, short_title, short_summary, role, period, status, topic (FK Topic), contribution, featured (bool), featured_order*, featured_large*, featured_role_line*, tags (M2M Tag), featured_tags (M2M Tag*)                                                                  | `projects.json`                                              |
+| `ProjectDetail`        | project (1:1), summary_line, facts (role, institution, unit, technology, output), system_note, overview, context; contribution items (ordered list)                                                                                                                                     | `projects.json` `detail`                                     |
+| `ProjectBlock`         | project (FK), kind (system / result), icon, title, text, order                                                                                                                                                                                                                          | `detail.system`, `detail.results`                            |
+| `Topic`                | key, label, icon                                                                                                                                                                                                                                                                        | `research-archive.json` `topics`                             |
+| `Award`                | year, title, by; Portfolio card: kind, highlight, icon                                                                                                                                                                                                                                  | `awards.json`, `portfolio.json` `awards.items`               |
+| `Education`            | year, degree, institution, thesis                                                                                                                                                                                                                                                       | `education.json`, `portfolio.json` `experience.education`    |
+| `Role` (experience)    | title, period, unit, institution, text, bullets (list), order                                                                                                                                                                                                                           | `portfolio.json` `experience.roles`                          |
+| `Certification`        | title, by                                                                                                                                                                                                                                                                               | `certifications.json`, `portfolio.json` `expertise.training` |
+| `SkillGroup`           | group, icon*, items (list), order                                                                                                                                                                                                                                                       | `skills.json`, `portfolio.json` `expertise.groups`           |
+| `Post`                 | slug, title, short_title, standfirst, category (FK Category), status (draft / published), date* (published), body (Markdown), cover (illustration key + alt, later an image)                                                                                                            | `blog.json`, `posts/<slug>.md`, `blog-page.json` `covers`    |
+| `Category`             | key, label, order                                                                                                                                                                                                                                                                       | `blog-page.json` `categories`                                |
+| `Service`              | number, title, summary, items (list), evidence label + url                                                                                                                                                                                                                              | `hire.json` `services`                                       |
+| `Field` (area of work) | label, target, icon, order                                                                                                                                                                                                                                                              | `fields.json`                                                |
+| Page copy              | one settings-style model (or a JSON field) per block: home, portfolio, blog page, post sidebar, research archive, hire, contact, footer, meta descriptions, memberships, activities                                                                                                     | the remaining files                                          |
+
+**CV download (1.5.2, FD-146): Django must serve `/cv/Rasel_Al_Mamun_CV.pdf`.** Every CV action
+(`components/cv-button`: Home, Portfolio, Hire me, drawer) is a plain link "Download CV (PDF)" to
+that site-root URL (`Profile.cv.href`; not under `/static/frontend/`), without a `download`
+attribute so the PDF opens in the browser. Serve the real file there with
+`Content-Type: application/pdf`; until it exists the link 404s. The PDF is not in the frontend
+repository: `dist/` carries a placeholder only for the frontend's own preview and tests, and
+`dist-django/` and the public export never contain a PDF. The old CV-request `mailto:` is gone.
 
 New field in 1.5.1 (FD-145): `Profile.secondary_email` (`mr.raselalmamun@gmail.com`), shown after
 `email` as its own `mailto:` link named "Email <address>" in `shell/footer` (every page), the
-Home contact band (`index`), and `components/email-box` (Contact, Hire me). The CV request
-`mailto:`, the form's static mailto and Copy button, the Person JSON-LD and the Privacy Policy use
+Home contact band (`index`) (the Contact and Hire me "Direct" card and the Copy button were removed in 1.6.0, round 5). The form's static mailto, the Person JSON-LD and the Privacy Policy use
 `email` only.
 
 New copy keys in 1.4.0 (FD-139, FD-140, FD-141): `footer.signature_by` ("by Rasel Al Mamun",
@@ -445,9 +450,241 @@ read `src/` and `dist/`; their Django equivalents are model and view tests.
 
 - Blog posts: the three posts are drafts with `[bracketed]` bodies; final text, dates and
   `status: published`.
-- The public CV PDF (`docs/content/web-cv.md` is its text; `profile.cv` is `null`).
+- The public CV PDF, served at `/cv/Rasel_Al_Mamun_CV.pdf` (`docs/content/web-cv.md` is its text; `profile.cv.href` is that path, FD-146).
 - Final project photographs (`[Photo: …]` placeholders stay until supplied) and a larger
   original hero photograph (the hero stays 720 px wide until then, FD-130).
 - Poultry AIoT project details: the M.S. thesis project (in progress) has no `detail` block yet,
   so its page shows the summary fields only.
 - The domain (`SITE_URL`): canonical URLs, absolute social images, sitemap.
+
+## 14. Release 1.6.0: dynamic slots, two phases, final content
+
+Release 1.6.0 applies the final site-basics content (Phase 1) and prepares every text Django
+will make editable. Decisions FD-147 … FD-153 (`docs/decisions.md`). The sample values are in
+`src/content/*.json` and mirrored in `docs/content/public-content.json`; the Django step copies
+the profile data from there.
+
+### 14.1 Django-owned texts
+
+Every row is a **slot**: it renders from one value, **hides cleanly when the value is empty** and
+holds its **maximum length** at 320, 390 and 1440 px in both themes, without overflow, clipping or
+overlap. Lengths are characters; `tests/slots.spec.js` builds the site with empty, one-item and
+maximum samples (the constants `MAX` and `MANY` in that file are this table). Words, not unbroken
+strings, are assumed except for emails and URLs, which break anywhere.
+
+| Key (JSON path)                                                                                        | Slot                                                        | Page(s)                             | Max length                                                                               | Empty →                                                                        |
+| ------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- | ----------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `profile.second_role`                                                                                  | second role; Person `worksFor` (not shown)                  | structured data, every page         | 40                                                                                       | no `worksFor`                                                                  |
+| `profile.eyebrow`                                                                                      | hero eyebrow, desktop (≥ 768 px)                            | Home                                | 100                                                                                      | whole eyebrow line hidden                                                      |
+| `profile.eyebrow_short`                                                                                | hero eyebrow, mobile (< 768 px)                             | Home                                | 48                                                                                       | falls back to `eyebrow`                                                        |
+| `profile.role_line`                                                                                    | hero role line **and** footer role line (one value, FD-148) | Home, footer (every page)           | 70                                                                                       | both lines hidden                                                              |
+| `profile.statement`                                                                                    | introduction                                                | Portfolio top                       | 300                                                                                      | paragraph hidden                                                               |
+| `portfolio.profile.summary_line`                                                                       | summary line                                                | Portfolio top                       | 140                                                                                      | line hidden                                                                    |
+| `profile.summary`                                                                                      | search description                                          | Portfolio `<meta>`                  | 160                                                                                      | empty description                                                              |
+| `portfolio.profile.eyebrow`                                                                            | Portfolio eyebrow                                           | Portfolio top                       | 100                                                                                      | line hidden                                                                    |
+| `portfolio.profile.location_line`                                                                      | location line                                               | Portfolio top                       | 60                                                                                       | line (and pin) hidden                                                          |
+| `profile.author_line`                                                                                  | post author line                                            | post page, author card              | 100                                                                                      | line hidden                                                                    |
+| `hire.availability`                                                                                    | availability line                                           | Hire me                             | 100                                                                                      | line hidden                                                                    |
+| `hire.available` (bool)                                                                                | availability dot: filled green = yes, hollow = no           | Hire me                             | —                                                                                        | no dot without the line                                                        |
+| `profile.email`, `profile.secondary_email`                                                             | both emails (each its own `mailto:`)                        | footer, Home band, Contact, Hire me | 40 each                                                                                  | that address (and, for the first, the Copy button) hidden                      |
+| `links[]` label, url, id                                                                               | profile links                                               | Portfolio top, Contact "Elsewhere"  | label 28; 0 / 1 / 9 links                                                                | block hidden at 0 links                                                        |
+| `footer.research_profiles`, `footer.connect_profiles` (link ids)                                       | footer groups                                               | footer (every page)                 | 0 / 1 / 8 links each                                                                     | group hidden at 0 links                                                        |
+| `fields[]` label, target, icon, order                                                                  | Areas of work                                               | Home screen 2                       | label 28; 0 / 1 / 8 areas                                                                | block hidden at 0 areas                                                        |
+| `hire.services[]` number, title, summary, items, evidence label and link                               | Hire me services                                            | Hire me, Home band                  | title 40, summary 90, item 50 (4 items), label 28; 0 / 1 / 4 services                    | block hidden at 0; the evidence link hides if its label or link is empty       |
+| `portfolio.experience.roles[]` title, period, unit, institution, text, bullets                         | experience roles                                            | Portfolio                           | title 40, period 30, unit 40, institution 50, text 160, 3 bullets of 60; 0 / 1 / 5 roles | column hidden at 0; an empty `unit` hides the unit line                        |
+| `contact.subjects[]`, `hire.form_kinds[]`                                                              | form options                                                | Contact, Hire me                    | 30 / 40 each; 0 / 1 / 8 options                                                          | the select is omitted at 0                                                     |
+| `contact.intro`, `contact.audiences[]`                                                                 | Contact intro and audiences                                 | Contact                             | intro 120; audience 60 each; 0 / 1 / 6 audiences                                         | intro or list hidden                                                           |
+| page `<title>` and search descriptions (`meta.*`, `profile.summary`, the projects archive description) | `<head>`                                                    | every page                          | title ≤ 60, description ≤ 160                                                            | —                                                                              |
+| `footer.ai_portrait_shown` (bool)                                                                      | AI-portrait note                                            | footer (every page)                 | —                                                                                        | note hidden when false (true now; false once no AI-generated portrait is left) |
+| `profile.cv.href`                                                                                      | "Download CV (PDF)" links, with a download icon             | Home, Portfolio, Hire me, drawer    | —                                                                                        | every CV link hidden when empty                                                |
+
+Fixed (changing it needs a release): brand, layout, Home screen 2 (headline, highlight, pillars),
+the working process, headings and interface labels. The Home field list's link targets are data,
+but the list itself stays plain text (FD-87); the targets (`portfolio.html#research`,
+`#expertise`, `#publications`, `hire.html`) are real anchors and a test checks each one.
+
+Profile link icons: a link type without its own icon (an id other than `orcid`, `scholar`,
+`scopus`, `wos`, `researchgate`, `linkedin`, `github`) shows the generic **link** icon
+(`icons/footer-icon.hbs`, `icons/pf-icon.hbs`); Web of Science (`wos`) has its own. Footer groups
+take any number of links.
+
+### 14.2 Two phases (the frontend shows Phase 1 only)
+
+The frontend builds **Phase 1** (until 12 December 2026). There is no date switch. The Phase 2
+values below must be admin-editable in Django, so the change on 12 December 2026 is an edit of
+text, not a release. "Research Assistant" must not appear anywhere after that date.
+
+| Text                                   | Phase 1 (now → 12 Dec 2026)                                                                                                                                                                             | Phase 2 (from 12 Dec 2026)                                                                                                          |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| Hero eyebrow, desktop (`eyebrow`)      | Founder, Ideatrium · Research Assistant, Bangladesh Agricultural University                                                                                                                             | Founder, Ideatrium · Agricultural engineer and software developer                                                                   |
+| Hero eyebrow, mobile (`eyebrow_short`) | Founder, Ideatrium · Research Assistant, BAU                                                                                                                                                            | Founder, Ideatrium · Engineer and developer                                                                                         |
+| Portfolio eyebrow                      | Founder, Ideatrium · Research Assistant, Bangladesh Agricultural University                                                                                                                             | Founder, Ideatrium · Agricultural engineer and software developer                                                                   |
+| Location line (`location_line`)        | Farm Power and Machinery · Mymensingh, Bangladesh                                                                                                                                                       | Mymensingh, Bangladesh                                                                                                              |
+| Post author line (`author_line`)       | Founder, Ideatrium · Research Assistant, Bangladesh Agricultural University                                                                                                                             | Founder, Ideatrium · Agricultural engineer and software developer                                                                   |
+| Main position (`position`)             | Research Assistant (second role: Founder, Ideatrium)                                                                                                                                                    | Founder, Ideatrium (no longer joined to BAU)                                                                                        |
+| Research Assistant period and tense    | "Jan 2024 – present"; "I develop an IoT-based monitoring and control system with AI-edge computing for poultry farm management."                                                                        | "Jan 2024 – Dec 2026"; "I developed an IoT-based monitoring and control system with AI-edge computing for poultry farm management." |
+| Person structured data                 | `jobTitle` "Research Assistant"; `affiliation` Bangladesh Agricultural University; Ideatrium a separate Organization the person founded (`worksFor` → Organization "Ideatrium", `founder` → the person) | `jobTitle` "Founder, Ideatrium"; no BAU affiliation; Ideatrium as in Phase 1                                                        |
+
+Never put Ideatrium under BAU in the structured data. Unchanged in both phases: `role_line`,
+`statement`, `summary`, both emails; the department and institution stay for education only after
+Phase 1.
+
+### 14.3 Other notes for Django
+
+- **Contact subjects.** The frontend form's subjects are now Research collaboration · Job
+  opportunity · Project or consulting · Speaking or teaching · Other. Django's inquiry subject
+  choices (the model choices and the form field) must match these five, in this order.
+- **Scroll boxes (Safari).** Wide formulas, tables and code blocks in post and project text are
+  keyboard-scrollable: `tabindex="0"`, `role="region"` and an accessible name, with the site's
+  focus ring. **Django's rich-text renderer must emit the same attributes**: `div.rt-math-display`
+  → `tabindex="0" role="region" aria-label="Formula N, scrollable"`; `pre.rt-code` and a plain `pre`
+  → `tabindex="0" role="region" aria-label="Code block N, scrollable"`; `div.rt-table-scroll` (and
+  Markdown tables) → `role="region" tabindex="0" aria-label="Table N, scrollable"` (N counted per
+  post). `src/partials/samples/rich-post.hbs` carries the attributes, edited by hand to match this
+  contract; regenerate it from the Django renderer once that emits them.
+- **Footer role line** is `profile.role_line` (one value with the hero); `footer.role_line` is gone.
+- **Introduction** (`profile.statement`) shows on the Portfolio top only, not on Home.
+- **CV link** target stays `/cv/Rasel_Al_Mamun_CV.pdf`; the PDF itself is not part of this release.
+- **Web of Science** (`wos`, RKQ-3766-2026) is the fourth link; Google Scholar's URL has no
+  `&hl=en`; all seven links are in `sameAs`.
+
+## 15. 1.6.0 round 3
+
+Decisions FD-154 … FD-161 (`docs/decisions.md`). What Django must mirror, component by component.
+
+### 15.1 Pagination and the list pages
+
+**Component** `src/partials/components/pagination.hbs` (Django `components/pagination.html`). Context
+`pager` (nothing is rendered when it is `null`, that is with one page) and an optional `label`:
+
+```
+pager = { page, pages, prev: {href}|null, next: {href}|null,
+          items: [ {n, href, current} | {gap: true} ] }
+```
+
+Markup: `nav.pager[aria-label][data-pager] > ul.pager-list > li.pager-step (Previous) · li.pager-num
+(a.pager-link[aria-label="Page N"], the current one also `.is-current`and`aria-current="page"`) ·
+li.pager-num.pager-gap ("…") · li.pager-status ("Page 2 of 5", shown below 576 px instead of the
+numbers) · li.pager-step (Next)`. Previous / Next are links with `rel="prev"` / `rel="next"`; at the
+ends they are `span.pager-link.is-disabled[aria-disabled="true"]`. The numbers show page 1, the last
+page, the current page and one either side, with a gap between. `tools/lists.mjs` (`pagerView`) is
+the reference for that rule. Every target is at least 44 px; it works at 320 px.
+
+**Sizes:** projects 9 per page, posts 9, publications 20 (pagination only above 20 items).
+**Count line** (`p.archive-count[data-results-status]`): "Showing 1–9 of 15 projects", "Showing 3 of 3
+projects", "No projects match your search." (`countLine` in `tools/lists.mjs`).
+
+**URLs (Django):**
+
+| Page         | Query                             | Notes                                                              |
+| ------------ | --------------------------------- | ------------------------------------------------------------------ |
+| Projects     | `?q=…&topic=<topic key>&page=N`   | a GET form; no sort menu (featured first, then the admin priority) |
+| Blog         | `?category=<category key>&page=N` | the category tabs are links                                        |
+| Publications | `?page=N`                         | only when there are more than 20 items                             |
+
+Changing the search or the topic drops `page` (back to page 1). An unknown `topic` / `category` is
+ignored; a page beyond the last is the last. Each page has its own `<title>`: "Projects — page 2 —
+Ideatrium", "Projects — Poultry systems — Ideatrium", "Blog — Education — Ideatrium", a **self-canonical**
+link (the same URL with the same query), `<link rel="prev">` / `<link rel="next">` (the neighbouring
+page URLs), and `noindex` on a search with no result. The `head` partial takes `relPrev`, `relNext`
+and `noindexPage`.
+
+**Projects page markup:** `form.archive-filter[role=search][method=get][data-list-form]` (the search
+`input[name=q]`, the `select[name=topic][data-list-auto]`, a visible "Search" button, so it works
+without JavaScript), then `div.archive-results[data-list-results]` with `h2#results-title[tabindex=-1]
+[data-results-heading]` (visually hidden), the count line, the cards (`h3` titles) or
+`div.empty-state` ("No projects match your search." and a "Clear filters" link to the unfiltered page),
+then the pager; after it `p.visually-hidden[role=status][data-list-announce]`.
+**Blog:** the same `div.blog-results[data-list-results]`: `nav.pf-tabs[data-category-filter]` of
+`a.pf-tab` (`aria-current="page"` on the current category, "false" on the others), the count line, the
+cards, the empty category state ("Show all posts" link), the pager.
+
+**JavaScript (enhancement only, `src/js/pages/list-nav.js`):** a form submit, a topic change, a
+category tab, a page link or "Clear filters" fetches the same URL, swaps the content of
+`[data-list-results]` for the response's, updates the form values, the `<title>` and the prev / next /
+canonical links, pushes the URL, moves focus to the results heading and announces the count in
+`[data-list-announce]`. Any error falls back to a normal navigation; Back works. Django answers the
+fetch with the normal full page.
+
+**Static preview (this repository only):** `research.html`, `research-page-2.html`,
+`research-topic-<key>.html`, `research-empty.html`, `blog.html`, `blog-category-<key>.html`,
+`publications.html` (and `-page-N` when a list has more pages) are built from the same templates;
+`vite preview` and `vite dev` map a query to the matching file (`resolveState`); free-text search is
+not run in the preview (a search with no match shows the empty state, any other shows page 1).
+`dist-django/` carries them too, so a pin can compare Django's HTML to them.
+
+### 15.2 Project-topic icons
+
+`src/partials/icons/line-icon.hbs`, 24 keys; Django offers exactly this list as the topic icon choice:
+`hen`, `fish`, `sun-water`, `tractor`, `leaf`, `greenhouse` (the agriculture set), `software`, `web`,
+`mobile`, `ai`, `robotics`, `data`, `cloud`, `security`, `energy`, `water`, `environment`, `health`,
+`education`, `research`, `hardware`, `automation`, `iot`, and `general`, the fallback (any other
+name draws it). 48 px grid, 1.5 px strokes, accent parts as `.la`.
+
+### 15.3 Covers
+
+A post's cover is an uploaded image when `cover.src` is set: `<picture>` with an AVIF `source` (optional)
+and the WebP `img` (`srcset` / `sizes` from `cover.srcset` / `cover.avif_srcset`), width and height,
+alt text on the post page (decorative `alt=""` on the card, whose link names the post), inside the
+16:9 `.blog-cover` frame, `object-fit: cover`. With no image the line drawing (`cover.illustration`)
+is the fallback. Project cards have no image slot; none was added.
+
+### 15.4 Small components
+
+- **Two emails, one group** (footer, Contact and Hire me "Direct"): one envelope icon, hello@ first;
+  `.footer-emails` / `.email-group` > `ul` of the two mailto links. In "Direct" each address is followed
+  by `button.copy-btn[data-copy-email][aria-label="Copy <address>"]` (JS only); one
+  `p.copy-status[role=status][data-copy-status]` says "Copied <address>" (visible and announced); the
+  button shows a tick for 2 s.
+- **Expertise** items are `li.pill` in `ul.pf-group-items` (flex wrap), one tag per item.
+- **Role lines and eyebrows** use `dots`: every " · " becomes a no-break space and "· " (Django: a
+  template filter doing `text.replace(" · ", " · ")`), so no line starts with "·"; `text-wrap:
+balance` on phones; one line from 1200 px (hero eyebrow, hero role line, footer role line).
+- **Hero buttons on phones:** `.hero-ctas` is a two-column grid (Hire me, Portfolio) with the CV link
+  full width below; desktop unchanged.
+- **Back to top:** `button.back-to-top[data-back-to-top]` with an up-arrow icon, 48 px, round, 24 px from the
+  edges; the footer keeps room under its last line. The portrait is gone, so is the Home stage hand-off.
+- **Portfolio:** counts label "Projects"; profile links one column below 600 px, two from 600 px; the
+  section menu `nav.pf-nav` is one sideways-scrolling row below 768 px with a fade at the right edge.
+- **Menu sub-lines:** Home "Overview", Contact "Email · Form".
+- **Contact** audiences are a bulleted list (`ul.plain-list`).
+- **Hire me:** the top button is "Start a brief" (`a[href="#brief"][data-start-brief]`, JS moves focus to
+  `#hire-name`); the right block is centred on the heading from lg; the availability line follows the
+  heading on phones.
+- **Project status** on every card: "In progress", "Done", "Planned" (a hollow dot) or, while the
+  admin has not set one, the visible placeholder "[Status]". The role line is 15 px, `--fg-1`.
+- **Home motion starts on the first scroll** (FD-162): `src/js/core/first-input.js`. Until then every layer shows (no hidden reveal state, no pinned stage); a Django page needs only the same scripts and markup.
+- **Project status:** no badge when the project has no status (no placeholder).
+
+## 16. 1.6.0 round 4
+
+For Django, in the order of the pages. Decisions FD-163 … FD-169.
+
+- **Home:** no "Two sides of this site" (drop `home.fork` from Page text). The desktop stage is shorter and ends at the hand-off; the markup is the same `data-stage*` hooks without `data-stage-fork`. The back-to-top button is the seated photo again (the markup of `back-to-top.hbs`). "Selected work" `All projects` links to the Projects page, `All publications` to the Publications page. `home.hire_intro` is gone: the Hire me band is the heading and one button. The Contact band has no email lines; its photo is hidden below 768 px (`d-none d-md-flex`).
+- **Project cover:** add an optional cover image field to the project model (WebP, optional AVIF, `srcset`, width, height, alt). The large Home card shows it in the Blog card's 16:9 frame (`object-fit: cover`); with none, the sensor-node drawing. Sample: `cover` in `projects.json`.
+- **Footer:** the AI portrait note and `footer.ai_portrait_shown` are removed. On phones the bottom row is the copyright over "Privacy Policy" on the left and the Theme button (`components/theme-button.hbs`) on the right. The menu uses the same button with `state=true` (its label is "Dark" / "Light", kept by `theme.js` through `[data-theme-state]`).
+- **Header Hire me (S4):** on /hire the link has `aria-current="page"`; CSS makes it outlined (`.hire-cta[aria-current]`). Every other page: the filled button.
+- **Back links (S5):** `components/back-link.hbs` ("← Portfolio" on Projects and Publications, "← Projects" on a project); the post page has "← Blog / Category", the category linking to `?category=ID`.
+- **Blog and posts:** `blog_page.eyebrow` ("Blog / Articles & notes"), `count_label` / `count_label_one` ("{count} articles" / "{count} article"), counted over published posts only. A post says `Published <d Month yyyy> · <n> min read` (no date: no "Published"); the Draft badge only in the private preview of an unpublished post. The mobile "On this page" is a `<details>` (closed) under the cover with three or more headings; the sidebar list is unchanged. Previous / Next article (title and category, a side absent when there is none) sit above the footer; "← Back to all articles" ends the article.
+- **Projects:** status labels "In progress", "Completed" (data value `done`), "Planned"; no status: no badge, never "[Status]".
+- **Publications:** each row has DOI always and Project only when linked, in a fixed-width right column (16.5 rem from lg); the actions go under the title below lg.
+- **Hire me and Contact:** the form line is `privacy.form_line` ("Your details are used only to reply to your inquiry and are never sold or used for marketing.") + the Privacy Policy link. Hire me's header keeps the availability line and "Start a brief" (scrolls to the form, focuses the Name field via `data-focus`); no CV button there. The Direct card (and Contact's Elsewhere card) are removed; no email appears on either page (the footer has them). **What to expect** (`contact.expect`: heading and `{label, value}` lines — response time, location, languages) is sample content: make its lines admin-editable (Page text). Right column order: Hire me — What to expect, CV, Also; Contact — What to expect, Who I'd like to hear from. The cards start level with the Name field (a two-row grid on Hire me).
+- **404:** centred; a large "404", "Page not found", one line, the `disconnected-node` drawing (blog-cover style), links Home, Projects, Blog, Contact; no portrait.
+- **Portfolio:** the profile keeps Download CV (PDF); Awards and Experience & education have no CV button or link (1.6.0 round 7).
+- **Privacy:** below 600 px the "Who else handles your data" table is one stacked block per row; every value carries its column's name in `data-label` (from the header row). Django's rich-text table renderer sets the same `data-label` at render time and `data-stack` on the table; the CSS is `.prose-table table[data-stack]`.
+
+## 17. 1.6.0 round 5
+
+Decisions FD-170 … FD-172.
+
+- **Navbar (FD-171):** the primary nav is Portfolio · Blog · **Projects** · Contact (`<li><a href="{% url 'projects' %}" {% if nav == 'projects' %}aria-current="{{ current }}"{% endif %}>Projects</a></li>`, after Blog). Nav key `projects`: the Projects archive and its states (`aria-current="page"`) and every project page (`aria-current="true"`); Portfolio is current only on the Portfolio page and Publications (`"true"`). The phone menu has the same item after Blog with the sub-line "Research · Software" (`drawer-sub`). The nav labels are fixed-width (`_shell.scss`, `.site-nav li:nth-child(n)`), so a fifth item needs its own width.
+- **Home markup:** `work-card.hbs`: the large card's title is a `t-h3` and its summary has no `t-body-l` (the same sizes as the small cards); the cover stays `div.blog-cover.work-cover`. Nothing else changes for Django.
+- **Removed (nothing used them):** the partials `components/email-box` and `sections/profile-links`, and the copy-button script. Django does not need either.
+- **Motion:** only `stage-desktop.js` changed (the hand-off condition). Django mounts the same script.
+
+## 18. 1.6.0 round 6
+
+Decisions FD-173 … FD-176.
+
+- **What to expect (FD-175):** the card has no visible label; `components/expect-box` renders `contact.expect.heading` in a visually hidden `h2` (it names the card for screen readers). Hire me's header (FD-176): `p.eyebrow`, then the availability `p.availability.t-small` (still hidden when empty; `data-available` sets the dot), then `div.hire-head-row` with the `h1` and the Start a brief link (`.band-actions`). The classes `band-head` and `band-aside` are gone.
+- **Motion:** only `stage-desktop.js` (the glide) and one CSS rule (`.back-to-top.is-gliding`) changed; Django mounts the same script and styles.

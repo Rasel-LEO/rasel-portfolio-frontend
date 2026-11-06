@@ -5,6 +5,73 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.7.0 — 2026-11-05
+
+- Card images (FD-177): every project and post has one card image (1600 × 900, with alt text). It shows on the Home large card, the Projects list, the Blog list and Latest posts, and at the top of its own page.
+- Figures in the text: a line `[Figure n]` in a project or post places that figure there. The whole image is shown, never cropped, with the caption "Figure n. …" below it. Three sizes: narrow, normal and wide. In the dark theme a figure sits on a light plate so charts stay readable.
+- Share images: each project and post page gets its own 1200 × 630 share image, made from its card image when the site is built.
+- Project page: a new Methods section; the Gallery is removed.
+- Cards: a card description, a role line and three card tags, each with a length limit that the content check enforces.
+- A hidden formatting test page shows every content element (headings, lists, quotes, code, equations, a wide table, figures). It is not in any menu, the sitemap or the public export.
+- CI installs the test browser before the build, because the build now draws the share images.
+- The public copy builds and tests without the CV placeholder PDF, which is never exported (FD-146).
+- Motion and the approved design are unchanged.
+
+## 1.6.0 round 6 — 2026-11-04
+
+- Back to top (FD-173): when the stage releases before the shrink has finished, the back-to-top image takes over at the figure's exact place and size and glides into the corner in about 300 ms (and back when scrolling up); slow scrolling is unchanged.
+- Home Contact band (FD-174): less space above "Contact". Contact and Hire me (FD-175): no visible "What to expect" label; the card level with the form. Hire me header (FD-176): HIRE ME, availability, then the title with "Start a brief". Handover section 18.
+
+## 1.6.0 round 5 — 2026-11-04
+
+- Back to top (FD-170): the figure finishes becoming the back-to-top image before the stage releases; from then on that image stays fixed in the corner on slow, fast and reverse scrolling. The only motion change of the round.
+- Navbar (FD-171): a Projects item (desktop and phone menu); the Home hero text is centred beside the figure from 1280 × 800.
+- Home (FD-172): Selected work at v1.5.1's size with the image strip inside the big card and one set of text sizes; the standard gap before the Contact band and after the Areas of work on phones; a one-line copyright and a footer row the back-to-top photo never covers on phones. The unused email card, profile-links card and copy-button code are removed. Four old tests fixed (tests only).
+
+## 1.6.0 round 4 — 2026-11-04
+
+- Motion is v1.5.1's again (FD-163): the hero mouse effect from page open, the page transitions, the scroll story, the phone portrait motion, the Contact band settle and the back-to-top photo with the figure shrinking into it. "Two sides of this site" is removed; the desktop stage ends at the hand-off.
+- Home (FD-164): a cover on the large Selected work card, "All projects" / "All publications", a leaner "Three ways to work with me" (Hire me beside the title), the Blog's cards under Latest posts, a Contact band without emails, one gap between sections, no Contact photo on phones.
+- Site (FD-165): no footer AI note; a one-row mobile footer bottom; the menu's Theme button shows the state; an outlined Hire me on /hire; one back link on child pages.
+- Blog and posts (FD-166): "Blog / Articles & notes", "{n} articles", "Published d Month yyyy", a collapsible "On this page" on small screens, Previous / Next article.
+- Projects and Publications (FD-167), Hire me and Contact (FD-168), 404, Portfolio and Privacy (FD-169). Handover section 16.
+
+## 1.6.0 — 2026-11-03
+
+- Final fixes (FD-162): Home is complete before anyone scrolls (screen 2, the Fork and every section show without JavaScript, with reduced motion, in print and in a capture of an unscrolled page; the reveals and the pinned stage start on the first scroll); a project without a status shows no badge; Publications show 20 per page, a pager only above 20.
+
+- Round 3 (FD-154 … FD-161): pagination and server-rendered list states (projects 9 per page, Blog 9, Publications grouped by year, 30 per page above 30), a GET search that works without JavaScript, 24 topic icons, uploaded post covers, two emails in one group with a copy button per address, expertise as tags, one-line hero and role lines, a round back-to-top arrow (the portrait button and the Home hand-off are gone), "Start a brief", a status on every project card, and smaller layout fixes. Handover section 15.
+
+- Changed: the final site-basics content, Phase 1 (FD-147): the full name, role line, introduction, summary line,
+  the Home Areas of work (six, with chip and gear icons) and their targets, the Portfolio / Hire me / Contact /
+  Blog / Projects texts and search descriptions, the Projects archive ("Projects — Ideatrium"), "More projects",
+  the drawer's Blog sub-line, the contact subjects ("Job opportunity"), skills, expertise and training.
+  Google Scholar's URL loses `&hl=en`. The CV link icon is now a download icon (FD-151).
+- Added: Web of Science (footer, Portfolio, Contact, `sameAs`); a generic link icon for any other link type.
+- Added: the introduction on the Portfolio profile top; three experience roles (Founder · Ideatrium,
+  Research Assistant, Undergraduate researcher), the sub-heading "Experience" (FD-149).
+- Added: Phase 1 profile fields `second_role`, `eyebrow`, `eyebrow_short`, `location_line`, `author_line`; the
+  footer role line is the hero's (FD-148); Person data gets Ideatrium as a separate organisation the person founded.
+- Added: dynamic slots (FD-153): every Django-owned text hides when empty and holds its maximum length; lists of 0 to N
+  items; `hire.available`; `footer.ai_portrait_shown` (FD-150). `tests/slots.spec.js` builds empty, one-item and
+  maximum samples. Handover §14 lists the Django-owned texts, the two phases and the notes for Django.
+- Changed: the Portfolio portrait is the owner's photo (suit and tie); the project breadcrumb says "Projects"; no line of a role line, eyebrow, location or author line starts with "·".
+- Fixed: formulas, tables and code blocks scroll by keyboard in Safari: focusable, named, with the focus ring (FD-152).
+- Fixed: the back-to-top tests wait for the state, not a time (20 of 20 repeats).
+- Fixed: the Hire me form's mailto subject without a kind; the footer's link groups hide when empty.
+
+## 1.5.2 — 2026-11-02
+
+- Changed: the CV request becomes a CV download (FD-146). Every CV action (Home, Portfolio, Hire me,
+  the drawer) is now a direct link "Download CV (PDF)" to `/cv/Rasel_Al_Mamun_CV.pdf` in the same
+  style as the request, opening the PDF in the browser; its accessible name says it is a PDF.
+  No CV-request `mailto:` remains. Both email addresses are unchanged.
+- Added: a placeholder PDF (`tools/preview/cv/`) for the frontend's own preview and tests, served by
+  the dev / preview servers and written into `dist/` only. It is not in `dist-django/`, it is excluded
+  from `export:public`, and the export scan fails if any PDF is exported.
+- Handover: Django must serve the real PDF at `/cv/Rasel_Al_Mamun_CV.pdf` (`docs/handover-django.md`).
+- Tests: the CV link (href, accessible name, no `download`) on every page; no CV-request mailto.
+
 ## 1.5.1 — 2026-11-02
 
 - Changed: two public email addresses (FD-145). Wherever the site shows an address (footer of

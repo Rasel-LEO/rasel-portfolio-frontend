@@ -4,6 +4,7 @@ dist-django/
 .vite/
 coverage/
 playwright-report/
+.slots/
 test-results/
 tests/screenshots/
 .lighthouseci/

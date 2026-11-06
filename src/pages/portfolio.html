@@ -17,7 +17,7 @@
               <source type="image/avif" srcset="/images/avatar/avatar-512.avif" />
               <img
                 src="/images/avatar/avatar-512.webp"
-                alt="Portrait of {{profile.name}}"
+                alt="Portrait of {{profile.name}} in a dark suit and tie."
                 width="512"
                 height="512"
                 fetchpriority="high"
@@ -25,11 +25,21 @@
               />
             </picture>
             <div class="pf-intro-text" data-pf-enter>
-              <p class="t-label pf-role mb-0">{{portfolio.profile.eyebrow}}</p>
+              {{!-- FD-148: Django-owned texts; each line hides when its value is empty. --}} {{#if
+              portfolio.profile.eyebrow}}
+              <p class="t-label pf-role mb-0">{{{dots portfolio.profile.eyebrow}}}</p>
+              {{/if}} {{#if portfolio.profile.summary_line}}
               <p class="t-body-l pf-summary mb-0">{{portfolio.profile.summary_line}}</p>
+              {{/if}} {{!-- FD-149: the introduction (profile.statement) under the summary line.
+              --}} {{#if profile.statement}}
+              <p class="pf-statement mb-0">{{profile.statement}}</p>
+              {{/if}} {{#if portfolio.profile.location_line}}
               <p class="pf-location mb-0">
-                {{> icons/pf-icon name="pin"}}<span>{{portfolio.profile.location_line}}</span>
+                {{> icons/pf-icon name="pin"}}<span
+                  >{{{dots portfolio.profile.location_line}}}</span
+                >
               </p>
+              {{/if}}
             </div>
           </div>
 
@@ -59,6 +69,7 @@
             </a>
           </div>
 
+          {{#if links.length}}
           <ul class="list-unstyled pf-links mb-0" aria-label="Research and social profiles">
             {{#each links}}
             <li>
@@ -70,6 +81,7 @@
             </li>
             {{/each}}
           </ul>
+          {{/if}}
 
           <nav class="pf-nav" aria-label="Portfolio sections" data-section-nav>
             <ul class="list-unstyled mb-0">
@@ -179,10 +191,6 @@
             </li>
             {{/each}}
           </ul>
-          <div class="pf-end pf-cv">
-            <p class="pf-note mb-0">{{portfolio.awards.note}}</p>
-            {{> components/cv-button variant="btn-primary" lead=true arrow=true}}
-          </div>
         </div>
       </section>
       <section
@@ -198,9 +206,10 @@
           </h2>
           <p class="t-body-l section-intro mb-0">{{portfolio.experience.intro}}</p>
           <div class="pf-body pf-columns">
+            {{#if portfolio.experience.roles.length}}
             <div class="pf-column">
               <h3 class="pf-column-head">
-                {{> icons/pf-icon name="briefcase"}}<span>Research experience</span>
+                {{> icons/pf-icon name="briefcase"}}<span>Experience</span>
               </h3>
               {{#each portfolio.experience.roles}}
               <article class="pf-entry" data-reveal>
@@ -209,18 +218,22 @@
                   <p class="t-meta pf-entry-date mb-0">{{period}}</p>
                 </div>
                 <p class="pf-entry-sub mb-0">
-                  <span>{{unit}}</span>
+                  {{#if unit}}<span>{{unit}}</span>{{/if}}
                   <span>{{institution}}</span>
                 </p>
+                {{#if text}}
                 <p class="pf-entry-text mb-0">{{text}}</p>
+                {{/if}} {{#if bullets.length}}
                 <ul class="pf-bullets mb-0">
                   {{#each bullets}}
                   <li>{{this}}</li>
                   {{/each}}
                 </ul>
+                {{/if}}
               </article>
               {{/each}}
             </div>
+            {{/if}} {{#if portfolio.experience.education.length}}
             <div class="pf-column">
               <h3 class="pf-column-head">
                 {{> icons/pf-icon name="mortarboard"}}<span>Education</span>
@@ -237,10 +250,8 @@
                 {{/each}}
               </ul>
             </div>
+            {{/if}}
           </div>
-          <p class="pf-end pf-note pf-rule mb-0">
-            <span>{{portfolio.experience.note}}</span> {{> components/cv-button link=true}}
-          </p>
         </div>
       </section>
       <section
@@ -263,7 +274,7 @@
                 <h3 class="pf-group-title mb-0">{{title}}</h3>
                 <ul class="list-unstyled pf-group-items mb-0">
                   {{#each items}}
-                  <li>{{this}}</li>
+                  <li class="pill">{{this}}</li>
                   {{/each}}
                 </ul>
               </div>

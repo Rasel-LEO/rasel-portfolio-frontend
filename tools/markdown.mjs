@@ -24,6 +24,25 @@ const slugify = (text) =>
     .replace(/^-+|-+$/g, '') || 'section';
 
 const FIGURE = /^\[Figure: .+\]$/;
+// 1.7.0: a line that is only "[Figure 2]" puts figure entry 2 of the page here.
+export const FIGURE_MARKER = /^\[Figure (\d+)\]$/;
+export const FIGURE_SIZES = ['narrow', 'normal', 'wide'];
+
+// A figure in the text (1.7.0): the whole image on a plate (never cropped, its natural ratio), then
+// "Figure n. caption". `number` is the figure's number on the page; `fig` is a figure entry
+// ({ src, avif, alt, width, height, caption, size }). Width and height prevent layout shift.
+export function figureHtml(fig, number) {
+  const avif = fig.avif ? `<source type="image/avif" srcset="${escapeHtml(fig.avif)}">` : '';
+  return (
+    `<figure class="fig fig-${fig.size ?? 'normal'}" id="figure-${number}">` +
+    `<div class="fig-plate"><picture>${avif}` +
+    `<img src="${escapeHtml(fig.src)}" alt="${escapeHtml(fig.alt)}" width="${fig.width}" height="${fig.height}" loading="lazy" decoding="async">` +
+    `</picture></div>` +
+    `<figcaption><span class="fig-label">Figure ${number}.</span> ${escapeHtml(fig.caption)}` +
+    `</figcaption>` +
+    `</figure>\n`
+  );
+}
 const NEW_TAB =
   '<span class="visually-hidden"> (opens in a new tab)</span><svg class="icon" viewBox="0 0 24 24" width="14" height="14" aria-hidden="true" focusable="false"><path d="M7 17L17 7M9 7h8v8" /></svg>';
 // A whole paragraph in [brackets] (placeholder copy), not one that opens with a [link](…).
@@ -31,8 +50,10 @@ const PLACEHOLDER = /^\[[^\]]*\]$/;
 // http(s), mailto, and relative or same-page URLs; anything else fails the build.
 const SAFE_URL = /^(?:https?:|mailto:|[/#.]|[\w-]+(?:[/?#.]|$))/i;
 
-// One Marked instance per post, so heading ids are unique within that post.
-function markdown() {
+// One Marked instance per post, so heading ids are unique within that post. `figures` are the
+// page's figure entries by number; `counter` numbers the figures in the order they appear and is
+// shared by every text block of one page (a project page renders four).
+function markdown({ figures = [], counter = { n: 0 } } = {}) {
   const ids = new Map();
   const uniqueId = (text) => {
     const base = slugify(text);
@@ -64,14 +85,22 @@ function markdown() {
         }
         return `<a href="${escapeHtml(href)}"${titleAttr}>${text}</a>`;
       },
-      code({ text, lang }) {
-        const name = lang ? `Code sample (${escapeHtml(lang)})` : 'Code sample';
-        // Focusable so a keyboard user can scroll a long line (axe scrollable-region-focusable),
-        // and a named region so that tab stop is announced as something.
+      code({ text }) {
+        const name = 'Code block, scrollable';
+        // Focusable so a keyboard user can scroll a long line (axe scrollable-region-focusable; Safari
+        // does not make a scroll box focusable by itself, FD-152), and a named region so that tab
+        // stop is announced as something.
         return `<pre class="prose-code" tabindex="0" role="region" aria-label="${name}"><code>${escapeHtml(text)}</code></pre>\n`;
       },
       paragraph({ tokens, text }) {
         const trimmed = text.trim();
+        const marker = FIGURE_MARKER.exec(trimmed);
+        if (marker) {
+          const fig = figures.find((entry) => entry.n === Number(marker[1]));
+          if (!fig) throw new Error(`[Figure ${marker[1]}] has no figure entry`);
+          counter.n += 1;
+          return figureHtml(fig, counter.n);
+        }
         if (FIGURE.test(trimmed)) {
           // Labelled media placeholder (FD-29), styled by .media-ph in the components stylesheet.
           return `<figure class="media-ph media-ph-3x2"><figcaption class="media-ph-caption">${escapeHtml(trimmed)}</figcaption></figure>\n`;
@@ -92,19 +121,36 @@ function markdown() {
       // name (1.5.0; Django names its rich tables the same way).
       postprocess(html) {
         let tables = 0;
-        return html
-          .replace(/<table>/g, () => {
-            tables += 1;
-            return `<div class="prose-table" tabindex="0" role="region" aria-label="Table ${tables}"><table>`;
-          })
-          .replace(/<\/table>/g, '</table></div>');
+        let codes = 0;
+        return (
+          html
+            // Landmark names must be unique on a page: "Code block 1, scrollable", "… 2, …".
+            .replace(/aria-label="Code block, scrollable"/g, () => {
+              codes += 1;
+              return `aria-label="Code block ${codes}, scrollable"`;
+            })
+            .replace(/<table>/g, () => {
+              tables += 1;
+              return `<div class="prose-table" tabindex="0" role="region" aria-label="Table ${tables}, scrollable"><table>`;
+            })
+            .replace(/<\/table>/g, '</table></div>')
+        );
       },
     },
   });
 }
 
-export function renderMarkdown(source) {
-  return markdown().parse(source);
+export function renderMarkdown(source, options) {
+  return markdown(options).parse(source);
+}
+
+// The figure numbers a Markdown text refers to, in order ("[Figure 2]" → 2).
+export function figureMarkers(source) {
+  return source
+    .split('\n')
+    .map((line) => FIGURE_MARKER.exec(line.trim()))
+    .filter(Boolean)
+    .map((match) => Number(match[1]));
 }
 
 // Words in the Markdown source (markup stripped), at 200 words per minute, at least 1.

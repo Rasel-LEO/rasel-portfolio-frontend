@@ -6,7 +6,7 @@
   <body data-page="home">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
     <main id="main" tabindex="-1">
-      {{!-- The stage (FD-44, FD-47): hero, screen 2 (FD-84) and Fork as a plain document. The stage
+      {{!-- The stage (FD-44, FD-47): hero and screen 2 (FD-84) as a plain document. The stage
       motion pins and animates it through the data-stage* hooks. The text comes before the
       decorative figure (FD-73): on phones the name, then the photo band, then screen 2. --}}
       <div class="stage" data-stage>
@@ -14,17 +14,24 @@
           <div class="row stage-main">
             <div class="col-md-7 stage-text">
               <div class="stage-hero" data-stage-hero>
+                {{#if profile.eyebrow}}
                 <p class="eyebrow hero-eyebrow mb-0">
-                  {{!-- Below md the short form (FD-47); display:none hides the other from screen
-                  readers too, so they get the visible text. --}}
-                  <span class="d-md-none">{{profile.position}} · {{profile.institution}}</span
-                  ><span class="d-none d-md-inline">{{profile.eyebrow}}</span>
+                  {{!-- Below md the short form (FD-47, FD-148: profile.eyebrow_short); display:none
+                  hides the other from screen readers too, so they get the visible text. Empty hides
+                  the line. --}}
+                  <span class="d-md-none"
+                    >{{#if profile.eyebrow_short}}{{{dots profile.eyebrow_short}}}{{else}}{{{dots
+                    profile.eyebrow}}}{{/if}}</span
+                  ><span class="d-none d-md-inline">{{{dots profile.eyebrow}}}</span>
                 </p>
+                {{/if}}
                 <h1 class="t-display-xl hero-name mb-0">
                   {{#each home.hero_name_lines}}<span class="hero-line">{{this}}</span>
                   {{/each}}
                 </h1>
-                <p class="t-body-l hero-role mb-0">{{profile.role_line}}</p>
+                {{#if profile.role_line}}
+                <p class="t-body-l hero-role mb-0">{{{dots profile.role_line}}}</p>
+                {{/if}}
                 <div class="hero-ctas">
                   {{#each home.ctas}} {{#if (eq variant "primary")}}
                   <a class="btn btn-primary" href="/{{href}}">
@@ -91,6 +98,7 @@
                 </ul>
                 {{!-- FD-87, FD-99: the areas are plain text, not links — nothing here is
                 interactive; icon and label, the 01–06 index only where the data asks for it. --}}
+                {{#if fields.length}}
                 <div class="screen2-areas">
                   <p class="screen2-areas-title mb-0" id="areas-title">
                     {{home.screen2.areas_label}}
@@ -109,6 +117,7 @@
                     {{/each}}
                   </ul>
                 </div>
+                {{/if}}
               </div>
             </div>
 
@@ -130,125 +139,41 @@
               </figure>
             </div>
           </div>
-
-          <section class="fork" aria-labelledby="fork-title" data-stage-fork>
-            <h2 class="t-display-l fork-title" id="fork-title">{{home.fork.heading}}</h2>
-            <div class="fork-cols">
-              <div class="row fork-row">
-                <div class="col-md-6">
-                  <article class="fork-card" data-fork-col="portfolio">
-                    <span class="chip fork-chip" aria-hidden="true"
-                      ><svg
-                        class="icon"
-                        viewBox="0 0 24 24"
-                        width="14"
-                        height="14"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path d="M4 5h16v14H4zM4 10h16" /></svg
-                      >{{home.fork.portfolio.title}}</span
-                    >
-                    <h3 class="t-h2 mb-0">{{home.fork.portfolio.title}}</h3>
-                    <p class="fork-text mb-0">{{home.fork.portfolio.text}}</p>
-                    <ul class="list-unstyled chip-row mb-0">
-                      {{#each home.fork.portfolio.tags}}
-                      <li class="chip">{{this}}</li>
-                      {{/each}}
-                    </ul>
-                    <a class="btn btn-primary fork-cta" href="/{{home.fork.portfolio.href}}">
-                      {{home.fork.portfolio.cta}}
-                      <svg
-                        class="icon icon-arrow"
-                        viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </a>
-                  </article>
-                </div>
-                <div class="col-md-6">
-                  <article class="fork-card" data-fork-col="blog">
-                    <span class="chip fork-chip" aria-hidden="true"
-                      ><svg
-                        class="icon"
-                        viewBox="0 0 24 24"
-                        width="14"
-                        height="14"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path d="M5 4h14v16H5zM8 9h8M8 13h8M8 17h5" /></svg
-                      >{{home.fork.blog.title}}</span
-                    >
-                    <h3 class="t-h2 mb-0">{{home.fork.blog.title}}</h3>
-                    <p class="fork-text mb-0">{{home.fork.blog.text}}</p>
-                    <ul class="list-unstyled chip-row mb-0">
-                      {{#each home.fork.blog.tags}}
-                      <li class="chip">{{this}}</li>
-                      {{/each}}
-                    </ul>
-                    <a class="btn btn-primary fork-cta" href="/{{home.fork.blog.href}}">
-                      {{home.fork.blog.cta}}
-                      <svg
-                        class="icon icon-arrow"
-                        viewBox="0 0 24 24"
-                        width="20"
-                        height="20"
-                        aria-hidden="true"
-                        focusable="false"
-                      >
-                        <path d="M5 12h14M13 6l6 6-6 6" />
-                      </svg>
-                    </a>
-                  </article>
-                </div>
-              </div>
-              <div class="fork-seam" aria-hidden="true"></div>
-            </div>
-          </section>
         </div>
       </div>
 
       <section class="home-section band hire-band" aria-labelledby="hire-title" data-home="hire">
         <div class="container">
-          <div class="row band-head">
-            <div class="col-lg-7">
+          {{!-- H5 (1.6.0): the title, and Hire me to its right on one row at every width (the title
+          may wrap, the button never does). No paragraph, no CV button. --}}
+          <div class="hire-band-head">
+            <div class="hire-band-title">
               <p class="eyebrow mb-0">Hire me</p>
               <h2 class="t-display-l section-title mb-0" data-reveal id="hire-title">
                 {{hire.heading}}
               </h2>
             </div>
-            <div class="col-lg-5 band-aside">
-              {{!-- FD-89: the intro and the two actions; the availability line is on Hire me. --}}
-              <p class="band-text mb-0">{{home.hire_intro}}</p>
-              <div class="band-actions">
-                <a class="btn btn-primary" href="/hire.html">
-                  Hire me
-                  <svg
-                    class="icon icon-arrow"
-                    viewBox="0 0 24 24"
-                    width="20"
-                    height="20"
-                    aria-hidden="true"
-                    focusable="false"
-                  >
-                    <path d="M5 12h14M13 6l6 6-6 6" />
-                  </svg>
-                </a>
-                {{> components/cv-button variant="btn-secondary" icon=true}}
-              </div>
-            </div>
+            <a class="btn btn-primary hire-band-action" href="/hire.html">
+              Hire me
+              <svg
+                class="icon icon-arrow"
+                viewBox="0 0 24 24"
+                width="20"
+                height="20"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path d="M5 12h14M13 6l6 6-6 6" />
+              </svg>
+            </a>
           </div>
+          {{#if hire.services.length}}
           <ul class="list-unstyled row services home-services mb-0">
             {{#each hire.services}}
             <li class="col-lg-4">{{> sections/service tag="h3"}}</li>
             {{/each}}
           </ul>
+          {{/if}}
         </div>
       </section>
 
@@ -277,7 +202,7 @@
           </ul>
 
           <div class="home-more d-none d-lg-block">
-            <a class="more-link" href="/portfolio.html"
+            <a class="more-link" href="/research.html"
               ><span class="link">{{home.selected.cta}}</span
               ><svg
                 class="icon icon-arrow"
@@ -291,7 +216,7 @@
             ></a>
           </div>
           <div class="home-more d-lg-none">
-            <a class="btn btn-secondary" href="/portfolio.html">
+            <a class="btn btn-secondary" href="/research.html">
               {{home.selected.cta}}
               <svg
                 class="icon icon-arrow"
@@ -325,7 +250,7 @@
           </ol>
 
           <div class="home-more">
-            <a class="btn btn-secondary" href="/portfolio.html">
+            <a class="btn btn-secondary" href="/publications.html">
               {{home.publications.cta}}
               <svg
                 class="icon icon-arrow"
@@ -355,11 +280,10 @@
             </h2>
             <p class="t-body-l section-intro mb-0">{{home.latest.intro}}</p>
           </div>
+          {{!-- H6 (1.6.0): the Blog's own card (cover on top), three from lg. --}}
           <ul class="list-unstyled row latest-cards home-body mb-0">
             {{#each latestPosts}}
-            <li class="col-lg-4">
-              {{> sections/latest-card tag="h3" cta=@root.home.latest.item_cta}}
-            </li>
+            <li class="col-md-6 col-lg-4">{{> sections/blog-card tag="h3"}}</li>
             {{/each}}
           </ul>
           <div class="home-more">
@@ -394,22 +318,6 @@
                 {{home.contact_band.heading}}
               </h2>
               <p class="band-text mb-0">{{home.contact_band.text}}</p>
-              <p class="contact-band-email mb-0">
-                <a
-                  class="profile-link"
-                  href="mailto:{{profile.email}}"
-                  aria-label="Email {{profile.email}}"
-                  ><span class="link">{{profile.email}}</span></a
-                >
-              </p>
-              <p class="contact-band-email contact-band-email-2 mb-0">
-                <a
-                  class="profile-link"
-                  href="mailto:{{profile.secondary_email}}"
-                  aria-label="Email {{profile.secondary_email}}"
-                  ><span class="link">{{profile.secondary_email}}</span></a
-                >
-              </p>
               <div class="band-actions">
                 <a class="btn btn-primary" href="/contact.html">
                   {{home.contact_band.primary}}
@@ -426,7 +334,7 @@
                 </a>
               </div>
             </div>
-            <div class="col-md-5 d-flex contact-band-figure-col">
+            <div class="col-md-5 d-none d-md-flex contact-band-figure-col">
               <figure class="contact-band-figure mb-0" aria-hidden="true" data-contact-figure>
                 <picture>
                   <source type="image/avif" srcset="/images/figure/P6-desktop-720x1300.avif" />

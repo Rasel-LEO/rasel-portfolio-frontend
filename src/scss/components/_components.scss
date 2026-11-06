@@ -266,6 +266,15 @@ a[aria-current] > .link,
   stroke: var(--success);
 }
 
+// FD-157: Planned — a hollow dot.
+.status-planned .dot {
+  flex: none;
+  width: var(--s-2);
+  height: var(--s-2);
+  border: 1.5px solid var(--fg-1);
+  border-radius: var(--r-full);
+}
+
 // Draft post (FD-36): dashed border like "Planned"; the label carries the meaning.
 .chip-draft {
   border-style: dashed;
@@ -329,28 +338,6 @@ a[aria-current] > .link,
   border-radius: var(--r-1);
 }
 
-// Real project photographs (FD-35): same ratios and radius as the placeholders.
-.project-image {
-  display: block;
-  overflow: hidden;
-  border-radius: var(--r-3);
-}
-
-.project-image img {
-  display: block;
-  width: 100%;
-  height: auto;
-  object-fit: cover;
-}
-
-.project-image-3x2 img {
-  aspect-ratio: 3 / 2;
-}
-
-.project-image-4x3 img {
-  aspect-ratio: 4 / 3;
-}
-
 // Work card (FD-32): the whole card is one link named by its title
 // (the title link is stretched over the card; Bootstrap .stretched-link).
 .card {
@@ -369,10 +356,6 @@ a[aria-current] > .link,
     rotate var(--d-base) var(--e-out),
     border-color var(--d-base) var(--e-out),
     box-shadow var(--d-base) var(--e-out);
-
-  .project-image img {
-    transition: transform var(--d-base) var(--e-out);
-  }
 
   &:hover,
   &:has(:focus-visible) {
@@ -403,10 +386,6 @@ a[aria-current] > .link,
   @media (hover: hover) and (pointer: fine) {
     &:hover {
       translate: 0 -4px;
-
-      .project-image img {
-        transform: scale(1.03);
-      }
     }
   }
 }
@@ -419,13 +398,7 @@ a[aria-current] > .link,
   justify-self: start;
 }
 
-// Profile links (FD-22): text labels with an external-link icon.
-.profile-links {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0 var(--s-4);
-}
-
+// Text links with an external-link icon (FD-22).
 .profile-link {
   display: inline-flex;
   gap: var(--s-1);
@@ -442,17 +415,12 @@ a[aria-current] > .link,
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .card,
-  .card .project-image img {
+  .card {
     transition-property: border-color, box-shadow;
   }
 
   .card:hover {
     translate: none;
-  }
-
-  .card:hover .project-image img {
-    transform: none;
   }
 }
 

@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from './fixtures.js';
 import { buildSite, loadContent } from '../tools/content.mjs';
-import { isDjango, pagePath, phonePortrait, venueLine } from './pages.js';
+import { isDjango, pagePath, phonePortrait, servedLink, venueLine } from './pages.js';
 
 const content = loadContent();
 const site = buildSite(content, { showDrafts: true });
@@ -43,7 +43,7 @@ test.describe('Home document', () => {
   test('sections come in order, with the stage hooks and landmarks', async ({ page }) => {
     const order = await page
       .locator(
-        'main [data-stage], main [data-stage-hero], main [data-stage-statement], main [data-stage-fork], main [data-home]',
+        'main [data-stage], main [data-stage-hero], main [data-stage-statement], main [data-home]',
       )
       .evaluateAll((els) =>
         els.map((el) =>
@@ -57,7 +57,6 @@ test.describe('Home document', () => {
       'stage',
       'stageHero',
       'stageStatement',
-      'stageFork',
       'hire',
       'selected',
       'publications',
@@ -65,15 +64,14 @@ test.describe('Home document', () => {
       'contact',
     ]);
     await expect(page.locator('[data-stage] [data-stage-figure]')).toHaveCount(1);
-    await expect(page.locator('[data-fork-col="portfolio"]')).toHaveCount(1);
-    await expect(page.locator('[data-fork-col="blog"]')).toHaveCount(1);
+    // FD-163 (1.6.0): the Fork is gone.
+    await expect(page.locator('[data-stage-fork], [data-fork-col], .fork')).toHaveCount(0);
 
     await expect(page.getByRole('banner')).toHaveCount(1);
     await expect(page.getByRole('main')).toHaveCount(1);
     await expect(page.getByRole('contentinfo')).toHaveCount(1);
     await expect(page.getByRole('list', { name: screen2.areas_label })).toHaveCount(1);
     for (const name of [
-      content.home.fork.heading,
       content.hire.heading,
       content.home.selected.heading,
       content.home.publications.heading,
@@ -106,10 +104,10 @@ test.describe('Home document', () => {
     await expect(ctas.nth(0)).toHaveClass(/btn-primary/);
     await expect(ctas.nth(1)).toHaveAttribute('href', pagePath('portfolio.html'));
     await expect(ctas.nth(1)).toHaveClass(/btn-secondary/);
-    // FD-34: Request CV by email while profile.cv is null.
-    expect(content.profile.cv).toBeNull();
-    await expect(ctas.nth(2)).toHaveText('Request CV');
-    await expect(ctas.nth(2)).toHaveAttribute('href', /^mailto:/);
+    // FD-146: a direct Download CV (PDF) link, no download attribute.
+    await expect(ctas.nth(2)).toHaveText('Download CV (PDF)');
+    await expect(ctas.nth(2)).toHaveAttribute('href', '/cv/Rasel_Al_Mamun_CV.pdf');
+    await expect(ctas.nth(2)).not.toHaveAttribute('download');
     await expect(ctas.nth(2)).toHaveClass(/btn-sm/);
   });
 
@@ -175,10 +173,10 @@ test.describe('Home document', () => {
     await expect(pillars.nth(1)).toHaveAccessibleName(
       'Development: Dependable web, apps & software',
     );
-    // FD-87: Research → the publications, Development → the research projects, both with the
-    // same → arrow (real section ids on the Portfolio page).
+    // FD-87, FD-147: Research → the publications, Development → Hire me (its target changed in
+    // 1.6.0), both with the same → arrow.
     await expect(pillars.first()).toHaveAttribute('href', pagePath('portfolio.html#publications'));
-    await expect(pillars.nth(1)).toHaveAttribute('href', pagePath('portfolio.html#research'));
+    await expect(pillars.nth(1)).toHaveAttribute('href', pagePath('hire.html'));
     const arrows = await pillars
       .locator('svg.pillar-arrow')
       .evaluateAll((els) => els.map((el) => el.innerHTML.replace(/\s+/g, ' ').trim()));
@@ -191,7 +189,8 @@ test.describe('Home document', () => {
     for (const pillar of screen2.pillars) {
       await page.goto(`/${pillar.href}`);
       const id = pillar.href.split('#')[1];
-      await expect(page.locator(`[id="${id}"]`), pillar.href).toHaveCount(1);
+      // A pillar that links to a page (Development → hire.html) has no anchor to find.
+      if (id) await expect(page.locator(`[id="${id}"]`), pillar.href).toHaveCount(1);
     }
   });
 
@@ -288,17 +287,26 @@ test.describe('Home document', () => {
     const first = cards.nth(0);
     await expect(first).toHaveClass(/work-card-large/);
     await expect(first.locator('.work-eyebrow')).toHaveText(content.home.selected.large_eyebrow);
-    await expect(first.locator('.work-role-line')).toHaveText(large.featured_role_line);
+    await expect(first.locator('.work-role-line')).toHaveText(large.role_line);
     await expect(first.locator('.work-period')).toHaveText(large.period);
     await expect(first.locator('.card-status')).toHaveText('In progress');
+    // H3 (1.6.0), round 5 (FD-172): the cover is a full-width strip at the card's top, inside the card's
+    // height (v1.5.1's); the small cards have none.
+    await expect(first.locator('.blog-cover')).toHaveCount(1);
+    await expect(first.locator('.blog-cover img')).toHaveCount(1);
+    await expect(cards.nth(1).locator('.blog-cover')).toHaveCount(0);
+    const cover = await first.locator('.blog-cover').boundingBox();
+    const outer = await first.boundingBox();
+    expect(Math.abs(cover.width - outer.width)).toBeLessThanOrEqual(2);
+    expect(cover.height).toBeLessThan(outer.height / 2);
     for (const [i, project] of [large, ...small].entries()) {
       const card = cards.nth(i);
       await expect(card.getByRole('heading', { level: 3 })).toHaveText(project.short_title);
-      await expect(card.locator('.work-summary')).toHaveText(project.short_summary);
-      if (i > 0) await expect(card.locator('.work-role')).toHaveText(project.role);
+      await expect(card.locator('.work-summary')).toHaveText(project.card_description);
+      if (i > 0) await expect(card.locator('.work-role')).toHaveText(project.role_line);
       await expect(card.locator('.work-period')).toHaveCount(project.period ? 1 : 0);
-      // The design-specification tags (featured_tags); the project page keeps all of them.
-      await expect(card.locator('.pill-row li.pill')).toHaveText(project.featured_tags);
+      // The three card tags (card_tags); the project page keeps all of them.
+      await expect(card.locator('.pill-row li.pill')).toHaveText(project.card_tags);
       await expect(card.locator('.card-status')).toHaveCount(project.status ? 1 : 0);
       const link = card.getByRole('link');
       await expect(link).toHaveCount(1);
@@ -308,7 +316,7 @@ test.describe('Home document', () => {
       const response = await page.request.get(pagePath(`project-${project.id}.html`));
       expect(response.status(), project.id).toBe(200);
     }
-    expect(Object.fromEntries([large, ...small].map((p) => [p.id, p.featured_tags]))).toEqual({
+    expect(Object.fromEntries([large, ...small].map((p) => [p.id, p.card_tags]))).toEqual({
       'poultry-aiot-edge': ['IoT', 'Edge AI', 'Control systems'],
       // FD-108: "Automation" added.
       'biofloc-iot': ['IoT', 'Aquaculture', 'Automation'],
@@ -319,11 +327,12 @@ test.describe('Home document', () => {
       await expect(page.locator('.pill', { hasText: tag }).first()).toBeVisible();
     }
     await page.goto('/index.html');
-    // One "Full portfolio" for each layout, both to the Portfolio page; one exposed at a time.
+    // One "All projects" for each layout, both to the Projects page (H4); one exposed at a time.
     const more = section.locator('.home-more a');
     await expect(more).toHaveCount(2);
+    expect(content.home.selected.cta).toBe('All projects');
     for (const href of await more.evaluateAll((els) => els.map((el) => el.getAttribute('href'))))
-      expect(href).toBe(pagePath('portfolio.html'));
+      expect(href).toBe(pagePath('research.html'));
     await expect(section.getByRole('link', { name: content.home.selected.cta })).toHaveCount(1);
     // No papers here any more (FD-91: their own section).
     await expect(section.locator('.pub, [data-first-author]')).toHaveCount(0);
@@ -344,29 +353,30 @@ test.describe('Home document', () => {
       content.home.latest.heading,
     );
     await expect(section.locator('.section-intro')).toHaveText(content.home.latest.intro);
-    const cards = section.locator('.latest-card');
+    // H6 (1.6.0): the Blog's own card, with its cover on top.
+    const cards = section.locator('.blog-card');
     await expect(cards).toHaveCount(3);
     for (const [i, post] of content.blog.entries()) {
       const card = cards.nth(i);
       const label = content.blogPage.categories.find((c) => c.id === post.category).label;
-      await expect(card.locator('.latest-category')).toHaveText(label);
+      await expect(card.locator('.blog-card-category')).toHaveText(label);
+      await expect(card.locator('.blog-cover img')).toHaveCount(1);
       await expect(card.getByRole('heading', { level: 3 })).toHaveText(post.title);
       // The written excerpt (FD-103), not a [bracketed] placeholder.
-      await expect(card.locator('.latest-excerpt')).toHaveText(post.standfirst);
-      expect(post.standfirst).not.toMatch(/^\[/);
+      await expect(card.locator('.blog-card-excerpt')).toHaveText(post.card_description);
+      expect(post.card_description).not.toMatch(/^\[/);
       const link = card.getByRole('link');
-      await expect(link).toHaveAccessibleName(`${content.home.latest.item_cta}: ${post.title}`);
+      // The seed posts are drafts, so the Blog card names them so (as on the Blog page).
+      await expect(link).toHaveAccessibleName(`Read article: ${post.title} (draft)`);
       await expect(link).toHaveAttribute('href', pagePath(`post-${post.slug}.html`));
       expect((await page.request.get(pagePath(`post-${post.slug}.html`))).status(), post.slug).toBe(
         200,
       );
     }
-    await expect(section.locator('.chip-draft, .draft-chip')).toHaveCount(0);
-    await expect(section.getByText('Draft', { exact: true })).toHaveCount(0);
     await expect(section.locator('.home-more a')).toHaveAttribute('href', pagePath('blog.html'));
   });
 
-  test('Contact band: heading, text, email link and the one Contact action (FD-93)', async ({
+  test('Contact band: heading, text and the one Contact action, no email (FD-93, H7)', async ({
     page,
   }) => {
     const band = page.locator('[data-home="contact"]');
@@ -377,10 +387,7 @@ test.describe('Home document', () => {
     expect(content.home.contact_band.text).toBe(
       'Research collaborations, software projects and technical questions.',
     );
-    await expect(band.getByRole('link', { name: content.profile.email })).toHaveAttribute(
-      'href',
-      `mailto:${content.profile.email}`,
-    );
+    await expect(band.locator('a[href^="mailto:"], .contact-band-email')).toHaveCount(0);
     await expect(
       band.getByRole('link', { name: content.home.contact_band.primary }),
     ).toHaveAttribute('href', pagePath('contact.html'));
@@ -400,7 +407,7 @@ test.describe('Home layout', () => {
   test('below 768px the eyebrow is the short form, also for screen readers', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/index.html');
-    const short = `${content.profile.position} · ${content.profile.institution}`;
+    const short = content.profile.eyebrow_short;
     const eyebrow = page.locator('.hero-eyebrow');
     await expect(eyebrow.locator('span:visible')).toHaveText(short);
     // The accessibility tree holds only the visible text.
@@ -408,9 +415,9 @@ test.describe('Home layout', () => {
     await expect(eyebrow.locator('span:visible')).toHaveCount(1);
   });
 
-  // No rail reservation; section content shares the Fork's right edge.
+  // No rail reservation; section content shares the services' right edge.
   for (const width of [1440, 1920]) {
-    test(`section content is aligned with the Fork's right edge at ${width}px`, async ({
+    test(`section content is aligned with the services' right edge at ${width}px`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height: 900 });
@@ -418,7 +425,6 @@ test.describe('Home layout', () => {
       const edges = await page.evaluate(() =>
         Object.fromEntries(
           [
-            ['fork', '.fork-row > :last-child .fork-card'],
             ['services', '.home-services > :last-child .service'],
             ['selected', '[data-featured-project]:last-child .card'],
             ['contact', '[data-home="contact"] .container'],
@@ -431,31 +437,10 @@ test.describe('Home layout', () => {
         ),
       );
       for (const [key, right] of Object.entries(edges)) {
-        expect(Math.abs(right - edges.fork), key).toBeLessThanOrEqual(1);
+        expect(Math.abs(right - edges.services), key).toBeLessThanOrEqual(1);
       }
     });
   }
-
-  for (const width of [768, 1024, 1440]) {
-    test(`Fork cards have the same size side by side at ${width}px`, async ({ page }) => {
-      await page.setViewportSize({ width, height: 900 });
-      await page.goto('/index.html');
-      await page.evaluate(() => document.fonts.ready);
-      const [a, b] = await rects(page, '[data-fork-col]');
-      expect(Math.abs(a.width - b.width)).toBeLessThanOrEqual(1);
-      expect(Math.abs(a.height - b.height)).toBeLessThanOrEqual(1);
-      expect(Math.abs(a.top - b.top)).toBeLessThanOrEqual(1);
-      expect(b.left).toBeGreaterThan(a.right);
-      await expect(page.locator('.fork-seam')).toBeVisible({ visible: width >= 992 });
-    });
-  }
-
-  test('Fork cards stack below 768px', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.goto('/index.html');
-    const [a, b] = await rects(page, '[data-fork-col]');
-    expect(b.top).toBeGreaterThanOrEqual(a.bottom);
-  });
 
   // FD-73, FD-86: on phones the text comes first — in the DOM too — then the whole portrait,
   // centred, then screen 2; 768–991 px: text left, photo right.
@@ -594,30 +579,13 @@ test.describe('Home layout', () => {
     expect(overflow).toBe(0);
   });
 
-  // FD-93: phones show the whole original P6 — chair and shoes — centred under the action
-  // (lazy, so not before the band nears).
+  // H9 (1.6.0): below 768 px the Contact band has no photograph (FD-93 shows it no more).
   for (const width of [320, 390, 767]) {
-    test(`P6 in the Contact band at ${width}px: whole, centred, under the action`, async ({
-      page,
-    }) => {
+    test(`the Contact band photo is hidden at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: 844 });
       await page.goto('/index.html');
-      const img = page.locator('.contact-band-figure img');
-      await img.scrollIntoViewIfNeeded();
-      await expect(img).toBeVisible();
-      await img.evaluate((el) => el.decode());
-      const shape = await phonePortrait(page, '[data-contact-figure]', 'P6');
-      const [actions] = await rects(page, '[data-home="contact"] .band-actions');
-      expect(shape.src).toContain('P6-desktop-720x1300');
-      expect(shape.img.width / shape.img.height).toBeCloseTo(720 / 1300, 2);
-      expect(shape.content.top).toBeGreaterThanOrEqual(shape.window.top);
-      expect(shape.content.bottom).toBeLessThanOrEqual(shape.window.bottom);
-      expect(shape.content.left).toBeGreaterThanOrEqual(shape.window.left - 0.5);
-      expect(shape.content.right).toBeLessThanOrEqual(shape.window.right + 0.5);
-      expect(shape.window.top).toBeGreaterThanOrEqual(actions.bottom);
-      const centre = (shape.content.left + shape.content.right) / 2;
-      expect(Math.abs(centre - width / 2)).toBeLessThanOrEqual(width * 0.03);
-      if (width <= 430) expect(shape.window.width).toBeGreaterThanOrEqual(width * 0.4 - 1);
+      await expect(page.locator('[data-contact-figure]')).toBeHidden();
+      await expect(page.locator('.contact-band-figure-col')).toHaveCSS('display', 'none');
     });
   }
 
@@ -640,10 +608,10 @@ test.describe('Home layout', () => {
         .evaluate((el) => el.getBoundingClientRect().height);
       expect(height).toBeGreaterThanOrEqual(360);
       expect(height).toBeLessThanOrEqual(Math.min(420, 1300));
-      // FD-93's one-line text and single action made the text block ~285–300 px, under
-      // FD-72's 360 px floor for the photo: the photo keeps its approved size, so it may now be
-      // up to a third taller than the text.
-      expect(Math.abs(height - text) / text).toBeLessThan(0.34);
+      // The text block is the heading, one line and one action (no emails since H7), well under
+      // FD-72's 360 px floor for the photo: the photo keeps its approved size, so it may be taller
+      // than the text — by up to a factor of 1.75.
+      expect(Math.abs(height - text) / text).toBeLessThan(0.75);
     });
   }
 });
@@ -672,12 +640,12 @@ test.describe('Selected work layout (FD-102)', () => {
       expect(b.top).toBeGreaterThan(a.bottom);
       expect(Math.abs(large.top - a.top)).toBeLessThanOrEqual(1);
       expect(Math.abs(large.bottom - b.bottom)).toBeLessThanOrEqual(1);
-      // The large card's title is the larger one.
+      // Round 5 (FD-172): all three titles are the same size.
       const sizes = await page
         .locator('[data-home="selected"] .card-title')
         .evaluateAll((els) => els.map((el) => parseFloat(getComputedStyle(el).fontSize)));
-      expect(sizes[0]).toBeGreaterThan(sizes[1]);
-      // Its title on two lines, "Poultry farm monitoring / with edge AI", as in the design specification.
+      expect(sizes[0]).toBe(sizes[1]);
+      // Its title starts "Poultry farm monitoring" (one line or two, by the width).
       const firstLine = await page.locator('.work-card-large .card-title').evaluate((h) => {
         const range = document.createRange();
         range.selectNodeContents(h);
@@ -687,7 +655,7 @@ test.describe('Selected work layout (FD-102)', () => {
           words: h.textContent.trim().split(' ').slice(0, 3).join(' '),
         };
       });
-      expect(firstLine.lines).toBe(2);
+      expect(firstLine.lines).toBeGreaterThanOrEqual(1);
       expect(firstLine.words).toBe('Poultry farm monitoring');
       // "Full portfolio →": the amber text link, top right, level with the heading; the phone
       // button is not shown.
@@ -809,14 +777,14 @@ test.describe('Home link styles (FD-105)', () => {
     );
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/index.html');
-    const a = page.locator('[data-home="latest"] .work-link').first();
+    // H6: the Blog card's "Read article →" (amber, the FD-76 underline on hover).
+    const a = page.locator('[data-home="latest"] .blog-card-link').first();
     await a.scrollIntoViewIfNeeded();
-    let s = await look(a.locator('.link'));
-    expect([s.image, s.accentText]).toEqual(['none', false]);
-    await a.locator('.link').hover();
-    await expect.poll(async () => (await look(a.locator('.link'))).accentText).toBe(true);
-    s = await look(a.locator('.link'));
-    expect(s.image).toBe('none');
+    const text = a.locator('span').first();
+    const s = await look(text);
+    expect(s.accentText).toBe(true);
+    await a.hover();
+    await expect.poll(async () => (await look(text)).accentText).toBe(true);
   });
 
   // FD-119 makes FD-76 site-wide: Hire me's service links now match Home's.
@@ -871,7 +839,7 @@ test.describe('Selected publications (FD-91)', () => {
     await expect(section.getByText(papers[0].authors[1].name)).toHaveCount(0);
     await expect(
       section.getByRole('link', { name: content.home.publications.cta }),
-    ).toHaveAttribute('href', pagePath('portfolio.html'));
+    ).toHaveAttribute('href', pagePath('publications.html'));
   });
 
   for (const width of [992, 1440, 1920]) {
@@ -1007,22 +975,28 @@ test.describe('Services (FD-89)', () => {
     }
   }
 
-  test('Home head at 1440px: heading left; intro, Hire me and Request CV right', async ({
+  test('Home head: the title and Hire me on one row, no paragraph, no CV button (H5)', async ({
     page,
   }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await page.goto('/index.html');
-    const band = page.locator('[data-home="hire"]');
-    await expect(band.locator('.band-text')).toHaveText([content.home.hire_intro]);
-    await expect(band.getByText(content.hire.availability)).toHaveCount(0);
-    const actions = band.locator('.band-actions a');
-    await expect(actions).toHaveText([/Hire me/, /Request CV/]);
-    const [heading] = await rects(page, '#hire-title');
-    const [intro] = await rects(page, '[data-home="hire"] .band-text');
-    const [buttons] = await rects(page, '[data-home="hire"] .band-actions');
-    expect(intro.left).toBeGreaterThan(heading.right);
-    expect(buttons.left).toBeGreaterThan(heading.right);
-    expect(buttons.top).toBeGreaterThan(intro.top);
+    for (const [width, height] of [
+      [1440, 900],
+      [390, 844],
+      [320, 640],
+    ]) {
+      await page.setViewportSize({ width, height });
+      await page.goto('/index.html');
+      const band = page.locator('[data-home="hire"]');
+      await expect(band.locator('.band-text, .band-actions')).toHaveCount(0);
+      await expect(band.getByText(content.hire.availability)).toHaveCount(0);
+      await expect(band.locator('.hire-band-head a')).toHaveText(/Hire me/);
+      await expect(band.getByRole('link', { name: /Download CV/ })).toHaveCount(0);
+      const [heading] = await rects(page, '#hire-title');
+      const [button] = await rects(page, '.hire-band-action');
+      expect(button.left, `${width}px`).toBeGreaterThanOrEqual(heading.right - 1);
+      // Level with the title block, one line, never wrapped.
+      expect(button.height, `${width}px`).toBeLessThan(60);
+      expect(button.top, `${width}px`).toBeLessThan(heading.bottom);
+    }
   });
 
   test('phones: the cards stack, without empty space in them', async ({ page }) => {
@@ -1121,8 +1095,6 @@ test.describe('Home without JavaScript (FD-47)', () => {
       '.screen2-headline',
       '.screen2-pillars',
       '.screen2-areas',
-      '[data-fork-col="portfolio"]',
-      '[data-fork-col="blog"]',
       '[data-home="hire"]',
       '[data-home="selected"]',
       '[data-home="publications"]',
@@ -1138,7 +1110,7 @@ test.describe('Home without JavaScript (FD-47)', () => {
       .evaluateAll((els) => [...new Set(els.map((el) => el.href))]);
     const internal = hrefs.filter((href) => href.startsWith(origin));
     expect(internal.length).toBeGreaterThanOrEqual(8);
-    for (const href of internal) {
+    for (const href of internal.filter(servedLink)) {
       const response = await request.get(href);
       expect(response.status(), href).toBe(200);
     }
@@ -1196,14 +1168,14 @@ test.describe('Latest posts layout (FD-103)', () => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/index.html');
     await page.evaluate(() => document.fonts.ready);
-    const cards = await rects(page, '[data-home="latest"] .latest-card');
+    const cards = await rects(page, '[data-home="latest"] .blog-card');
     expect(cards).toHaveLength(3);
     for (const key of ['width', 'height', 'top']) {
       const values = cards.map((card) => card[key]);
       expect(Math.max(...values) - Math.min(...values), key).toBeLessThanOrEqual(1);
     }
     // "Read article" on each card's bottom, on one line.
-    const links = await rects(page, '[data-home="latest"] .work-link');
+    const links = await rects(page, '[data-home="latest"] .blog-card-link');
     const tops = links.map((link) => link.top);
     expect(Math.max(...tops) - Math.min(...tops)).toBeLessThanOrEqual(1);
     const [more] = await rects(page, '[data-home="latest"] .home-more .btn');
@@ -1225,7 +1197,7 @@ test.describe('Latest posts layout (FD-103)', () => {
     );
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/index.html');
-    const cards = await rects(page, '[data-home="latest"] .latest-card');
+    const cards = await rects(page, '[data-home="latest"] .blog-card');
     expect(cards).toHaveLength(3);
     for (let i = 1; i < cards.length; i += 1) {
       expect(cards[i].top).toBeGreaterThanOrEqual(cards[i - 1].bottom);
@@ -1320,12 +1292,12 @@ test.describe('Latest posts in a release build (FD-103)', () => {
     await openFixture(page, 1440, 900);
     const section = page.locator('[data-home="latest"]');
     await expect(section.locator('.eyebrow')).toHaveText(content.home.latest.eyebrow);
-    const cards = section.locator('.latest-card');
+    const cards = section.locator('.blog-card');
     await expect(cards).toHaveCount(1);
     const card = cards.first();
     const label = content.blogPage.categories.find((c) => c.id === blog[0].category).label;
-    await expect(card.locator('.latest-category')).toHaveText(label);
-    const style = await card.locator('.latest-category').evaluate((el) => {
+    await expect(card.locator('.blog-card-category')).toHaveText(label);
+    const style = await card.locator('.blog-card-category').evaluate((el) => {
       const probe = document.createElement('span');
       probe.style.color = 'var(--accent)';
       document.body.append(probe);
@@ -1337,12 +1309,12 @@ test.describe('Latest posts in a release build (FD-103)', () => {
     expect(style.color).toBe(style.accent);
     expect(style.font).toMatch(/JetBrains Mono/);
     await expect(card.getByRole('heading', { level: 3 })).toHaveText(blog[0].title);
-    await expect(card.locator('.latest-excerpt')).toHaveText(blog[0].standfirst);
+    await expect(card.locator('.blog-card-excerpt')).toHaveText(blog[0].card_description);
     const link = card.getByRole('link');
-    await expect(link).toHaveAccessibleName(`${content.home.latest.item_cta}: ${blog[0].title}`);
+    await expect(link).toHaveAccessibleName(`Read article: ${blog[0].title}`);
     await expect(link).toHaveAttribute('href', `/post-${blog[0].slug}.html`);
     // Three columns from lg; "All posts" top right.
-    const [box] = await rects(page, '[data-home="latest"] .latest-card');
+    const [box] = await rects(page, '[data-home="latest"] .blog-card');
     const [list] = await rects(page, '[data-home="latest"] .latest-cards');
     expect(box.width).toBeLessThan(list.width / 3);
     const [more] = await rects(page, '[data-home="latest"] .home-more .btn');
@@ -1362,7 +1334,7 @@ test.describe('Latest posts in a release build (FD-103)', () => {
 
   test('phones: the card, then a full-width "All posts" (390px)', async ({ page }) => {
     await openFixture(page, 390, 844);
-    const [box] = await rects(page, '[data-home="latest"] .latest-card');
+    const [box] = await rects(page, '[data-home="latest"] .blog-card');
     const [more] = await rects(page, '[data-home="latest"] .home-more .btn');
     expect(more.top).toBeGreaterThanOrEqual(box.bottom);
     expect(Math.abs(more.width - box.width)).toBeLessThanOrEqual(1);
@@ -1378,7 +1350,6 @@ test.describe('Home keyboard walk', () => {
     ['header', '.site-header, #drawer'],
     ['hero', '[data-stage-hero]'],
     ['pillars', '.screen2-pillars'],
-    ['fork', '[data-stage-fork]'],
     ['services', '[data-home="hire"]'],
     ['selected', '[data-home="selected"]'],
     ['publications', '[data-home="publications"]'],
@@ -1426,7 +1397,6 @@ test.describe('Home keyboard walk', () => {
         'header',
         'hero',
         'pillars',
-        'fork',
         'services',
         'selected',
         'publications',
@@ -1507,19 +1477,26 @@ test.describe('section spacing (FD-101)', () => {
     }
   }
 
-  test('FD-101: --section-pad is clamp(40px, 5vw, 80px)', async ({ page }) => {
+  // H8 (1.6.0): the sections after the stage take one --home-gap, clamp(32px, 4vw, 56px).
+  test('FD-164: --home-gap is clamp(32px, 4vw, 56px), above and below every section', async ({
+    page,
+  }) => {
     for (const [width, pad] of [
-      [390, 40],
-      [1024, 51.2],
-      [1440, 72],
-      [1920, 80],
+      [390, 32],
+      [1024, 40.96],
+      [1440, 56],
+      [1920, 56],
     ]) {
       await page.setViewportSize({ width, height: 900 });
       await page.goto('/index.html');
       const value = await page
         .locator('[data-home="selected"]')
-        .evaluate((el) => parseFloat(getComputedStyle(el).paddingTop));
-      expect(value, `${width}px`).toBeCloseTo(pad, 1);
+        .evaluate((el) => [
+          parseFloat(getComputedStyle(el).paddingTop),
+          parseFloat(getComputedStyle(el).paddingBottom),
+        ]);
+      expect(value[0], `${width}px`).toBeCloseTo(pad, 1);
+      expect(value[1], `${width}px`).toBeCloseTo(pad, 1);
     }
   });
 });

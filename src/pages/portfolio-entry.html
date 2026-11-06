@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     {{> shell/head title=project.title shortTitle=project.short_title
-    description=project.contribution ogType="article"}}
+    description=project.contribution ogType="article" shareImage=project.shareImage
+    shareAlt=project.card_image.alt}}
   </head>
   <body data-page="project">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
@@ -12,13 +13,7 @@
       overview, results, study context) only where verified from the published study. --}}
       <div class="container project">
         <header class="page-head project-head">
-          <nav aria-label="Breadcrumb">
-            <ol class="list-unstyled breadcrumb-list mb-0">
-              <li><a class="link" href="/portfolio.html">Portfolio</a></li>
-              <li><a class="link" href="/research.html">Research projects</a></li>
-              <li aria-current="page">{{project.short_title}}</li>
-            </ol>
-          </nav>
+          {{> components/back-link href="/research.html" label="Projects"}}
           <h1 class="mb-0">{{project.title}}</h1>
           {{#if project.detail.summary_line}}
           <p class="t-body-l project-summary mb-0">{{project.detail.summary_line}}</p>
@@ -38,11 +33,13 @@
           </ul>
         </header>
 
-        {{#if project.image}}
-        <div class="project-cover">
-          {{> components/project-image project.image ratio="3x2" loading="eager"}}
+        {{!-- 1.7.0: the card image is the page-top image — 16:9, the full content width, with its
+        alt text; the LCP, so eager. --}}
+        <div class="blog-cover project-cover">
+          {{> components/card-image image=project.card_image eager=true sizes="(min-width: 1400px)
+          1296px, (min-width: 992px) 960px, 100vw"}}
         </div>
-        {{/if}} {{#if project.detail.system}}
+        {{#if project.detail.system}}
         <section class="system" aria-labelledby="system-title" data-reveal>
           <h2 class="t-label system-title mb-0" id="system-title">Conceptual system overview</h2>
           <ol class="list-unstyled system-steps mb-0">
@@ -58,45 +55,35 @@
           <p class="system-note mb-0">{{project.detail.system_note}}</p>
           {{/if}}
         </section>
-        {{/if}}
-
-        <div class="project-cols">
-          <div class="row">
-            <section class="col-lg-6 project-col" aria-labelledby="overview-title">
-              {{!-- FD-142: the template page only — a rich Overview as Django renders one
-              (div.project-text.project-rich), the visual and parity reference. --}} {{#if
-              richSamples}}
-              <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
-              {{> samples/rich-overview}}
-              <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>
-              {{else if project.detail.overview}}
-              <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
-              <p class="project-text">{{project.detail.overview}}</p>
-              <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>
-              {{else}}
-              <h2 class="project-h2" id="overview-title" data-reveal>Topics</h2>
-              {{/if}} {{> components/tag-pills tags=project.tags}}
-            </section>
-            <section
-              class="col-lg-6 project-col project-col-end"
-              aria-labelledby="contribution-title"
-            >
-              <h2 class="project-h2" id="contribution-title" data-reveal>My contribution</h2>
-              {{#if project.detail.contribution}}
-              <ul class="list-unstyled contribution-list mb-0">
-                {{#each project.detail.contribution}}
-                <li>{{this}}</li>
-                {{/each}}
-              </ul>
-              {{else}}
-              <p class="project-text detail-text mb-0">{{project.contribution}}</p>
-              {{/if}}
-            </section>
-          </div>
-        </div>
-        {{#if project.detail.results}}
-        <section class="project-section" aria-labelledby="results-title">
-          <h2 class="project-h2" id="results-title" data-reveal>System and results</h2>
+        {{/if}} {{!-- 1.7.0: one fixed order — Overview, Methods, Results (text with figures, then
+        the result blocks), Limitations, My contribution, related publication. Each block is
+        Markdown from the project's detail, with "[Figure n]" lines turned into figures
+        (tools/content.mjs); a block renders only where the data has it. --}}
+        <section class="project-section project-article" aria-labelledby="overview-title">
+          {{!-- FD-142: the template page only — a rich Overview as Django renders one
+          (div.project-text.project-rich), the visual and parity reference. --}} {{#if richSamples}}
+          <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
+          {{> samples/rich-overview}}
+          <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>
+          {{else if project.text.overview}}
+          <h2 class="project-h2" id="overview-title" data-reveal>Overview</h2>
+          <div class="prose project-prose">{{{project.text.overview}}}</div>
+          <h3 class="t-label project-topics-title" id="topics-title">Topics</h3>
+          {{else}}
+          <h2 class="project-h2" id="overview-title" data-reveal>Topics</h2>
+          {{/if}} {{> components/tag-pills tags=project.tags}}
+        </section>
+        {{#if project.text.methods}}
+        <section class="project-section project-article" aria-labelledby="methods-title">
+          <h2 class="project-h2" id="methods-title" data-reveal>Methods</h2>
+          <div class="prose project-prose">{{{project.text.methods}}}</div>
+        </section>
+        {{/if}} {{#if (or project.text.results project.detail.results)}}
+        <section class="project-section project-article" aria-labelledby="results-title">
+          <h2 class="project-h2" id="results-title" data-reveal>Results</h2>
+          {{#if project.text.results}}
+          <div class="prose project-prose">{{{project.text.results}}}</div>
+          {{/if}} {{#if project.detail.results}}
           <ul class="list-unstyled results mb-0">
             {{#each project.detail.results}}
             <li class="result" data-reveal>
@@ -108,12 +95,30 @@
             </li>
             {{/each}}
           </ul>
-          {{#if project.detail.context}}
+          {{/if}} {{#if project.detail.context}}
           <p class="study-context mb-0">{{project.detail.context}}</p>
           {{/if}}
         </section>
-        {{/if}} {{#if project.publications.length}}
-        <section class="project-section" aria-labelledby="publication-title">
+        {{/if}} {{#if project.text.limitations}}
+        <section class="project-section project-article" aria-labelledby="limitations-title">
+          <h2 class="project-h2" id="limitations-title" data-reveal>Limitations</h2>
+          <div class="prose project-prose">{{{project.text.limitations}}}</div>
+        </section>
+        {{/if}}
+        <section class="project-section project-article" aria-labelledby="contribution-title">
+          <h2 class="project-h2" id="contribution-title" data-reveal>My contribution</h2>
+          {{#if project.detail.contribution}}
+          <ul class="list-unstyled contribution-list mb-0">
+            {{#each project.detail.contribution}}
+            <li>{{this}}</li>
+            {{/each}}
+          </ul>
+          {{else}}
+          <p class="project-text detail-text mb-0">{{project.contribution}}</p>
+          {{/if}}
+        </section>
+        {{#if project.publications.length}}
+        <section class="project-section project-article" aria-labelledby="publication-title">
           <h2 class="project-h2" id="publication-title" data-reveal>
             {{#if (eq (count project.publications) 1)}}Related publication{{else}}Related
             publications{{/if}}
@@ -124,23 +129,7 @@
             {{/each}}
           </ul>
         </section>
-        {{/if}} {{#if project.gallery}}
-        <section class="project-section" aria-labelledby="gallery-title">
-          <h2 class="project-h2" id="gallery-title" data-reveal>Gallery</h2>
-          <ul class="list-unstyled row gallery mb-0">
-            {{#each project.gallery}}
-            <li class="col-md-4">
-              <figure class="gallery-item mb-0">
-                {{> components/project-image this ratio="4x3"}} {{#if caption}}
-                <figcaption class="t-meta gallery-caption">{{caption}}</figcaption>
-                {{/if}}
-              </figure>
-            </li>
-            {{/each}}
-          </ul>
-        </section>
         {{/if}}
-
         <div class="project-end">
           <p class="mb-0">
             <a class="back-link" href="/research.html"
@@ -157,7 +146,7 @@
             >
           </p>
           {{#if (or project.prev project.next)}}
-          <nav class="project-pager" aria-label="More research projects">
+          <nav class="project-pager" aria-label="More projects">
             {{#if project.prev}}
             <a class="card project-pager-link" href="/{{project.prev.file}}" rel="prev">
               <svg

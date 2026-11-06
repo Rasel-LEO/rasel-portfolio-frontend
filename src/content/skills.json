@@ -1,7 +1,7 @@
 [
   {
     "group": "Programming",
-    "items": ["Python", "C++", "C#", "Dart / Flutter", "R", "JavaScript", "PHP", "HTML", "CSS"]
+    "items": ["Python", "C++", "C#", "Flutter (Dart)", "R", "JavaScript", "PHP", "HTML", "CSS"]
   },
   {
     "group": "Embedded, IoT & AI",
@@ -15,11 +15,19 @@
     ]
   },
   {
-    "group": "Data",
-    "items": ["R", "Tableau", "SQLite", "MySQL", "PostgreSQL"]
+    "group": "Data & databases",
+    "items": ["Python", "R", "Tableau", "SQLite", "MySQL", "PostgreSQL"]
   },
   {
     "group": "Design & tools",
-    "items": ["Fusion 360", "AutoCAD", "Proteus", "STELLA", "GraphPad Prism", "Adobe Illustrator"]
+    "items": [
+      "Fusion 360",
+      "AutoCAD",
+      "Proteus",
+      "STELLA",
+      "GraphPad Prism",
+      "Adobe Illustrator",
+      "MS Office"
+    ]
   }
 ]

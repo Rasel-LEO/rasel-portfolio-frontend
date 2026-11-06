@@ -9,12 +9,21 @@ The bottom row keeps the back-to-top photo's slot free (FD-95, FD-104). --}}
         {{!-- FD-139: the signature form — the logo, then "by Rasel Al Mamun" as real text; the link
         names the site and the author for people and search engines alike. --}}
         <a class="footer-signature" href="/index.html"{{{ariaCurrent "home"}}}>{{> icons/logo class="footer-logo" width="220" height="32"}}<span class="visually-hidden">Ideatrium </span><span class="footer-by">{{footer.signature_by}}</span></a>
-        <p class="footer-role mb-0">{{footer.role_line}}</p>
+        {{!-- FD-148: the role line is the hero's (profile.role_line), one value for both. --}}
+        {{#if profile.role_line}}<p class="footer-role mb-0">{{{dots profile.role_line}}}</p>{{/if}}
         <p class="footer-affiliation mb-0">
           {{#each footerAffiliation}}<span class="d-block">{{this}}</span>{{/each}}
         </p>
-        <a class="footer-link footer-email" href="mailto:{{profile.email}}" aria-label="Email {{profile.email}}">{{> icons/footer-icon name="mail"}}<span class="link">{{profile.email}}</span></a>
-        <a class="footer-link footer-email footer-email-2" href="mailto:{{profile.secondary_email}}" aria-label="Email {{profile.secondary_email}}">{{> icons/footer-icon name="mail"}}<span class="link">{{profile.secondary_email}}</span></a>
+        {{!-- FD-155: both addresses in one tight group, one envelope icon. --}}
+        {{#if (or profile.email profile.secondary_email)}}
+        <div class="footer-emails">
+          {{> icons/footer-icon name="mail"}}
+          <ul class="list-unstyled mb-0">
+            {{#if profile.email}}<li><a class="footer-email" href="mailto:{{profile.email}}" aria-label="Email {{profile.email}}"><span class="link">{{profile.email}}</span></a></li>{{/if}}
+            {{#if profile.secondary_email}}<li><a class="footer-email footer-email-2" href="mailto:{{profile.secondary_email}}" aria-label="Email {{profile.secondary_email}}"><span class="link">{{profile.secondary_email}}</span></a></li>{{/if}}
+          </ul>
+        </div>
+        {{/if}}
       </div>
 
       <nav class="col-5 col-lg-2 offset-lg-1 footer-group" aria-labelledby="footer-explore">
@@ -27,6 +36,7 @@ The bottom row keeps the back-to-top photo's slot free (FD-95, FD-104). --}}
         </ul>
       </nav>
 
+      {{#if footerLinks.research.length}}
       <nav class="col-7 col-lg-3 footer-group" aria-labelledby="footer-research">
         <p class="footer-group-title mb-0" id="footer-research">{{footer.groups.research}}</p>
         <ul class="list-unstyled mb-0">
@@ -35,7 +45,9 @@ The bottom row keeps the back-to-top photo's slot free (FD-95, FD-104). --}}
           {{/each}}
         </ul>
       </nav>
+      {{/if}}
 
+      {{#if footerLinks.connect.length}}
       <nav class="col-12 col-lg-2 footer-group footer-connect" aria-labelledby="footer-connect">
         <p class="footer-group-title mb-0" id="footer-connect">{{footer.groups.connect}}</p>
         <ul class="list-unstyled mb-0">
@@ -44,17 +56,16 @@ The bottom row keeps the back-to-top photo's slot free (FD-95, FD-104). --}}
           {{/each}}
         </ul>
       </nav>
+      {{/if}}
     </div>
 
     <div class="site-footer-bottom">
-      {{!-- FD-141: the AI-generated portraits are disclosed on every page, beside the copyright. --}}
       <div class="footer-legal">
         <p class="footer-copyright mb-0">© {{buildYear}} {{footer.copyright_name}}</p>
-        <p class="footer-ai-note mb-0">{{footer.ai_portrait_note}}</p>
         {{!-- FD-143: the Privacy Policy on every page; Django: {% url 'privacy' %} (/privacy/). --}}
         <p class="footer-privacy mb-0"><a class="footer-link footer-privacy-link" href="/privacy.html"{{{ariaCurrent "privacy"}}}><span class="link">{{privacy.link_label}}</span></a></p>
       </div>
-      <button type="button" class="btn btn-secondary footer-theme js-only" data-theme-toggle aria-label="Theme: dark"><svg class="icon icon-moon" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" /></svg><svg class="icon icon-sun" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4" /><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" /></svg>Theme</button>
+      {{> components/theme-button class="footer-theme"}}
     </div>
   </div>
 </footer>

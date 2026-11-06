@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { expect, test } from './fixtures.js';
 import { buildSite, loadContent } from '../tools/content.mjs';
 import { validateContent } from '../tools/validate-content.mjs';
-import { isDjango, pageEnd, pagePath } from './pages.js';
+import { isDjango, pagePath } from './pages.js';
 
 const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
 const inner = read('docs/content/inner-pages-content.json');
@@ -19,7 +19,7 @@ test.describe('item 1: content', () => {
     const content = loadContent();
     const pub = read('docs/content/public-content.json');
     for (const blogPage of [content.blogPage, pub.blog_page]) {
-      for (const key of ['eyebrow_draft', 'heading', 'intro', 'count_label_draft', 'covers']) {
+      for (const key of ['eyebrow', 'heading', 'intro', 'count_label']) {
         expect(blogPage[key], key).toEqual(inner.blog_page[key]);
       }
     }
@@ -43,7 +43,7 @@ test.describe('item 1: content', () => {
     for (const project of site.projectList) {
       expect(topics.has(project.topic), project.id).toBe(true);
       expect(project.short_title, project.id).toBeTruthy();
-      expect(project.short_summary, project.id).toBeTruthy();
+      expect(project.card_description, project.id).toBeTruthy();
     }
     expect(site.projectList.filter((p) => p.detail).map((p) => p.id)).toEqual([
       'biofloc-iot',
@@ -52,7 +52,7 @@ test.describe('item 1: content', () => {
     expect(validateContent(loadContent())).toEqual([]);
   });
 
-  test('validate-content checks topics, short titles, details and covers', () => {
+  test('validate-content checks topics, short titles and details', () => {
     const content = structuredClone(loadContent());
     const [first, second, third] = content.projects;
     first.topic = 'space';
@@ -60,7 +60,6 @@ test.describe('item 1: content', () => {
     const biofloc = content.projects.find((p) => p.id === 'biofloc-iot');
     biofloc.detail.system = biofloc.detail.system.slice(0, 2);
     third.detail = { invented_fact: 'x' };
-    content.blogPage.covers['no-such-post'] = { illustration: 'sensor-node', alt: 'x' };
     const problems = validateContent(content).join('\n');
     expect(problems).toContain(`projects[1]: missing "short_title"`);
     expect(problems).toContain(`projects[2]: invalid "detail"`);
@@ -68,16 +67,12 @@ test.describe('item 1: content', () => {
 
     const topic = structuredClone(loadContent());
     topic.projects[0].topic = 'space';
-    topic.blogPage.covers['no-such-post'] = { illustration: 'sensor-node', alt: 'x' };
     const cross = validateContent(topic).join('\n');
     expect(cross).toContain(`projects "${topic.projects[0].id}": unknown topic "space"`);
-    expect(cross).toContain('blogPage.covers: unknown post "no-such-post"');
 
     const cover = structuredClone(loadContent());
-    cover.blogPage.covers['edge-ai-poultry-farm'].illustration = 'photo';
     cover.researchArchive.topics[0].icon = 'rocket';
     const shape = validateContent(cover).join('\n');
-    expect(shape).toContain('blogPage: invalid "covers"');
     expect(shape).toContain('researchArchive: invalid "topics"');
 
     const icon = structuredClone(loadContent());
@@ -94,9 +89,11 @@ test.describe('item 2: illustrations and icons', () => {
     const { COVER_ILLUSTRATIONS, SYSTEM_ICONS, TOPIC_ICONS } =
       await import('../tools/validate-content.mjs');
     expect(branches(partial('illustration')).sort()).toEqual([...COVER_ILLUSTRATIONS].sort());
-    expect(branches(partial('line-icon')).sort()).toEqual([...SYSTEM_ICONS, ...TOPIC_ICONS].sort());
+    // FD-159: "general" is the fallback branch ({{else}}), not a named one.
+    expect(branches(partial('line-icon')).sort()).toEqual(
+      [...SYSTEM_ICONS, ...TOPIC_ICONS].filter((key) => key !== 'general').sort(),
+    );
     const used = [
-      ...Object.values(site.blogPage.covers).map((cover) => cover.illustration),
       ...site.researchArchive.topics.map((topic) => topic.icon),
       ...site.projectList.flatMap((p) =>
         [...(p.detail?.system ?? []), ...(p.detail?.results ?? [])].map((step) => step.icon),
@@ -147,27 +144,30 @@ test.describe('item 3: Blog (FD-112, FD-113)', () => {
     );
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/blog.html');
-    await expect(page.locator('[data-blog-eyebrow]')).toHaveText(site.blogPage.eyebrow_draft);
+    await expect(page.locator('[data-blog-eyebrow]')).toHaveText(site.blogPage.eyebrow);
     await expect(page.locator('h1')).toHaveText(site.blogPage.heading);
     await expect(page.locator('.page-intro')).toHaveText(site.blogPage.intro);
-    await expect(page.locator('[data-category-count]')).toHaveText('3 drafts');
-    const group = page.getByRole('group', { name: 'Filter posts by category' });
-    await expect(group.getByRole('button')).toHaveText([
+    await expect(page.locator('.blog-count')).toHaveText('3 articles');
+    const group = page.getByRole('navigation', { name: 'Blog categories' });
+    await expect(group.getByRole('link')).toHaveText([
       'All',
       ...site.categories.map((c) => c.label),
     ]);
     const ink = group.locator('.pf-tab-ink');
     const under = async (name) => {
-      const tab = await group.getByRole('button', { name }).boundingBox();
+      const tab = await group.getByRole('link', { name }).boundingBox();
       const line = await ink.boundingBox();
+      if (!tab || !line) return false;
       return Math.abs(tab.x - line.x) < 1 && Math.abs(tab.width - line.width) < 1;
     };
     await expect.poll(() => under('All')).toBe(true);
-    await group.getByRole('button', { name: 'Tech review' }).click();
+    await group.getByRole('link', { name: 'Tech review' }).click();
     await expect.poll(() => under('Tech review')).toBe(true);
   });
 
-  test('cards: decorative cover drawing, label, title, excerpt, Read article', async ({ page }) => {
+  test('cards: decorative card image, label, title, description, Read article', async ({
+    page,
+  }) => {
     test.skip(
       isDjango,
       'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
@@ -176,9 +176,10 @@ test.describe('item 3: Blog (FD-112, FD-113)', () => {
     for (const post of site.postList) {
       const card = page.locator(`[data-post-category="${post.category}"] .blog-card`);
       // Decorative on the card, which its link names; named on the post.
-      const cover = card.locator('.blog-cover svg');
-      await expect(cover).toHaveAttribute('aria-hidden', 'true');
-      await expect(cover).not.toHaveAttribute('role', 'img');
+      const cover = card.locator('.blog-cover img');
+      await expect(cover).toHaveAttribute('alt', '');
+      await expect(cover).toHaveAttribute('width', '1600');
+      await expect(cover).toHaveAttribute('height', '900');
       const ratio = await card
         .locator('.blog-cover')
         .evaluate((el) => el.clientWidth / el.clientHeight);
@@ -222,11 +223,10 @@ test.describe('item 3: Blog (FD-112, FD-113)', () => {
       const release = buildInto({ RELEASE: 'true', CONTENT_FIXTURE: fixture });
       outDirs.push(release);
       const html = readFileSync(join(release, 'blog.html'), 'utf8');
-      expect(html).not.toContain(site.blogPage.eyebrow_draft);
       expect(html).not.toContain('data-draft-label');
       expect(html).not.toMatch(/\bdrafts?\b/);
-      expect(html).toMatch(/data-blog-eyebrow>\s*Blog\s*</);
-      expect(html).toMatch(/data-category-count>\s*1 post\s*</);
+      expect(html).toContain(site.blogPage.eyebrow.replace('&', '&amp;'));
+      expect(html).toMatch(/data-results-status>\s*1 article\s*</);
       expect(html).toContain(blog[1].title);
       expect(html).not.toContain(blog[0].title);
     } finally {
@@ -238,15 +238,17 @@ test.describe('item 3: Blog (FD-112, FD-113)', () => {
 test.describe('item 3: Blog without JavaScript', () => {
   test.use({ javaScriptEnabled: false });
 
-  test('every card is shown and links to its post; no tabs', async ({ page }) => {
+  test('every card is shown and links to its post; the category tabs are links', async ({
+    page,
+  }) => {
     test.skip(
       isDjango,
       'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
     );
     await page.goto('/blog.html');
-    await expect(page.locator('[data-category-filter]')).toBeHidden();
+    await expect(page.getByRole('navigation', { name: 'Blog categories' })).toBeVisible();
     await expect(page.locator('.blog-card:visible')).toHaveCount(site.postList.length);
-    await expect(page.locator('[data-category-count]')).toHaveText('3 drafts');
+    await expect(page.locator('.blog-count')).toHaveText('3 articles');
   });
 });
 
@@ -259,8 +261,9 @@ test.describe('item 4: post page (FD-114)', () => {
     test.skip(isDjango, 'Django: no post page exists, the posts are drafts (FD-137)');
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`/${post.file}`);
-    const cover = page.locator('.post-cover svg');
-    await expect(cover).toHaveAttribute('aria-label', post.cover.alt);
+    // 1.7.0: the card image is the page-top image, 16:9, with its alt text.
+    const cover = page.locator('.post-cover img');
+    await expect(cover).toHaveAttribute('alt', post.card_image.alt);
     const toc = page.getByRole('navigation', { name: site.postSidebar.toc_heading });
     await expect(toc.getByRole('link')).toHaveText(post.toc.map((item) => item.label));
     for (const item of post.toc) {
@@ -321,132 +324,12 @@ test.describe('item 4: post page (FD-114)', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/${post.file}`);
     await expect(page.locator('[data-post-toc]')).toBeHidden();
-    const article = await page.locator('article.post').boundingBox();
     const author = await page.locator('.author-card').boundingBox();
     const more = await page.locator('.post-more').boundingBox();
+    const article = await page.locator('article.post').boundingBox();
     expect(author.y).toBeGreaterThanOrEqual(article.y + article.height);
     expect(more.y).toBeGreaterThan(author.y);
     expect(author.width).toBeGreaterThan(300);
-  });
-});
-
-test.describe('item 5: research archive (FD-115)', () => {
-  const { archive } = site;
-  const showing = (n) =>
-    archive.count_label.replace('{shown}', String(n)).replace('{total}', String(archive.total));
-
-  test('head, controls, live count; no Status filter, no pagination', async ({ page }) => {
-    await page.goto('/research.html');
-    await expect(page.locator('h1')).toHaveText(archive.heading);
-    await expect(page.locator('.page-intro')).toHaveText(archive.intro);
-    const search = page.getByRole('searchbox', { name: archive.search_label });
-    await expect(search).toHaveAttribute('placeholder', archive.search_placeholder);
-    const topic = page.getByRole('combobox', { name: archive.topic_label });
-    await expect(topic.locator('option')).toHaveText([
-      archive.topic_all,
-      ...archive.topics.map((t) => t.label),
-    ]);
-    await expect(page.getByRole('combobox')).toHaveCount(1);
-    await expect(page.getByRole('navigation', { name: /pagination/i })).toHaveCount(0);
-    const count = page.locator('[data-archive-count]');
-    await expect(count).toHaveAttribute('aria-live', 'polite');
-    await expect(count).toHaveText(showing(15));
-  });
-
-  test('cards: topic icon and label, status, short title, role, summary, two pills', async ({
-    page,
-  }) => {
-    await page.goto('/research.html');
-    for (const project of archive.cards) {
-      const card = page.locator(`[data-project-card]:has(a[href="${pagePath(project.file)}"])`);
-      await expect(card.locator('.archive-topic .line-icon')).toHaveCount(1);
-      await expect(card.locator('.archive-topic')).toHaveText(project.topicLabel);
-      await expect(card.locator('.archive-card-role')).toHaveText(project.roleLine);
-      await expect(card.locator('.pf-card-summary')).toHaveText(project.short_summary);
-      await expect(card.locator('.pill')).toHaveCount(2);
-      await expect(card.locator('.status-progress')).toHaveCount(
-        project.status === 'in-progress' ? 1 : 0,
-      );
-    }
-  });
-
-  test('search (titles and tags) and topic filter together; empty state', async ({ page }) => {
-    await page.goto('/research.html');
-    const search = page.getByRole('searchbox', { name: archive.search_label });
-    const topic = page.getByRole('combobox', { name: archive.topic_label });
-    const visible = page.locator('[data-project-card]:visible');
-    const count = page.locator('[data-archive-count]');
-    const empty = page.locator('[data-archive-empty]');
-
-    const expected = (words, topicId) =>
-      archive.cards.filter(
-        (card) =>
-          (!topicId || card.topic === topicId) &&
-          words.every((word) => card.search.includes(word.toLowerCase())),
-      );
-
-    for (const [words, topicId] of [
-      [['biofloc'], ''],
-      [['Edge', 'AI'], ''],
-      [['solar'], 'irrigation'],
-      [[], 'aquaculture'],
-      [['ergonomics'], ''],
-    ]) {
-      await search.fill(words.join(' '));
-      await topic.selectOption(topicId);
-      const want = expected(words, topicId);
-      expect(want.length, words.join(' ')).toBeGreaterThan(0);
-      await expect(visible).toHaveCount(want.length);
-      await expect(count).toHaveText(showing(want.length));
-      await expect(empty).toBeHidden();
-    }
-    await search.fill('blockchain');
-    await topic.selectOption('');
-    await expect(visible).toHaveCount(0);
-    await expect(count.locator('[data-count-text]')).toHaveText(showing(0));
-    // The live count also says the advice.
-    await expect(count).toHaveText(`${showing(0)} ${archive.empty}`);
-    await expect(empty).toBeVisible();
-    await expect(empty).toHaveText(archive.empty);
-    await search.fill('');
-    await expect(visible).toHaveCount(15);
-    // Enter does not reload the page.
-    await search.press('Enter');
-    await expect(page).toHaveURL(pageEnd('research.html'));
-  });
-
-  test('?q= and ?topic= start the filter', async ({ page }) => {
-    await page.goto('/research.html?q=poultry&topic=poultry');
-    await expect(page.getByRole('searchbox')).toHaveValue('poultry');
-    await expect(page.getByRole('combobox')).toHaveValue('poultry');
-    await expect(page.locator('[data-project-card]:visible')).toHaveCount(
-      archive.cards.filter((c) => c.topic === 'poultry' && c.search.includes('poultry')).length,
-    );
-  });
-
-  test('320 px: controls stacked, full width, usable', async ({ page }) => {
-    await page.setViewportSize({ width: 320, height: 700 });
-    await page.goto('/research.html');
-    const search = await page.getByRole('searchbox').boundingBox();
-    const topic = await page.getByRole('combobox').boundingBox();
-    expect(topic.y).toBeGreaterThan(search.y);
-    expect(Math.round(search.width)).toBe(Math.round(topic.width));
-    expect(search.height).toBeGreaterThanOrEqual(44);
-    await page.getByRole('combobox').selectOption('machinery');
-    await expect(page.locator('[data-project-card]:visible')).toHaveCount(
-      archive.cards.filter((c) => c.topic === 'machinery').length,
-    );
-  });
-});
-
-test.describe('item 5: research archive without JavaScript', () => {
-  test.use({ javaScriptEnabled: false });
-
-  test('every card shown, controls hidden, count for all', async ({ page }) => {
-    await page.goto('/research.html');
-    await expect(page.locator('[data-archive-filter]')).toBeHidden();
-    await expect(page.locator('[data-project-card]:visible')).toHaveCount(15);
-    await expect(page.locator('[data-archive-count]')).toHaveText(site.archive.countText);
   });
 });
 
@@ -457,16 +340,19 @@ test.describe('item 6: project detail template (FD-116)', () => {
     }) => {
       const detail = inner.projects[project.id].detail;
       await page.goto(`/${project.file}`);
-      const crumbs = page.getByRole('navigation', { name: 'Breadcrumb' });
-      await expect(crumbs.getByRole('link')).toHaveText(['Portfolio', 'Research projects']);
-      await expect(crumbs.locator('[aria-current="page"]')).toHaveText(project.short_title);
+      // S5 (1.6.0): one back link at the top, "← Projects".
+      const back = page.getByRole('navigation', { name: 'Back' });
+      await expect(back.getByRole('link')).toHaveText('Projects');
+      await expect(back.getByRole('link')).toHaveAttribute('href', pagePath('research.html'));
       await expect(page.locator('h1')).toHaveText(project.title);
 
       // Facts: role always; period and status where set; the detail facts where given.
       const facts = [
         ['Role', detail?.facts?.role ?? project.role],
         ...(project.period ? [['Period', project.period]] : []),
-        ...(project.status ? [['Status', project.status === 'done' ? 'Done' : 'In progress']] : []),
+        ...(project.status
+          ? [['Status', project.status === 'done' ? 'Completed' : 'In progress']]
+          : []),
         ...(detail?.facts?.institution
           ? [['Institution', `${detail.facts.institution}${detail.facts.unit ?? ''}`]]
           : []),
@@ -490,7 +376,20 @@ test.describe('item 6: project detail template (FD-116)', () => {
         );
         await expect(system.locator('.system-step .line-icon')).toHaveCount(3);
         await expect(system.locator('.system-note')).toHaveText(detail.system_note);
-        await expect(page.locator('.project-text').first()).toHaveText(detail.overview);
+        // 1.7.0: Overview, Methods, Results and Limitations are Markdown text blocks.
+        const blocks = {
+          overview: detail.overview,
+          methods: detail.methods,
+          results: detail.results_text,
+          limitations: detail.limitations,
+        };
+        for (const [key, text] of Object.entries(blocks)) {
+          await expect(page.locator(`#${key}-title`), key).toHaveCount(text ? 1 : 0);
+        }
+        await expect(page.locator('.project-prose').first()).toContainText(
+          detail.overview.split('\n')[0],
+        );
+        await expect(page.locator('figure.fig')).toHaveCount(detail.figures?.length ?? 0);
         await expect(page.locator('.contribution-list li')).toHaveText(detail.contribution);
         await expect(results.locator('.result-title')).toHaveText(
           detail.results.map((r) => r.title),
@@ -511,7 +410,7 @@ test.describe('item 6: project detail template (FD-116)', () => {
         }
         await expect(page.locator('.detail-text')).toHaveText(project.contribution);
       }
-      await expect(page.locator('.project-cols .pill')).toHaveText(project.tags);
+      await expect(page.locator('.project-article .pill')).toHaveText(project.tags);
 
       // Related publication: full citation, DOI and Read publication in a new tab.
       const pubs = page.locator('.related-pub');
@@ -537,7 +436,7 @@ test.describe('item 6: project detail template (FD-116)', () => {
         'href',
         pagePath('research.html'),
       );
-      const pager = page.getByRole('navigation', { name: 'More research projects' });
+      const pager = page.getByRole('navigation', { name: 'More projects' });
       for (const [rel, other] of [
         ['prev', project.prev],
         ['next', project.next],
@@ -580,19 +479,19 @@ const topsOf = (locator) =>
   locator.evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
 
 test.describe('item 7: Hire me (FD-117)', () => {
-  test('1440: heading left, availability and two actions right; one-row process; form beside the aside', async ({
+  test('1440: heading left, availability and Start a brief right; one-row process; form beside the aside', async ({
     page,
   }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/hire.html');
     const h1 = await page.locator('h1').boundingBox();
-    const aside = await page.locator('.hire-head .band-aside').boundingBox();
+    const aside = await page.locator('.hire-head-row .band-actions').boundingBox();
     expect(aside.x).toBeGreaterThan(h1.x + h1.width - 1);
-    await expect(page.locator('.hire-head .band-text')).toHaveText(site.hire.availability);
+    await expect(page.locator('.hire-head .availability')).toHaveText(site.hire.availability);
+    // F2 (1.6.0): the availability line and "Start a brief" — no CV button in the head.
     const actions = page.locator('.hire-head .band-actions a');
-    await expect(actions).toHaveCount(2);
+    await expect(actions).toHaveCount(1);
     await expect(actions.first()).toHaveAttribute('href', '#brief');
-    await expect(actions.nth(1)).toHaveText(/Request CV|Download CV/);
     await expect(page.locator('.service')).toHaveCount(site.hire.services.length);
     expect(new Set(await topsOf(page.locator('.step'))).size).toBe(1);
     const form = await page.locator('form[data-form="hire"]').boundingBox();
@@ -602,7 +501,7 @@ test.describe('item 7: Hire me (FD-117)', () => {
     await expect(page).toHaveURL(/#brief$/);
   });
 
-  test('390: stacked, the two head actions full width', async ({ page }) => {
+  test('390: stacked, the head action full width', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/hire.html');
     const main = await page.locator('.hire-head .band-actions').boundingBox();
@@ -617,7 +516,7 @@ test.describe('item 7: Hire me (FD-117)', () => {
 });
 
 test.describe('item 8: Contact (FD-118)', () => {
-  test('1440: form | email + Copy, profile links, audiences', async ({ page }) => {
+  test('1440: form | What to expect, audiences', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/contact.html');
     const form = await page.locator('form[data-form="contact"]').boundingBox();
@@ -625,13 +524,16 @@ test.describe('item 8: Contact (FD-118)', () => {
     const box = await aside.boundingBox();
     expect(box.x).toBeGreaterThan(form.x + form.width - 1);
     expect(Math.abs(box.y - form.y)).toBeLessThan(80);
-    await expect(aside.getByRole('button', { name: /Copy/ })).toBeVisible();
-    await expect(aside.getByRole('link', { name: site.profile.email })).toHaveAttribute(
-      'href',
-      `mailto:${site.profile.email}`,
+    // C1 (1.6.0): no Direct and no Elsewhere card, no email; What to expect, then the audiences.
+    await expect(aside.getByRole('link')).toHaveCount(0);
+    await expect(aside.locator('.aside-box h2')).toHaveText([
+      site.contact.expect.heading,
+      "Who I'd like to hear from",
+    ]);
+    await expect(aside.locator('.expect-item dt')).toHaveText(
+      site.contact.expect.items.map((item) => item.label),
     );
-    await expect(aside.locator('.profile-link svg.footer-icon')).toHaveCount(site.links.length);
-    await expect(aside.locator('ol li')).toHaveText(site.contact.audiences);
+    await expect(aside.locator('ul.plain-list li')).toHaveText(site.contact.audiences);
   });
 
   test('390: stacked — the form, then the aside, full width', async ({ page }) => {
@@ -645,30 +547,33 @@ test.describe('item 8: Contact (FD-118)', () => {
 });
 
 test.describe('item 9: 404 and site-wide links (FD-119, FD-76)', () => {
-  test('404: section style, approved line, three ways on, seated photo', async ({ page }) => {
+  test('404: centred — a large 404, the approved line, a line drawing, four links, no portrait (N1)', async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto('/404.html');
-    await expect(page.locator('main .eyebrow')).toHaveText('404');
+    await expect(page.locator('.not-found-code')).toHaveText('404');
     await expect(page.locator('h1')).toHaveText('Page not found');
     await expect(page.locator('main .page-intro')).toHaveText(site.meta['404']);
     const actions = page.locator('.not-found-actions a');
-    await expect(actions).toHaveText(['Home', 'Portfolio', 'Blog']);
+    await expect(actions).toHaveText(['Home', 'Projects', 'Blog', 'Contact']);
     for (const [i, href] of [
       pagePath('index.html'),
-      pagePath('portfolio.html'),
+      pagePath('research.html'),
       pagePath('blog.html'),
+      pagePath('contact.html'),
     ].entries()) {
       await expect(actions.nth(i)).toHaveAttribute('href', href);
     }
-    const figure = page.locator('.not-found-figure');
-    await expect(figure).toHaveAttribute('aria-hidden', 'true');
-    const img = figure.locator('img');
-    await expect
-      .poll(() => img.evaluate((el) => el.complete && el.naturalWidth))
-      .toBeGreaterThan(0);
-    const text = await page.locator('.not-found .col-md-7').boundingBox();
-    const photo = await figure.boundingBox();
-    expect(photo.x).toBeGreaterThan(text.x + text.width - 1);
+    // The line drawing in the blog-cover frame; no photograph.
+    await expect(page.locator('main .not-found-art svg.illustration')).toHaveCount(1);
+    await expect(page.locator('main img')).toHaveCount(0);
+    // Centred: the heading's middle is the window's middle.
+    const h1 = await page.locator('h1').boundingBox();
+    expect(Math.abs(h1.x + h1.width / 2 - 720)).toBeLessThan(2);
+    // N2: the message sits high — the 404 starts within 140 px of the header.
+    const code = await page.locator('.not-found-code').boundingBox();
+    expect(code.y).toBeLessThan(64 + 140);
   });
 
   // 1.5.0 (the error-page note): in forced-colours mode the system drops backgrounds, so a pill
@@ -685,22 +590,27 @@ test.describe('item 9: 404 and site-wide links (FD-119, FD-76)', () => {
           getComputedStyle(el).borderTopWidth,
         ]),
       );
-    expect(borders).toHaveLength(3);
+    expect(borders).toHaveLength(4);
     for (const [style, width] of borders) {
       expect(style).toBe('solid');
       expect(parseFloat(width)).toBeGreaterThanOrEqual(1);
     }
   });
 
-  test('404 at 390: actions full width, photo under the copy', async ({ page }) => {
+  test('404 at 390: actions full width, the drawing above them', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/404.html');
     const list = await page.locator('.not-found-actions').boundingBox();
     for (const action of await page.locator('.not-found-actions a').all()) {
       expect(Math.round((await action.boundingBox()).width)).toBe(Math.round(list.width));
     }
-    const photo = await page.locator('.not-found-figure').boundingBox();
-    expect(photo.y).toBeGreaterThan(list.y + list.height);
+    const art = await page.locator('.not-found-art').boundingBox();
+    expect(art.y + art.height).toBeLessThan(list.y);
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      ),
+    ).toBeLessThanOrEqual(0);
   });
 
   test('every external link on every page opens a new tab and says so', () => {
@@ -752,7 +662,7 @@ test.describe('item 9: 404 and site-wide links (FD-119, FD-76)', () => {
       probe.remove();
       return colour;
     });
-    const link = page.locator('.breadcrumb-list .link');
+    const link = page.locator('.author-links .link').first();
     const style = () =>
       link.evaluate((el) => {
         const c = getComputedStyle(el);
@@ -790,7 +700,7 @@ test.describe('item 10: phones and tablets', () => {
     await page.goto('/blog.html');
     const group = page.locator('[data-category-filter]');
     const tops = await group
-      .getByRole('button')
+      .getByRole('link')
       .evaluateAll((els) => els.map((el) => Math.round(el.getBoundingClientRect().top)));
     expect(new Set(tops).size).toBe(1);
     // The row scrolls inside itself; the page never does (no scrollbar shown).
@@ -807,7 +717,7 @@ test.describe('item 10: phones and tablets', () => {
       expect(box.height).toBeGreaterThanOrEqual(44);
       expect(box.width).toBeGreaterThanOrEqual(44);
     }
-    await page.getByRole('button', { name: 'Education' }).click();
+    await page.getByRole('link', { name: 'Education' }).click();
     await expect(page.locator('.blog-card:visible')).toHaveCount(1);
   });
 
@@ -824,7 +734,7 @@ test.describe('item 10: phones and tablets', () => {
         '.ext-link',
         '.profile-link',
         '.not-found-actions a',
-        '.breadcrumb-list a',
+        '.back-category',
         '.band-actions a',
         '.field-control',
       ].join(', ');
@@ -950,9 +860,9 @@ test.describe('category tabs and empty states', () => {
       );
       await page.setViewportSize({ width, height: 844 });
       await page.goto('/blog.html');
-      const group = page.getByRole('group', { name: 'Filter posts by category' });
+      const group = page.getByRole('navigation', { name: 'Blog categories' });
       const ink = group.locator('.pf-tab-ink');
-      const tabs = group.getByRole('button');
+      const tabs = group.getByRole('link');
       const view = await group.boundingBox();
       for (const tab of [...(await tabs.all()), ...(await tabs.all()).reverse()]) {
         await tab.click();
@@ -960,6 +870,7 @@ test.describe('category tabs and empty states', () => {
           .poll(async () => {
             const t = await tab.boundingBox();
             const i = await ink.boundingBox();
+            if (!t || !i) return false;
             const inView = t.x >= view.x - 1 && t.x + t.width <= view.x + view.width + 1;
             const under = Math.abs(t.x - i.x) < 1 && Math.abs(t.width - i.width) < 1;
             return inView && under && Math.abs(t.y + t.height - (i.y + i.height)) < 2;
@@ -976,16 +887,17 @@ test.describe('category tabs and empty states', () => {
     );
     await page.setViewportSize({ width: 768, height: 900 });
     await page.goto('/blog.html');
-    const group = page.getByRole('group', { name: 'Filter posts by category' });
+    const group = page.getByRole('navigation', { name: 'Blog categories' });
     const ink = group.locator('.pf-tab-ink');
     await expect(group).toHaveCSS('overflow-x', 'visible');
-    const tabs = group.getByRole('button');
+    const tabs = group.getByRole('link');
     for (const tab of await tabs.all()) {
       await tab.click();
       await expect
         .poll(async () => {
           const t = await tab.boundingBox();
           const i = await ink.boundingBox();
+          if (!t || !i) return false;
           return Math.abs(t.x - i.x) < 1 && Math.abs(t.y + t.height - (i.y + i.height)) < 2;
         })
         .toBe(true);
@@ -994,30 +906,17 @@ test.describe('category tabs and empty states', () => {
     }
   });
 
-  test('counts say "drafts" only when every counted post is a draft', () => {
+  test('counts say "{n} articles" ("1 article") and the eyebrow is fixed (B1, B2)', () => {
     const content = structuredClone(loadContent());
     content.blog[0] = { ...content.blog[0], status: 'published', date: '2026-10-26' };
     const mixed = buildSite(content, { showDrafts: true });
-    expect(mixed.blogView.eyebrow).toBe(content.blogPage.eyebrow_draft);
-    expect(mixed.blogView.countText).toBe('3 posts');
-    const [published, drafted] = mixed.categories;
-    expect(published.countText).toBe(`1 post in ${published.label}`);
-    expect(drafted.countText).toBe(`1 draft in ${drafted.label}`);
-    expect(site.blogView.countText).toBe('3 drafts');
-  });
-
-  test('an empty Blog category is announced with its message', async ({ page }) => {
-    test.skip(
-      isDjango,
-      'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
-    );
-    await page.goto('/blog.html');
-    await page.locator('[data-post-category="education"]').evaluate((el) => el.remove());
-    await page.getByRole('button', { name: 'Education' }).click();
-    // Its own line, shown and announced.
-    await expect(page.locator('[data-category-count]')).toContainText(site.blogPage.empty_category);
-    await expect(page.locator('[data-empty-category]')).toHaveText(site.blogPage.empty_category);
-    await expect(page.locator('[data-empty-all]')).toBeHidden();
+    expect(mixed.blogView.eyebrow).toBe(content.blogPage.eyebrow);
+    expect(mixed.blogView.countText).toBe('3 articles');
+    const [first, second] = mixed.categories;
+    expect(first.countText).toBe(`1 article in ${first.label}`);
+    expect(second.countText).toBe(`1 article in ${second.label}`);
+    expect(site.blogView.eyebrow).toBe('Blog / Articles & notes');
+    expect(site.blogView.countText).toBe('3 articles');
   });
 
   test('footer links: no underline at rest, FD-76 underline on hover (FD-94)', async ({ page }) => {
@@ -1032,20 +931,21 @@ test.describe('category tabs and empty states', () => {
     await expect.poll(() => size(portfolio)).toBe('100% 2px');
     // The page you are on keeps its 2 px line; other links keep FD-76 at rest.
     expect(await size(footer.locator('a[aria-current] .link'))).toBe('100% 2px');
-    expect(await size(page.locator('main .blog-bar ~ * .link, main .link').first())).not.toBe(
-      '0px 1px',
-    );
   });
 
-  test('post figure placeholder: a compact 16:9 box in the article column', async ({ page }) => {
+  test('post figures: whole image, "Figure n." caption, a wide one stays in the text column', async ({
+    page,
+  }) => {
     test.skip(isDjango, 'Django: no post page exists, the posts are drafts (FD-137)');
     await page.setViewportSize({ width: 1440, height: 900 });
     await page.goto(`/${site.postList[0].file}`);
-    const figure = page.locator('.prose figure.media-ph');
-    const box = await figure.boundingBox();
-    expect(box.width / box.height).toBeCloseTo(16 / 9, 1);
+    const figures = page.locator('.prose figure.fig');
+    await expect(figures).toHaveCount(site.postList[0].figures.length);
+    const wide = await page.locator('.prose figure.fig-wide').boundingBox();
     const prose = await page.locator('.prose').boundingBox();
-    expect(box.width).toBeLessThanOrEqual(prose.width + 1);
+    expect(Math.abs(wide.width - prose.width)).toBeLessThanOrEqual(1);
+    expect(wide.x).toBeGreaterThanOrEqual(prose.x - 1);
+    await expect(figures.first().locator('img')).toHaveCSS('object-fit', 'contain');
   });
 
   test('the DOI link has the ↗ icon (FD-76)', async ({ page }) => {

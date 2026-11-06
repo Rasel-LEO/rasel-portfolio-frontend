@@ -8,7 +8,7 @@
 export function tabInk(group) {
   const ink = group.querySelector('.pf-tab-ink');
   const place = () => {
-    const pressed = group.querySelector('[aria-pressed="true"]');
+    const pressed = group.querySelector('[aria-pressed="true"], [aria-current="page"]');
     if (!ink || !pressed) return;
     ink.style.setProperty('--ink-x', `${pressed.offsetLeft}px`);
     ink.style.setProperty('--ink-w', `${pressed.offsetWidth}px`);

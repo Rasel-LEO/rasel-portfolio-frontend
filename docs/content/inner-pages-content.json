@@ -1,24 +1,27 @@
 {
   "_about": "Approved content for the inner pages (2026-10-26), merged unchanged into public-content.json and src/content. Project details only where verified from the published abstracts (DOAJ records of the two papers) or the CV; nothing else is invented.",
   "blog_page": {
-    "eyebrow_draft": "Blog / Draft preview",
+    "eyebrow": "Blog / Articles & notes",
     "heading": "Posts and articles",
-    "intro": "Notes on agricultural engineering, IoT and applied AI.",
-    "count_label_draft": "{count} drafts",
-    "covers": {
-      "edge-ai-poultry-farm": {
-        "illustration": "sensor-node",
-        "alt": "Line illustration of a wireless sensor node on a farm post"
+    "intro": "Notes on IoT, software, applied AI and agricultural engineering.",
+    "categories": [
+      {
+        "id": "agricultural-engineering",
+        "label": "Agricultural engineering"
       },
-      "esp32-vs-raspberry-pi-farm-iot": {
-        "illustration": "two-boards",
-        "alt": "Line illustration of two microcontroller boards side by side"
+      {
+        "id": "tech-review",
+        "label": "Tech review"
       },
-      "thesis-to-journal-paper": {
-        "illustration": "notebook-journal",
-        "alt": "Line illustration of an open notebook beside a journal"
+      {
+        "id": "education",
+        "label": "Education"
       }
-    }
+    ],
+    "empty": "First posts are on their way. Meanwhile, the publications on the Portfolio show the research behind them.",
+    "empty_category": "No posts in this category yet.",
+    "count_label": "{count} articles",
+    "count_label_one": "{count} article"
   },
   "post_sidebar": {
     "toc_heading": "On this page",
@@ -26,30 +29,56 @@
     "more_heading": "More posts"
   },
   "research_archive": {
-    "back_label": "Back to Portfolio",
-    "heading": "Research projects",
-    "intro": "IoT, automation and applied AI for agriculture.",
+    "back_label": "Portfolio",
+    "heading": "Projects",
+    "intro": "Research and software projects: IoT, edge AI, automation and applications.",
     "search_label": "Search projects",
     "search_placeholder": "Search by title or keyword…",
     "topic_label": "Topic",
     "topic_all": "All topics",
-    "count_label": "Showing {shown} of {total} projects",
-    "empty": "No project matches. Try another keyword or topic.",
+    "search_button": "Search",
+    "results_heading": "Project results",
+    "clear_label": "Clear filters",
+    "empty": "No projects match your search.",
     "topics": [
-      { "id": "poultry", "label": "Poultry systems", "icon": "hen" },
-      { "id": "aquaculture", "label": "Aquaculture & fisheries", "icon": "fish" },
-      { "id": "irrigation", "label": "Irrigation", "icon": "sun-water" },
-      { "id": "machinery", "label": "Farm machinery", "icon": "tractor" },
-      { "id": "crop", "label": "Crop & post-harvest", "icon": "leaf" },
-      { "id": "cea", "label": "Controlled environment", "icon": "greenhouse" }
+      {
+        "id": "poultry",
+        "label": "Poultry systems",
+        "icon": "hen"
+      },
+      {
+        "id": "aquaculture",
+        "label": "Aquaculture & fisheries",
+        "icon": "fish"
+      },
+      {
+        "id": "irrigation",
+        "label": "Irrigation",
+        "icon": "sun-water"
+      },
+      {
+        "id": "machinery",
+        "label": "Farm machinery",
+        "icon": "tractor"
+      },
+      {
+        "id": "crop",
+        "label": "Crop & post-harvest",
+        "icon": "leaf"
+      },
+      {
+        "id": "cea",
+        "label": "Controlled environment",
+        "icon": "greenhouse"
+      }
     ]
   },
   "projects": {
-    "poultry-aiot-edge": { "topic": "poultry" },
+    "poultry-aiot-edge": {
+      "topic": "poultry"
+    },
     "poultry-iot-undergrad": {
-      "topic": "poultry",
-      "short_title": "Real-time poultry farm monitoring & control",
-      "short_summary": "IoT monitoring system for poultry farms (B.Sc. thesis)."
+      "topic": "poultry"
     },
     "biofloc-iot": {
       "topic": "aquaculture",
@@ -99,13 +128,46 @@
             "text": "Relays switch the heater, water pump and air pump when readings leave their target ranges."
           }
         ],
-        "context": "Study context: mono-sex Nile tilapia (Oreochromis niloticus). See the paper for details."
+        "context": "Study context: mono-sex Nile tilapia (Oreochromis niloticus). See the paper for details.",
+        "methods": "[Methods paragraph: how the system was built and tested.]\n\n- [First method point]\n- [Second method point]\n\n[Figure 1]\n\n[Closing methods sentence.]",
+        "results_text": "[Results paragraph with **bold** and *italic* text.]\n\n[Figure 2]\n\n[Second results paragraph.]\n\n[Figure 3]",
+        "limitations": "[Limitations paragraph: what the study could not show.]",
+        "figures": [
+          {
+            "n": 1,
+            "src": "/images/projects/trial-fig-normal.webp",
+            "avif": "/images/projects/trial-fig-normal.avif",
+            "alt": "[Alt text of figure 1]",
+            "width": 1200,
+            "height": 800,
+            "caption": "[Caption of figure 1]",
+            "size": "normal"
+          },
+          {
+            "n": 2,
+            "src": "/images/projects/trial-fig-wide.webp",
+            "avif": "/images/projects/trial-fig-wide.avif",
+            "alt": "[Alt text of figure 2]",
+            "width": 1600,
+            "height": 700,
+            "caption": "[Caption of figure 2]",
+            "size": "wide"
+          },
+          {
+            "n": 3,
+            "src": "/images/projects/trial-fig-narrow.webp",
+            "avif": "/images/projects/trial-fig-narrow.avif",
+            "alt": "[Alt text of figure 3]",
+            "width": 600,
+            "height": 1000,
+            "caption": "[Caption of figure 3]",
+            "size": "narrow"
+          }
+        ]
       }
     },
     "machinery-tracking": {
-      "topic": "machinery",
-      "short_title": "Farm machinery tracking & hiring",
-      "short_summary": "IoT and edge AI for tracking and hiring agricultural machinery."
+      "topic": "machinery"
     },
     "solar-irrigation": {
       "topic": "irrigation",
@@ -136,7 +198,7 @@
           }
         ],
         "system_note": "Simplified system overview · Based on the published study",
-        "overview": "Field substations measure soil moisture and climate and report to a solar-powered base station, which switches the irrigation pump automatically and lets farmers monitor and control it remotely.",
+        "overview": "Field substations measure soil moisture and climate and report to a solar-powered base station, which switches the irrigation pump automatically and lets farmers monitor and control it remotely.\n\n[Figure 1]",
         "contribution": [
           "System development",
           "Hardware design",
@@ -155,58 +217,63 @@
             "text": "A 20 W panel and a 12 V, 7.5 Ah battery run the pump for at least two hours at night."
           }
         ],
-        "context": null
+        "context": null,
+        "methods": "[Methods paragraph: sensors, base station and pump control.]\n\n1. [First step]\n2. [Second step]",
+        "results_text": "[Results paragraph.]\n\n[Figure 2]",
+        "limitations": "[Limitations paragraph.]",
+        "figures": [
+          {
+            "n": 1,
+            "src": "/images/projects/trial-fig-normal.webp",
+            "avif": "/images/projects/trial-fig-normal.avif",
+            "alt": "[Alt text of figure 1]",
+            "width": 1200,
+            "height": 800,
+            "caption": "[Caption of figure 1]",
+            "size": "wide"
+          },
+          {
+            "n": 2,
+            "src": "/images/projects/trial-fig-narrow.webp",
+            "avif": "/images/projects/trial-fig-narrow.avif",
+            "alt": "[Alt text of figure 2]",
+            "width": 600,
+            "height": 1000,
+            "caption": "[Caption of figure 2]",
+            "size": "narrow"
+          }
+        ]
       }
     },
     "fish-feed-spreader": {
-      "topic": "aquaculture",
-      "short_title": "Solar-powered fish feed spreader",
-      "short_summary": "Modification and evaluation of an IoT-based automated fish feeder."
+      "topic": "aquaculture"
     },
     "potato-grading-nn": {
-      "topic": "crop",
-      "short_title": "Potato volume & size grading",
-      "short_summary": "Neural-network prediction from two-dimensional RGB images."
+      "topic": "crop"
     },
     "power-tiller-ergonomics": {
-      "topic": "machinery",
-      "short_title": "Power tiller ergonomics by age",
-      "short_summary": "Ergonomic performance of power tiller operators of different ages."
+      "topic": "machinery"
     },
     "biofloc-winter": {
-      "topic": "aquaculture",
-      "short_title": "Biofloc system for winter",
-      "short_summary": "Modifying a biofloc system for the winter season."
+      "topic": "aquaculture"
     },
     "egg-incubator": {
-      "topic": "poultry",
-      "short_title": "Low-cost egg incubator",
-      "short_summary": "Semi-automated incubator for homestead egg hatching."
+      "topic": "poultry"
     },
     "hydroponics-led": {
-      "topic": "cea",
-      "short_title": "LED lighting for hydroponic lettuce",
-      "short_summary": "Effect of coloured LED combinations in a hydroponic system."
+      "topic": "cea"
     },
     "multi-nozzle-sprayer": {
-      "topic": "machinery",
-      "short_title": "Walking-type multi-nozzle sprayer",
-      "short_summary": "Design and development of a multi-nozzle sprayer."
+      "topic": "machinery"
     },
     "rice-germination": {
-      "topic": "crop",
-      "short_title": "Precision rice seed germination",
-      "short_summary": "Sustainable and conventional approaches compared."
+      "topic": "crop"
     },
     "solar-irrigation-ai": {
-      "topic": "irrigation",
-      "short_title": "Solar & AI smart irrigation",
-      "short_summary": "IoT irrigation with solar power and AI decision making."
+      "topic": "irrigation"
     },
     "ice-storage-boxes": {
-      "topic": "aquaculture",
-      "short_title": "Insulated ice boxes for fisheries",
-      "short_summary": "Sustainable ice storage boxes for marine fisheries compared."
+      "topic": "aquaculture"
     }
   }
 }

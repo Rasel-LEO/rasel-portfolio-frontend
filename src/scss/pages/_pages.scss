@@ -2,51 +2,50 @@
 // Page-specific layout: project pages (Portfolio is _portfolio.scss), Blog, posts,
 // Hire me, Contact and forms, 404.
 
-// 404 (FD-119): the page head's rhythm, three actions (full width on phones), the seated P6
-// photograph beside the copy from md and under it below.
+// 404 (FD-119, N1, N2 in 1.6.0): centred — a large 404, the heading, one short line, a small line
+// drawing in the blog-cover style and four links (full width on phones). Less space above, so the
+// message sits higher.
 .not-found {
-  padding-block: clamp(48px, 8vw, 96px) var(--section-pad);
+  padding-block: clamp(24px, 4vw, 48px) var(--section-pad);
+}
 
-  .col-md-7 {
-    display: grid;
-    gap: var(--s-4);
-  }
+.not-found-inner {
+  display: grid;
+  gap: var(--s-4);
+  justify-items: center;
+  max-width: 40rem;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.not-found-code {
+  font-family: var(--font-mono);
+  font-size: clamp(4rem, 3rem + 8vw, 8rem);
+  font-weight: 500;
+  line-height: 1;
+  color: var(--accent);
+}
+
+.not-found-art {
+  width: min(100%, 20rem);
+  margin-block: var(--s-3);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
 }
 
 .not-found-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-3);
+  justify-content: center;
   margin-top: var(--s-3);
 
   @include media-breakpoint-down(sm) {
     flex-direction: column;
+    align-self: stretch;
 
     .btn {
       width: 100%;
-    }
-  }
-}
-
-.not-found-figure {
-  display: flex;
-  justify-content: center;
-  margin-top: var(--s-7);
-
-  @include media-breakpoint-up(md) {
-    margin-top: 0;
-  }
-
-  img {
-    display: block;
-    width: auto;
-    max-width: 100%;
-    height: auto;
-    max-height: 280px;
-    filter: drop-shadow(0 10px 10px var(--figure-shadow));
-
-    @include media-breakpoint-up(md) {
-      max-height: 440px;
     }
   }
 }
@@ -77,29 +76,6 @@
 }
 
 // Project page
-.breadcrumb-list {
-  @include t-meta;
-
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-  align-items: center;
-  color: var(--fg-2);
-
-  li + li::before {
-    margin-right: var(--s-2);
-    content: "/";
-  }
-
-  a {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 44px;
-    min-height: 44px;
-  }
-}
-
 // The status chip follows the <h1> in reading order but sits above it.
 .entry-status {
   order: -1;
@@ -119,16 +95,6 @@
     margin-right: var(--s-2);
     content: "·";
   }
-}
-
-.gallery {
-  --bs-gutter-y: var(--s-3);
-  --bs-gutter-x: var(--s-3);
-}
-
-.gallery-caption {
-  margin-top: var(--s-2);
-  color: var(--fg-2);
 }
 
 .aside-box {
@@ -219,7 +185,9 @@
 }
 
 .blog-cover {
+  position: relative;
   aspect-ratio: 16 / 9;
+  overflow: hidden;
   color: var(--fg-2);
   background: var(--bg-1);
   border-bottom: 1px solid var(--line);
@@ -229,6 +197,13 @@
     display: block;
     width: 100%;
     height: 100%;
+  }
+
+  // FD-160: an uploaded image of any ratio fills the 16:9 frame (never grows it).
+  picture {
+    position: absolute;
+    inset: 0;
+    display: block;
   }
 
   img {
@@ -345,6 +320,16 @@
     color: var(--fg-0);
   }
 
+  // 1.7.0: a post's sections start the medium gap below the text before them (with the column's
+  // 16 px row gap: 24 px on phones, 32 px from md).
+  h2 {
+    margin-top: var(--s-2);
+
+    @include media-breakpoint-up(md) {
+      margin-top: var(--s-4);
+    }
+  }
+
   .standfirst {
     color: var(--fg-0);
   }
@@ -380,6 +365,54 @@
 
   th {
     color: var(--fg-0);
+  }
+}
+
+// V1 (1.6.0): a table with data-stack (the privacy notice's "Who else handles your data") becomes one
+// stacked block per row below 600 px — the row's first cell is its heading, every other value follows
+// its column's name (data-label, from the header row, shown by CSS; the header row itself is hidden
+// visually only). Above 600 px it is the table it was.
+@media (width < 600px) {
+  .prose-table table[data-stack] {
+    display: block;
+
+    thead {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+    }
+
+    tbody,
+    tr,
+    th,
+    td {
+      display: block;
+    }
+
+    tr {
+      padding-block: var(--s-3);
+      border-bottom: 1px solid var(--line);
+    }
+
+    th[scope="row"],
+    td {
+      padding: var(--s-1) 0;
+      border-bottom: 0;
+    }
+
+    th[scope="row"] {
+      font-size: var(--type-body-size);
+    }
+
+    td::before {
+      @include t-label;
+
+      display: block;
+      color: var(--fg-2);
+      content: attr(data-label);
+    }
   }
 }
 
@@ -425,6 +458,97 @@
   padding-block: var(--s-6) 0;
 }
 
+// P3 (1.6.0): Previous / Next article above the footer, as the project pages' pager.
+.post-pager {
+  margin-bottom: var(--section-pad);
+}
+
+.post-pager-category {
+  @include t-label;
+
+  color: var(--accent);
+}
+
+// P4, S5 (1.6.0): "← Blog / Category" — plain links, an underline on hover or keyboard focus.
+.back-crumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--s-2);
+  align-items: center;
+}
+
+.back-sep {
+  color: var(--fg-2);
+}
+
+.back-category {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 500;
+  color: var(--fg-1);
+  text-decoration: none;
+
+  .link {
+    color: inherit;
+    background: linear-gradient(var(--accent), var(--accent)) no-repeat 0 100% / 0 2px;
+  }
+
+  &:is(:hover, :focus-visible) {
+    color: var(--fg-0);
+
+    .link {
+      background-size: 100% 2px;
+    }
+  }
+}
+
+// P2 (1.6.0): "On this page" below lg — a collapsible box under the cover, closed by default.
+.post-toc-mobile {
+  max-width: 66ch;
+  margin-bottom: var(--s-6);
+  background: var(--bg-1);
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+
+  summary {
+    @include t-label;
+
+    display: flex;
+    gap: var(--s-3);
+    align-items: center;
+    justify-content: space-between;
+    min-height: 44px;
+    padding: 0 var(--s-4);
+    color: var(--accent);
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+
+    &::-webkit-details-marker {
+      display: none;
+    }
+
+    &::after {
+      width: 8px;
+      height: 8px;
+      margin-right: 2px;
+      content: "";
+      border-right: 2px solid currentcolor;
+      border-bottom: 2px solid currentcolor;
+      transform: translateY(-2px) rotate(45deg);
+    }
+  }
+
+  &[open] summary::after {
+    transform: translateY(2px) rotate(-135deg);
+  }
+
+  .post-toc-list {
+    margin: 0 var(--s-4) var(--s-3);
+  }
+}
+
 // Post page (FD-114): article and sidebar; the page ends with the section rhythm (FD-101).
 .post-layout {
   --bs-gutter-y: var(--s-7);
@@ -432,12 +556,17 @@
   padding-bottom: var(--section-pad);
 }
 
+// 1.7.0: the page-top image — 16:9; full width on phones, from md exactly the text column (66ch),
+// left-aligned with the title and the text.
 .post-cover {
-  max-width: 66ch;
   margin-bottom: var(--s-6);
   overflow: hidden;
   border: 1px solid var(--line);
   border-radius: var(--r-3);
+
+  @include media-breakpoint-up(md) {
+    max-width: 66ch;
+  }
 }
 
 // From lg the sidebar follows the reader; on a short screen it scrolls on its own, so every
@@ -661,6 +790,63 @@
   margin-bottom: var(--s-5);
 }
 
+// F4 (1.6.0): Hire me — the title over the form on the left, the cards on the right starting level with
+// the Name field (row 2); on phones: the title, the form, then the cards.
+.form-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0 var(--bs-gutter-x, 1.5rem);
+
+  .form-title {
+    grid-column: 1;
+  }
+
+  .form-main {
+    grid-column: 1;
+  }
+
+  .form-aside {
+    margin-top: var(--s-6);
+  }
+
+  @include media-breakpoint-up(lg) {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+
+    .form-aside {
+      grid-row: 2;
+      grid-column: 2;
+      margin-top: 0;
+    }
+  }
+}
+
+// "What to expect" (F3, C1): label over value, one pair after the other. Round 6 (FD-175): no visible
+// heading; from lg the card's first line is level with the form's first label ("Name"), so its border
+// starts above the form by the card's own padding and border.
+.form-aside .expect-box {
+  gap: var(--s-3);
+}
+
+.form-aside > :first-child {
+  @include media-breakpoint-up(lg) {
+    margin-top: calc((var(--s-4) + 1px) * -1);
+  }
+}
+
+.expect-list {
+  display: grid;
+  gap: var(--s-3);
+}
+
+.expect-item {
+  display: grid;
+  gap: var(--s-1);
+
+  dt {
+    color: var(--fg-2);
+  }
+}
+
 .site-form {
   display: grid;
   gap: var(--s-4);
@@ -756,15 +942,11 @@ select.field-control {
 
 // Live regions stay rendered while empty (never display: none), so the text that arrives
 // later is announced; an empty status takes no space beside the button.
-.form-actions,
-.copy-row {
+.form-actions {
   display: flex;
   flex-wrap: wrap;
   gap: var(--s-3) var(--s-4);
   align-items: center;
-}
-
-.form-actions {
   padding-top: var(--s-2);
 }
 
@@ -793,37 +975,6 @@ select.field-control {
 
   .aside-box {
     gap: var(--s-2);
-  }
-}
-
-.email-list {
-  display: grid;
-  gap: var(--s-1);
-}
-
-.email-text {
-  overflow-wrap: anywhere;
-  user-select: all;
-}
-
-.copy-status {
-  color: var(--fg-1);
-}
-
-// Contact (FD-118): profile links one per line, icon first, ↗ after the label.
-.form-aside .profile-links {
-  display: grid;
-  gap: 0;
-
-  .footer-icon {
-    width: 20px;
-    height: 20px;
-    margin-right: var(--s-2);
-    color: var(--fg-1);
-  }
-
-  .profile-external {
-    margin-left: var(--s-1);
   }
 }
 
@@ -868,9 +1019,14 @@ select.field-control {
   }
 
   @include media-breakpoint-up(md) {
-    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) auto;
     align-items: end;
   }
+}
+
+// FD-154: the filter is a real GET form (no JavaScript needed), so it has its own button.
+.archive-submit {
+  min-height: var(--s-7);
 }
 
 .search-wrap {
@@ -916,11 +1072,12 @@ select.field-control {
   color: var(--fg-1);
 }
 
+// FD-157: a little larger than the small text, --fg-1 (AA on the card in both themes).
 .archive-card-role {
-  @include t-small;
-
   margin-top: calc(var(--s-1) * -1);
-  color: var(--fg-2);
+  font-size: 0.9375rem;
+  line-height: 1.45;
+  color: var(--fg-1);
 }
 
 // The action on the card's bottom, under a rule (design specification).
@@ -995,9 +1152,22 @@ select.field-control {
   color: var(--fg-1);
 }
 
+// 1.7.0: the page-top image — 16:9; full width on phones, from md exactly the text column (66ch),
+// rounded like the post's.
 .project-cover {
-  max-width: 66ch;
   margin-bottom: var(--s-7);
+  border: 1px solid var(--line);
+  border-radius: var(--r-3);
+
+  @include media-breakpoint-up(md) {
+    max-width: 66ch;
+  }
+}
+
+// The first block after the cover or the system overview needs no extra space above it.
+.project-cover + .project-section,
+.system + .project-section {
+  padding-top: 0;
 }
 
 // System overview: three steps with arrows between from md, stacked with arrows down below.
@@ -1084,23 +1254,6 @@ select.field-control {
   border-top: 1px solid var(--line);
 }
 
-.project-cols {
-  padding-bottom: var(--s-7);
-  border-bottom: 1px solid var(--line);
-
-  > .row {
-    --bs-gutter-y: var(--s-7);
-  }
-}
-
-// A rule between the two columns from lg (design specification).
-.project-col-end {
-  @include media-breakpoint-up(lg) {
-    border-left: 1px solid var(--line);
-    padding-left: calc(var(--bs-gutter-x) * 0.5 + var(--s-6));
-  }
-}
-
 .project-h2 {
   margin-bottom: var(--s-4);
 }
@@ -1137,8 +1290,55 @@ select.field-control {
   }
 }
 
+// 1.7.0: the medium gap between sections, above and below each thin divider: 24 px on phones,
+// 32 px from md.
 .project-section {
-  padding-top: var(--s-7);
+  padding-top: var(--s-5);
+
+  @include media-breakpoint-up(md) {
+    padding-top: var(--s-6);
+  }
+}
+
+// 1.7.0: Overview, Methods, Results, Limitations and My contribution are one column, a section after
+// the other, the text in the post's measure (.prose); a rule closes each block.
+.project-article {
+  padding-bottom: var(--s-5);
+  border-bottom: 1px solid var(--line);
+
+  @include media-breakpoint-up(md) {
+    padding-bottom: var(--s-6);
+  }
+
+  .results,
+  .study-context {
+    margin-top: var(--s-6);
+  }
+
+  .prose + .results {
+    margin-top: var(--s-6);
+  }
+}
+
+// Cards of the Projects list (1.7.0): the card image flush with the top, the text below it, as the
+// Blog card.
+.pf-card.archive-card {
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+  border-radius: var(--r-3);
+}
+
+.archive-card-body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+
+  @include media-breakpoint-up(lg) {
+    padding: var(--s-6);
+  }
 }
 
 .results {
@@ -1261,8 +1461,8 @@ select.field-control {
   padding-top: var(--s-4);
   border-top: 1px solid var(--line);
 
-  // A reduced page: the columns' rule is enough.
-  .project-cols + & {
+  // The last block's rule is enough.
+  .project-article + & {
     margin-top: 0;
     border-top: 0;
   }
@@ -1313,13 +1513,11 @@ select.field-control {
   font-weight: 600;
 }
 
-// Hire me (FD-117): the head as Home's services band; on phones the two actions are full width.
+// Hire me (FD-117, FD-176): HIRE ME, the availability line, then the title and "Start a brief" on one
+// row (centred on the title); the button drops under a title too long for the row, and on phones
+// the four stack and the button is full width.
 .hire-head {
-  display: block;
-
-  .eyebrow {
-    margin-bottom: var(--s-3);
-  }
+  gap: var(--s-2);
 
   @include media-breakpoint-down(sm) {
     .band-actions .btn {
@@ -1328,7 +1526,105 @@ select.field-control {
   }
 }
 
+.hire-head-row {
+  display: flex;
+  margin-top: var(--s-3);
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-5);
+  align-items: center;
+  justify-content: space-between;
+
+  h1 {
+    min-width: 0;
+  }
+
+  .band-actions {
+    flex: none;
+    margin-top: 0;
+  }
+
+  @include media-breakpoint-down(sm) {
+    h1,
+    .band-actions {
+      flex: 1 1 100%;
+    }
+  }
+}
+
 // The brief form is a jump target (Hire me → #brief), not a control.
 .form-section:focus {
   outline: none;
+}
+
+// Pagination (FD-154): numbered links with Previous / Next; below 576 px "Previous · Page 2 of 5 ·
+// Next". Every target is at least 44 px; the current page is filled and marked aria-current.
+.pager {
+  margin-top: var(--s-7);
+}
+
+.pager-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: center;
+}
+
+.pager-link {
+  display: inline-flex;
+  gap: var(--s-2);
+  align-items: center;
+  justify-content: center;
+  min-width: var(--s-7);
+  min-height: var(--s-7);
+  padding-inline: var(--s-3);
+  color: var(--fg-0);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: var(--r-2);
+
+  .icon {
+    width: var(--s-5);
+    height: var(--s-5);
+  }
+
+  &:hover {
+    border-color: var(--accent);
+  }
+
+  &.is-current {
+    color: var(--accent-ink);
+    background: var(--accent-strong);
+    border-color: var(--accent-strong);
+  }
+
+  &.is-disabled {
+    color: var(--fg-2);
+    border-style: dashed;
+  }
+}
+
+.pager-gap {
+  color: var(--fg-2);
+}
+
+.pager-status {
+  display: none;
+  color: var(--fg-1);
+}
+
+@include media-breakpoint-down(sm) {
+  .pager-list {
+    flex-wrap: nowrap;
+    justify-content: space-between;
+  }
+
+  .pager-num {
+    display: none;
+  }
+
+  .pager-status {
+    display: block;
+    text-align: center;
+  }
 }

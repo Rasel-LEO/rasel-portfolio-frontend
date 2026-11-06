@@ -8,15 +8,15 @@
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { loadContent, postSource } from './content.mjs';
-import { isBracketed } from './markdown.mjs';
+import { loadContent, loadPostBodies, postSource } from './content.mjs';
+import { FIGURE_SIZES, figureMarkers, isBracketed } from './markdown.mjs';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
 const DOI = /^10\.\d{4,9}\/\S+$/;
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const PUBLICATION_TYPES = ['journal', 'conference'];
-const PROJECT_STATUSES = [null, 'in-progress', 'done'];
+const PROJECT_STATUSES = [null, 'in-progress', 'done', 'planned'];
 const POST_STATUSES = ['draft', 'published'];
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -26,12 +26,9 @@ const isTextList = (value) => Array.isArray(value) && value.length > 0 && value.
 const isListOf = (check) => (value) =>
   Array.isArray(value) && value.length > 0 && value.every((item) => item && check(item));
 const isStep = (v) => /^\d{2}$/.test(v.n) && isText(v.title);
-// A Home Fork card (FD-44): title, text, tag chips, button label and a page link.
-const isForkCard = (v) =>
-  isText(v?.title) && isText(v.text) && isTextList(v.tags) && isText(v.cta) && isText(v.href);
 const CTA_VARIANTS = ['primary', 'secondary', 'secondary-small'];
 // The in-house line icons of the Areas-of-work grid (FD-84, src/partials/icons/area-icon.hbs).
-const AREA_ICONS = ['sprout', 'network', 'camera', 'tractor', 'code', 'document'];
+const AREA_ICONS = ['sprout', 'network', 'camera', 'tractor', 'code', 'document', 'chip', 'gear'];
 const isPillar = (v) => isText(v?.label) && isTextList(v.lines) && isText(v.href);
 
 // Portfolio (FD-107, FD-108): in-house line icons (src/partials/icons/pf-icon.hbs), the section ids
@@ -44,7 +41,12 @@ const PORTFOLIO_COUNTS = ['publications', 'projects', 'awards'];
 const REMOVED_TERMS = /\b(?:MATLAB|LaTeX|Makeathon)\b/i;
 // FD-113, FD-115, FD-116: the in-house line drawings of src/partials/icons/illustration.hbs
 // (post covers) and src/partials/icons/line-icon.hbs (system steps, results, topics).
-export const COVER_ILLUSTRATIONS = ['sensor-node', 'two-boards', 'notebook-journal'];
+export const COVER_ILLUSTRATIONS = [
+  'sensor-node',
+  'two-boards',
+  'notebook-journal',
+  'disconnected-node',
+];
 export const SYSTEM_ICONS = [
   'tank',
   'dashboard',
@@ -55,11 +57,73 @@ export const SYSTEM_ICONS = [
   'gear',
   'sun',
 ];
-export const TOPIC_ICONS = ['hen', 'fish', 'sun-water', 'tractor', 'leaf', 'greenhouse'];
+// FD-159: the project-topic icon keys Django offers (the last one, "general", is also the fallback).
+export const TOPIC_ICONS = [
+  'hen',
+  'fish',
+  'sun-water',
+  'tractor',
+  'leaf',
+  'greenhouse',
+  'software',
+  'web',
+  'mobile',
+  'ai',
+  'robotics',
+  'data',
+  'cloud',
+  'security',
+  'energy',
+  'water',
+  'environment',
+  'health',
+  'education',
+  'research',
+  'hardware',
+  'automation',
+  'iot',
+  'general',
+];
+// A real photograph (FD-35): WebP under /images/, optional AVIF twin, alt text, intrinsic size,
+// optional caption (a figure). The files must exist: see missingImages().
+const IMAGE_PATH = /^\/images\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*\.(?:webp|avif)$/;
+const isImage = (v) =>
+  v !== null &&
+  typeof v === 'object' &&
+  IMAGE_PATH.test(v.src) &&
+  v.src.endsWith('.webp') &&
+  (v.avif === undefined || (IMAGE_PATH.test(v.avif) && v.avif.endsWith('.avif'))) &&
+  isText(v.alt) &&
+  Number.isInteger(v.width) &&
+  v.width > 0 &&
+  Number.isInteger(v.height) &&
+  v.height > 0 &&
+  (v.caption === undefined || isText(v.caption)) &&
+  // FD-160: responsive candidates of an uploaded cover ("url 480w, url 960w").
+  (v.srcset === undefined || isText(v.srcset)) &&
+  (v.avif_srcset === undefined || isText(v.avif_srcset));
+
+// 1.7.0: the card image of a project or post is 1600 × 900 (16:9), with alt text; Home cards, lists
+// and the page top crop it with object-fit: cover, so the subject sits in the centre band.
+const isCardImage = (v) => isImage(v) && v.width === 1600 && v.height === 900;
+// A figure in the text: an image with its number on the page, a caption (required) and a size.
+const isFigure = (v) =>
+  isImage(v) &&
+  Number.isInteger(v.n) &&
+  v.n > 0 &&
+  isText(v.caption) &&
+  FIGURE_SIZES.includes(v.size);
+
 // A project's detail (FD-116): every block optional — a page shows only the blocks that exist —
 // but each one well-formed when present.
 const isIconStep = (v) => SYSTEM_ICONS.includes(v?.icon) && isText(v.title) && isText(v.text);
 const DETAIL = {
+  // 1.7.0: Overview, Methods, Results and Limitations are Markdown; a line "[Figure n]" puts figure
+  // n of `figures` there (checked in checkFigures).
+  'methods*': isText,
+  'results_text*': isText,
+  'limitations*': isText,
+  'figures*': (v) => Array.isArray(v) && v.length > 0 && v.every(isFigure),
   'summary_line*': isText,
   'facts*': (v) =>
     v !== null &&
@@ -88,21 +152,33 @@ const isDetail = (v) =>
 const isHead = (v) => isText(v?.eyebrow) && isText(v.heading) && isText(v.intro);
 const isViewAll = (v) => isText(v) && v.includes('{count}');
 
-// A real photograph (FD-35): WebP under /images/, optional AVIF twin, alt text, intrinsic size,
-// optional caption (gallery). The files must exist: see missingImages().
-const IMAGE_PATH = /^\/images\/(?:[\w-]+\/)*[\w-]+(?:\.[\w-]+)*\.(?:webp|avif)$/;
-const isImage = (v) =>
-  v !== null &&
-  typeof v === 'object' &&
-  IMAGE_PATH.test(v.src) &&
-  v.src.endsWith('.webp') &&
-  (v.avif === undefined || (IMAGE_PATH.test(v.avif) && v.avif.endsWith('.avif'))) &&
-  isText(v.alt) &&
-  Number.isInteger(v.width) &&
-  v.width > 0 &&
-  Number.isInteger(v.height) &&
-  v.height > 0 &&
-  (v.caption === undefined || isText(v.caption));
+// The hard limits of the card fields (1.7.0). The large Home card has the roomier ones; every
+// other card is small. `short_title` is the card title; a post's card title is its title.
+const LIMITS = {
+  title: { large: 55, small: 40 },
+  description: { large: 140, small: 100 },
+  roleLine: 50,
+  blogTitle: 80,
+  blogDescription: 110,
+};
+// The soft limits: a warning, not a failure (fewer words than this reads as thin).
+const MIN_WORDS = {
+  title: { large: 4, small: 3 },
+  description: { large: 15, small: 10 },
+  blogTitle: 8,
+  blogDescription: 10,
+};
+// Fields of earlier releases that no longer exist; content that still has them fails, so no
+// Gallery, cover drawing or per-list role line quietly comes back.
+const REMOVED_PROJECT_FIELDS = [
+  'gallery',
+  'cover',
+  'image',
+  'short_summary',
+  'featured_tags',
+  'featured_role_line',
+];
+const words = (text) => text.trim().split(/\s+/).filter(Boolean).length;
 
 // Markdown bodies missing from src/content/posts/ (FD-37).
 function missingPosts(content) {
@@ -111,15 +187,83 @@ function missingPosts(content) {
     .map((post) => `blog "${post.slug}": src/content/posts/${post.slug}.md not found`);
 }
 
-// Image files named in projects.json that are not in src/images/ (Vite would only warn).
+// Image files named in projects.json and blog.json that are not in src/images/ (Vite would only warn).
 export function missingImages(content, srcDir = join(root, 'src')) {
-  return content.projects.flatMap((project) =>
-    [project.image, ...(project.gallery ?? [])]
+  const files = (owner, where, images) =>
+    images
       .filter(Boolean)
       .flatMap((image) => [image.src, image.avif].filter(Boolean))
       .filter((path) => !existsSync(join(srcDir, path)))
-      .map((path) => `projects "${project.id}": image file not found: src${path}`),
-  );
+      .map((path) => `${where} "${owner}": image file not found: src${path}`);
+  return [
+    ...content.projects.flatMap((project) =>
+      files(project.id, 'projects', [project.card_image, ...(project.detail?.figures ?? [])]),
+    ),
+    ...content.blog.flatMap((post) =>
+      files(post.slug, 'blog', [post.card_image, ...(post.figures ?? [])]),
+    ),
+  ];
+}
+
+// The figure markers of the text blocks (in page order) against the figure entries: every
+// "[Figure n]" has its entry and every entry its marker, once each, and the markers run 1, 2, 3 … in
+// the order they appear (the page numbers figures by position, so the numbers agree).
+function checkFigures(problems, where, texts, figures, [min, max]) {
+  const markers = texts.flatMap((text) => figureMarkers(text ?? ''));
+  const numbers = figures.map((fig) => fig.n);
+  for (const n of markers) {
+    if (!numbers.includes(n)) problems.push(`${where}: [Figure ${n}] has no figure entry`);
+  }
+  for (const n of numbers) {
+    if (!markers.includes(n)) problems.push(`${where}: figure ${n} has no [Figure ${n}] marker`);
+  }
+  if (new Set(numbers).size !== numbers.length) problems.push(`${where}: duplicate figure number`);
+  if (new Set(markers).size !== markers.length)
+    problems.push(`${where}: a [Figure n] is used twice`);
+  if (markers.some((n, i) => n !== i + 1)) {
+    problems.push(`${where}: [Figure n] markers must run 1, 2, 3 … in the order they appear`);
+  }
+  return figures.length >= min && figures.length <= max
+    ? []
+    : [`${where}: ${figures.length} figures (usually ${min}–${max})`];
+}
+
+// Soft limits (1.7.0): warnings that do not fail the build. Returns a list of messages.
+export function contentWarnings(content, bodies = {}) {
+  const warnings = [];
+  for (const project of content.projects) {
+    const size = project.featured_large ? 'large' : 'small';
+    const where = `projects "${project.id}"`;
+    if (words(project.short_title) < MIN_WORDS.title[size]) {
+      warnings.push(`${where}: card title under ${MIN_WORDS.title[size]} words`);
+    }
+    if (words(project.card_description) < MIN_WORDS.description[size]) {
+      warnings.push(`${where}: card description under ${MIN_WORDS.description[size]} words`);
+    }
+    if (project.detail) {
+      const figures = project.detail.figures ?? [];
+      const texts = ['overview', 'methods', 'results_text', 'limitations'].map(
+        (key) => project.detail[key],
+      );
+      checkFigures([], where, texts, figures, [2, 4]).forEach((message) => warnings.push(message));
+    }
+  }
+  for (const post of content.blog) {
+    const where = `blog "${post.slug}"`;
+    if (words(post.title) < MIN_WORDS.blogTitle) {
+      warnings.push(`${where}: title under ${MIN_WORDS.blogTitle} words`);
+    }
+    if (words(post.card_description) < MIN_WORDS.blogDescription) {
+      warnings.push(`${where}: card description under ${MIN_WORDS.blogDescription} words`);
+    }
+    const figures = post.figures ?? [];
+    if (post.slug in bodies) {
+      checkFigures([], where, [bodies[post.slug]], figures, [1, 3]).forEach((message) =>
+        warnings.push(message),
+      );
+    }
+  }
+  return warnings;
 }
 
 // field → check; `?` after a field name means the key must exist but may be null,
@@ -134,14 +278,20 @@ const shapes = {
     institution: isText,
     location: isText,
     affiliation_short: isText,
+    // FD-148: Django-owned texts (admin data), with Phase 1 sample values here: the second role,
+    // the hero eyebrow (desktop and mobile), the Portfolio location line and the post author line.
+    second_role: isText,
     eyebrow: isText,
+    eyebrow_short: isText,
     role_line: isText,
     statement: isText,
     summary: isText,
+    location_line: isText,
+    author_line: isText,
     email: (v) => isText(v) && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
     secondary_email: (v) => isText(v) && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
     languages: isTextList,
-    'cv?': (v) => isText(v.href) && isText(v.size),
+    'cv?': (v) => isText(v.href) && v.href.startsWith('/cv/') && v.href.endsWith('.pdf'),
     research_interests: isTextList,
   },
   links: {
@@ -173,21 +323,21 @@ const shapes = {
     featured: (v) => typeof v === 'boolean',
     contribution: isText,
     tags: isTextList,
-    'image*': isImage,
-    'gallery*': (v) => Array.isArray(v) && v.length > 0 && v.every(isImage),
     // FD-90, FD-115: the short forms of the cards (Home, Portfolio, the research archive).
+    // 1.7.0: the card title, the card description (separate from the summary), the role line
+    // (one line, on every card), exactly three card tags from `tags`, and the card image.
     short_title: isText,
-    short_summary: isText,
+    card_description: isText,
+    role_line: isText,
+    card_tags: (v) => isTextList(v) && v.length === 3,
+    card_image: isCardImage,
     // FD-115: one of research-archive.json's topics (checked in validateContent).
     topic: (v) => SLUG.test(v),
     // FD-116: the project page's detail blocks, only where verified.
     'detail*': isDetail,
     'featured_order*': (v) => Number.isInteger(v) && v > 0,
-    // FD-102: the one large Home card and its role line.
+    // FD-102: the one large Home card.
     'featured_large*': (v) => v === true,
-    'featured_role_line*': isText,
-    // The Home card's tags as in the design specification (a subset of tags).
-    'featured_tags*': isTextList,
   },
   awards: { year: Number.isInteger, title: isText, by: isText },
   education: { year: isText, degree: isText, institution: isText, thesis: isText },
@@ -201,29 +351,25 @@ const shapes = {
     // FD-128: the page <title> (with ' — Rasel Al Mamun', at most 60 characters).
     short_title: isText,
     standfirst: isText,
+    // 1.7.0: the card description (Blog list and Latest posts show it, not the standfirst), the
+    // card image (1600 × 900, alt text) and the figures of the body.
+    card_description: isText,
+    card_image: isCardImage,
+    'figures*': (v) => Array.isArray(v) && v.length > 0 && v.every(isFigure),
     status: (v) => POST_STATUSES.includes(v),
     'date*': (v) => ISO_DATE.test(v) && !Number.isNaN(Date.parse(v)),
   },
   blogPage: {
-    // FD-112: the eyebrow and count while drafts are shown.
-    eyebrow_draft: isText,
+    // B1, B2 (1.6.0): the eyebrow, and the count line (plural / singular).
+    eyebrow: isText,
     heading: isText,
     intro: isText,
     categories: isListOf((v) => SLUG.test(v.id) && isText(v.label)),
     empty: isText,
     // A filtered category without posts.
     empty_category: isText,
-    count_label_draft: (v) => isText(v) && v.includes('{count}'),
-    // FD-113: a cover per post slug (checked in validateContent): a known drawing and alt text,
-    // or later a real photo (same frame, no layout change).
-    covers: (v) =>
-      v !== null &&
-      typeof v === 'object' &&
-      Object.values(v).every(
-        (cover) =>
-          (COVER_ILLUSTRATIONS.includes(cover?.illustration) && isText(cover.alt)) ||
-          isImage(cover),
-      ),
+    count_label: (v) => isText(v) && v.includes('{count}'),
+    count_label_one: (v) => isText(v) && v.includes('{count}'),
   },
   // FD-114: the post sidebar's headings.
   postSidebar: { toc_heading: isText, author_heading: isText, more_heading: isText },
@@ -236,13 +382,19 @@ const shapes = {
     search_placeholder: isText,
     topic_label: isText,
     topic_all: isText,
-    count_label: (v) => isText(v) && v.includes('{shown}') && v.includes('{total}'),
+    // FD-154: the search button, the results heading (focus target after a change) and the
+    // empty state's "Clear filters" link.
+    search_button: isText,
+    results_heading: isText,
+    clear_label: isText,
     empty: isText,
     topics: isListOf((v) => SLUG.test(v.id) && isText(v.label) && TOPIC_ICONS.includes(v.icon)),
   },
   hire: {
     heading: isText,
     availability: isText,
+    // FD-153: the yes / no state of the availability dot.
+    available: (v) => typeof v === 'boolean',
     services: isListOf(
       (v) =>
         isStep(v) &&
@@ -259,13 +411,14 @@ const shapes = {
     intro: isText,
     audiences: isTextList,
     subjects: isTextList,
+    // F3, C1 (1.6.0): the "What to expect" card (Hire me and Contact); sample content, Page text in Django.
+    expect: (v) =>
+      isText(v?.heading) && isListOf((item) => isText(item.label) && isText(item.value))(v.items),
   },
   meta: { 404: isText, blog: isText, hire: isText, contact: isText, home: isText },
   home: {
     hero_name_lines: isTextList,
     ctas: isListOf((v) => isText(v.label) && isText(v.href) && CTA_VARIANTS.includes(v.variant)),
-    fork: (v) => isText(v?.heading) && isForkCard(v.portfolio) && isForkCard(v.blog),
-    hire_intro: isText,
     selected: (v) =>
       isText(v?.eyebrow) &&
       isText(v.heading) &&
@@ -330,12 +483,10 @@ const shapes = {
   // Footer (FD-94): the brand line, three group names, which profile links each group shows.
   footer: {
     signature_by: isText,
-    role_line: isText,
     groups: (v) => isText(v?.explore) && isText(v.research) && isText(v.connect),
     research_profiles: isTextList,
     connect_profiles: isTextList,
     copyright_name: isText,
-    ai_portrait_note: isText,
   },
   portfolio: {
     profile: (v) =>
@@ -349,14 +500,9 @@ const shapes = {
       ),
     publications: (v) =>
       isHead(v) && v.selection === 'first_author' && isTextList(v.order) && isViewAll(v.cta),
-    projects: (v) =>
-      isHead(v) &&
-      isTextList(v.order) &&
-      v.order.every((id) => isText(v.role_lines?.[id])) &&
-      isViewAll(v.cta),
+    projects: (v) => isHead(v) && isTextList(v.order) && isViewAll(v.cta),
     awards: (v) =>
       isHead(v) &&
-      isText(v.note) &&
       isListOf(
         (item) =>
           AWARD_ICONS.includes(item.icon) &&
@@ -368,12 +514,12 @@ const shapes = {
       )(v.items),
     experience: (v) =>
       isHead(v) &&
-      isText(v.note) &&
       isListOf(
         (role) =>
           isText(role.title) &&
           isText(role.period) &&
-          isText(role.unit) &&
+          // FD-149: the unit may be empty (Ideatrium has none).
+          typeof role.unit === 'string' &&
           isText(role.institution) &&
           isText(role.text) &&
           isTextList(role.bullets),
@@ -434,7 +580,7 @@ function checkUnique(problems, file, records, key) {
   }
 }
 
-export function validateContent(content) {
+export function validateContent(content, bodies) {
   const problems = [];
 
   for (const [file, shape] of Object.entries(shapes)) {
@@ -460,11 +606,7 @@ export function validateContent(content) {
   checkUnique(problems, 'blogPage.categories', content.blogPage.categories, 'id');
   checkUnique(problems, 'researchArchive.topics', content.researchArchive.topics, 'id');
 
-  // FD-113: covers belong to posts; FD-115: every project has one of the topics.
-  const slugs = new Set(content.blog.map((post) => post.slug));
-  for (const slug of Object.keys(content.blogPage.covers)) {
-    if (!slugs.has(slug)) problems.push(`blogPage.covers: unknown post "${slug}"`);
-  }
+  // FD-115: every project has one of the topics.
   const topicIds = new Set(content.researchArchive.topics.map((topic) => topic.id));
   for (const project of content.projects) {
     if (!topicIds.has(project.topic)) {
@@ -483,6 +625,57 @@ export function validateContent(content) {
     }
     if (post.status === 'published' && isBracketed(post.standfirst)) {
       problems.push(`blog "${post.slug}": published with a [bracketed] standfirst`);
+    }
+    // 1.7.0: hard limits of the Blog card, and the body's [Figure n] markers against the figures.
+    const where = `blog "${post.slug}"`;
+    if (post.title.length > LIMITS.blogTitle) {
+      problems.push(`${where}: title is ${post.title.length} characters (max ${LIMITS.blogTitle})`);
+    }
+    if (post.card_description.length > LIMITS.blogDescription) {
+      problems.push(
+        `${where}: card description is ${post.card_description.length} characters (max ${LIMITS.blogDescription})`,
+      );
+    }
+    if (bodies && post.slug in bodies) {
+      checkFigures(problems, where, [bodies[post.slug]], post.figures ?? [], [0, 99]);
+    }
+  }
+  // 1.7.0: the card fields of each project, and its figures against the markers in its text.
+  for (const project of content.projects) {
+    const where = `projects "${project.id}"`;
+    const size = project.featured_large ? 'large' : 'small';
+    for (const key of REMOVED_PROJECT_FIELDS) {
+      if (key in project) problems.push(`${where}: "${key}" no longer exists (1.7.0)`);
+    }
+    if (project.short_title.length > LIMITS.title[size]) {
+      problems.push(
+        `${where}: ${size} card title is ${project.short_title.length} characters (max ${LIMITS.title[size]})`,
+      );
+    }
+    if (project.card_description.length > LIMITS.description[size]) {
+      problems.push(
+        `${where}: ${size} card description is ${project.card_description.length} characters (max ${LIMITS.description[size]})`,
+      );
+    }
+    if (project.role_line.length > LIMITS.roleLine) {
+      problems.push(
+        `${where}: role line is ${project.role_line.length} characters (max ${LIMITS.roleLine})`,
+      );
+    }
+    const extra = project.card_tags.filter((tag) => !project.tags.includes(tag));
+    if (extra.length) problems.push(`${where}: card_tags not in tags: ${extra.join(', ')}`);
+    if (new Set(project.card_tags).size !== project.card_tags.length) {
+      problems.push(`${where}: duplicate card tag`);
+    }
+    if (project.detail) {
+      const { detail } = project;
+      checkFigures(
+        problems,
+        where,
+        [detail.overview, detail.methods, detail.results_text, detail.limitations],
+        detail.figures ?? [],
+        [0, 99],
+      );
     }
   }
 
@@ -505,31 +698,20 @@ export function validateContent(content) {
   // FD-90: every featured project has its Home short forms and a distinct place 1 … n.
   const featured = content.projects.filter((project) => project.featured);
   for (const project of featured) {
-    for (const key of ['short_title', 'short_summary', 'featured_order']) {
-      if (!(key in project)) problems.push(`projects "${project.id}": featured without "${key}"`);
+    if (!('featured_order' in project)) {
+      problems.push(`projects "${project.id}": featured without "featured_order"`);
     }
   }
   const places = featured.map((project) => project.featured_order).toSorted((a, b) => a - b);
   if (places.some((place, i) => place !== i + 1)) {
     problems.push(`projects: featured_order must be 1 … ${featured.length}, got ${places}`);
   }
-  // The Home card's tags are some of the project's own tags.
-  for (const project of content.projects.filter((p) => 'featured_tags' in p)) {
-    const extra = (project.featured_tags ?? []).filter((tag) => !project.tags.includes(tag));
-    if (!project.featured)
-      problems.push(`projects "${project.id}": featured_tags but not featured`);
-    if (extra.length) {
-      problems.push(`projects "${project.id}": featured_tags not in tags: ${extra.join(', ')}`);
-    }
-  }
-  // FD-102: exactly one featured project is the large card, with its role line.
+  // FD-102: exactly one featured project is the large card.
   const large = content.projects.filter((project) => project.featured_large);
   if (large.length !== 1 || !large[0].featured) {
     problems.push(
       `projects: exactly one featured project must be featured_large, got ${large.length}`,
     );
-  } else if (!('featured_role_line' in large[0])) {
-    problems.push(`projects "${large[0].id}": featured_large without "featured_role_line"`);
   }
 
   const projectIds = new Set(content.projects.map((project) => project.id));
@@ -562,7 +744,7 @@ function checkPortfolio(content, projectIds) {
   for (const id of portfolio.projects.order) {
     if (!projectIds.has(id)) problems.push(`portfolio.projects: unknown project "${id}"`);
     else if (!content.projects.find((p) => p.id === id).short_title) {
-      problems.push(`portfolio.projects: "${id}" has no short_title / short_summary`);
+      problems.push(`portfolio.projects: "${id}" has no short_title / card_description`);
     }
   }
   for (const key of ['publications', 'projects']) {
@@ -584,11 +766,17 @@ function checkPortfolio(content, projectIds) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const content = loadContent();
-  const problems = validateContent(content);
+  const bodies = loadPostBodies(content.blog);
+  const problems = validateContent(content, bodies);
   if (!problems.length) problems.push(...missingImages(content), ...missingPosts(content));
   if (problems.length) {
     console.error(`validate-content: ${problems.length} problem(s)\n${problems.join('\n')}`);
     process.exit(1);
+  }
+  // 1.7.0: the soft limits only warn.
+  const warnings = contentWarnings(content, bodies);
+  if (warnings.length) {
+    console.warn(`validate-content: ${warnings.length} warning(s)\n${warnings.join('\n')}`);
   }
   console.log(
     `validate-content: ${content.publications.length} publications, ${content.projects.length} projects, ${content.awards.length} awards, ${content.blog.length} posts valid`,

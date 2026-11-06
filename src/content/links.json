@@ -9,13 +9,19 @@
     "id": "scholar",
     "label": "Google Scholar",
     "handle": "mNjYDB0AAAAJ",
-    "url": "https://scholar.google.com/citations?user=mNjYDB0AAAAJ&hl=en"
+    "url": "https://scholar.google.com/citations?user=mNjYDB0AAAAJ"
   },
   {
     "id": "scopus",
     "label": "Scopus",
     "handle": "59354503700",
     "url": "https://www.scopus.com/authid/detail.uri?authorId=59354503700"
+  },
+  {
+    "id": "wos",
+    "label": "Web of Science",
+    "handle": "RKQ-3766-2026",
+    "url": "https://www.webofscience.com/wos/author/record/RKQ-3766-2026"
   },
   {
     "id": "researchgate",

@@ -5,8 +5,7 @@
 //   imported the first time the desktop condition matches (it reverts itself through
 //   gsap.matchMedia);
 // - mobile (< 992 px): no pin — screen 2's entrance once in view (screen2.js, FD-85) and
-//   one-time reveals of the Fork cards; on phones the photo band's parallax (home-motion.js,
-//   FD-73);
+//   on phones the photo band's parallax (home-motion.js, FD-73);
 // - reduced motion: nothing; the static document layout.
 // home-motion.js (GSAP) also runs the Contact band's settle (FD-72) on every width.
 export const queries = {
@@ -14,9 +13,6 @@ export const queries = {
   mobile: '(max-width: 991.98px) and (prefers-reduced-motion: no-preference)',
   reduced: '(prefers-reduced-motion: reduce)',
 };
-
-// Fork cards follow each other by 60 ms.
-const STAGGER = 60;
 
 const belowFold = (el) => el.getBoundingClientRect().top > window.innerHeight;
 
@@ -67,45 +63,9 @@ function initMobile(stage) {
   stage.dataset.stageMode = 'mobile';
 
   const cleanupScreen2 = mobileScreen2(stage);
-  const cards = [...stage.querySelectorAll('[data-fork-col]')];
-  // Only what is still below the fold is hidden; nothing on screen ever blinks.
-  const targets = cards.filter(belowFold);
-
-  const reveal = (el, observer) => {
-    el.classList.remove('is-pre');
-    observer.unobserve(el);
-  };
-  const observer = new IntersectionObserver(
-    (entries, self) => {
-      for (const entry of entries) if (entry.isIntersecting) reveal(entry.target, self);
-    },
-    { threshold: 0.15 },
-  );
-
-  for (const el of targets) {
-    const index = cards.indexOf(el);
-    if (index > 0) el.style.setProperty('--reveal-delay', `${index * STAGGER}ms`);
-    el.classList.add('stage-reveal', 'is-pre');
-    observer.observe(el);
-  }
-
-  // Keyboard focus never lands on a hidden card (FD-53): reveal it at once.
-  const onFocus = (event) => {
-    const el = targets.find((target) => target.contains(event.target));
-    if (!el?.classList.contains('is-pre')) return;
-    el.classList.add('is-instant');
-    reveal(el, observer);
-  };
-  stage.addEventListener('focusin', onFocus);
 
   return () => {
     cleanupScreen2();
-    observer.disconnect();
-    stage.removeEventListener('focusin', onFocus);
-    for (const el of targets) {
-      el.classList.remove('stage-reveal', 'is-pre', 'is-instant');
-      el.style.removeProperty('--reveal-delay');
-    }
     delete stage.dataset.stageMode;
   };
 }

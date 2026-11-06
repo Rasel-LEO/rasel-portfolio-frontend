@@ -2,6 +2,7 @@ dist/
 dist-django/
 node_modules/
 playwright-report/
+.slots/
 test-results/
 tests/screenshots/
 package-lock.json

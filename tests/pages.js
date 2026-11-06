@@ -1,5 +1,5 @@
 // Author: Rasel Al Mamun
-import { readdirSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 
 // The eleven template pages of docs/architecture.md (src/pages/), as served from dist/.
 const allTemplatePages = [
@@ -23,6 +23,12 @@ export const isDjango = process.env.TEST_TARGET === 'django';
 
 // Where the built assets are served: the site root, or Django's static URL (FD-133).
 export const staticBase = isDjango ? '/static/frontend' : '';
+
+// FD-146: the CV link. The static target serves the placeholder PDF only where tools/preview/ is
+// present; the public copy has none (no PDF is exported), so link checks leave that one URL out.
+const cvPath = '/cv/Rasel_Al_Mamun_CV.pdf';
+const cvServed = isDjango || existsSync('tools/preview/cv/Rasel_Al_Mamun_CV.pdf');
+export const servedLink = (url) => cvServed || new URL(url, 'http://x').pathname !== cvPath;
 
 // The build whose files the tests read from disk (sizes, hashes): the one the target serves.
 export const buildDir = isDjango ? 'dist-django' : 'dist';
@@ -70,6 +76,10 @@ export const pageUrl = (url) =>
 // expects a build too). Django: a fixed list, not dist/ — the templates with a Django URL,
 // one page per project in src/content/projects.json, and no post page: the posts are drafts and
 // Django does not publish drafts (FD-137).
+const STATE_PAGE = /^(research|blog)-(page|topic|category|empty)|^publications-page-/;
+
+const HIDDEN_PAGE = /^format-test\.html$/;
+
 export const pages = isDjango
   ? [
       ...templatePages,
@@ -78,7 +88,16 @@ export const pages = isDjango
       ),
     ].sort()
   : readdirSync('dist')
-      .filter((file) => file.endsWith('.html'))
+      // 1.7.0: the hidden formatting test page has its own test (tests/format-test.spec.js).
+      .filter((file) => file.endsWith('.html') && !STATE_PAGE.test(file) && !HIDDEN_PAGE.test(file))
+      .sort();
+
+// FD-154: the built states of the list pages (page 2, a topic, a category, no match) are tested on
+// their own (tests/lists.spec.js), not as pages of the site in every loop.
+export const statePages = isDjango
+  ? []
+  : readdirSync('dist')
+      .filter((file) => STATE_PAGE.test(file))
       .sort();
 
 export const projectPages = pages.filter((file) => file.startsWith('project-'));

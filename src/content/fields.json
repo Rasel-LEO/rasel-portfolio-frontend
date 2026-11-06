@@ -1,28 +1,28 @@
 [
   {
-    "label": "Precision agriculture",
-    "target": "portfolio.html#research",
-    "icon": "sprout"
-  },
-  {
     "label": "IoT & edge AI",
     "target": "portfolio.html#research",
     "icon": "network"
   },
   {
-    "label": "Machine vision",
-    "target": "portfolio.html#research",
-    "icon": "camera"
-  },
-  {
-    "label": "Farm machinery",
-    "target": "portfolio.html#research",
-    "icon": "tractor"
+    "label": "Embedded systems",
+    "target": "portfolio.html#expertise",
+    "icon": "chip"
   },
   {
     "label": "Software & web",
     "target": "hire.html",
     "icon": "code"
+  },
+  {
+    "label": "Robotics & automation",
+    "target": "portfolio.html#expertise",
+    "icon": "gear"
+  },
+  {
+    "label": "Precision agriculture",
+    "target": "portfolio.html#research",
+    "icon": "sprout"
   },
   {
     "label": "Publications",

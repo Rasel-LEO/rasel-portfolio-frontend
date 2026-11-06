@@ -1,8 +1,10 @@
 // Author: Rasel Al Mamun
 // Desktop Home stage (≥ 992 px, motion allowed): the pinned scroll stage of the motion map
 // (docs/architecture.md, FD-69). The container sticks under the header for
-// 360 svh (CSS: from the first paint, FD-66); one timeline, scrubbed with 0.8 s of smoothing,
-// maps stage progress p (0–1) to the layers.
+// 234 svh (CSS: from the first paint, FD-66); one timeline, scrubbed with 0.8 s of smoothing,
+// maps stage progress to the layers. 1.6.0 (FD-163): the Fork is gone and the stage ends at the
+// hand-off (END = 65 %). The timeline keeps v1.5.1's own coordinates p (0–0.65) and its 360 svh
+// of scrolling per unit, so every scroll distance up to the hand-off is as it was.
 // Only transform and opacity animate. Layout is read on setup and on ScrollTrigger refresh,
 // never in scroll or pointer handlers.
 import { gsap } from 'gsap';
@@ -17,37 +19,27 @@ const FINE = '(hover: hover) and (pointer: fine)';
 
 // Where each layer is fully shown, and where focus takes the stage when it is not (FD-53,
 // FD-60, FD-69, FD-98). Outside these ranges the hero takes no pointer, so nothing half-shown
-// can be clicked; a Fork card takes it by its own opacity (FD-96, FORK_SOLID). Screen 2
-// (FD-85) is the range from the hero's exit (8–16 %) until the Fork is half seen (65.8 %): its
-// content plays when the timeline enters it and fades out on leaving. The Fork's range is
-// documentary; its focus target is `at` (a card's pointer follows its opacity).
+// can be clicked. Screen 2 (FD-85) is the range from the hero's exit (8–16 %) to the end of the
+// stage: its content plays when the timeline enters it and fades out on leaving.
 const SHOWN = {
   hero: { from: 0, to: 0.08, at: 0 },
   statement: { from: 0.16, to: 0.658, at: 0.41 },
-  fork: { from: 0.78, to: 1, at: 0.9 },
 };
 const shown = (name, p) => p >= SHOWN[name].from && p <= SHOWN[name].to;
-// FD-96: a Fork card takes the pointer once it is this opaque, wherever the scrub has it.
-const FORK_SOLID = 0.95;
 const inScreen2 = (p) => p >= SHOWN.statement.from && p < SHOWN.statement.to;
 
 // FD-54, FD-97: the figure reaches the back-to-top box at 65 % and the two swap in one frame
 // there — never two portraits or two shadows at once, no cross-fade.
 const HANDOFF = 0.65;
+// FD-163: the stage ends at the hand-off. The timeline's own coordinates p (0–END) are v1.5.1's;
+// a ScrollTrigger progress (0–1) is converted with `clock`.
+const END = HANDOFF;
+const clock = (progress) => progress * END;
 // Scrub smoothing in seconds (FD-69).
 const SCRUB = 0.8;
 
-// Each Fork column's own perspective while it opens.
-const PERSPECTIVE = 1200;
-
-// FD-98: no empty stage. The figure first shrinks into the corner, fast (56–65 %), so it has
-// left the Fork's place before the Fork comes in (FD-88); the Fork's content then comes in
-// over FORK_FADE from 65.5 % and screen 2 leaves once it is half seen (65.8 %), so the two
-// never rest on top of each other; the columns turn and settle over FORK_OPEN_FOR.
+// FD-98: the figure shrinks into the corner, fast (56–65 %), while screen 2 still stands.
 const SHRINK = 0.56;
-const FORK_OPEN = 0.655;
-const FORK_FADE = 0.02;
-const FORK_OPEN_FOR = 0.12;
 
 function createCue() {
   const cue = document.createElement('p');
@@ -87,12 +79,6 @@ function stageNodes(stage) {
     photo: q('[data-stage-figure] img'),
     hero: q('[data-stage-hero]'),
     statementLayer: q('[data-stage-statement]'),
-    fork: q('[data-stage-fork]'),
-    forkTitle: q('[data-stage-fork] .fork-title'),
-    forkCols: q('[data-stage-fork] .fork-cols'),
-    colPortfolio: q('[data-fork-col="portfolio"]'),
-    colBlog: q('[data-fork-col="blog"]'),
-    seam: q('[data-stage-fork] .fork-seam'),
     button: q('[data-back-to-top]', document),
     sentinel: q('[data-back-to-top-sentinel]', document),
   };
@@ -102,25 +88,17 @@ function stageNodes(stage) {
 // Every layer must fit the pinned frame (short windows, large text); otherwise part of it
 // could never be reached. Offsets ignore transforms, so the scrub state does not matter.
 function fits(stage, nodes) {
-  const { frame, main, fork, forkTitle, forkCols } = nodes;
+  const { frame, main } = nodes;
   const staged = stage.classList.contains('is-staged');
   stage.classList.add('is-staged');
-  const forkStyle = getComputedStyle(fork);
-  const forkNeed =
-    parseFloat(forkStyle.paddingTop) +
-    forkTitle.offsetHeight +
-    parseFloat(getComputedStyle(forkTitle).marginBottom) +
-    forkCols.offsetHeight +
-    parseFloat(forkStyle.paddingBottom);
-  const ok =
-    main.offsetTop + main.offsetHeight <= frame.clientHeight && forkNeed <= fork.clientHeight;
+  const ok = main.offsetTop + main.offsetHeight <= frame.clientHeight;
   if (!staged) stage.classList.remove('is-staged');
   return ok;
 }
 
 function buildStage(stage, nodes, { fine, context }) {
   const { frame, figure, plane, photo, hero, statementLayer } = nodes;
-  const { fork, forkTitle, forkCols, colPortfolio, colBlog, seam, button, sentinel } = nodes;
+  const { button, sentinel } = nodes;
 
   let tl = null;
   let cue = null;
@@ -135,6 +113,9 @@ function buildStage(stage, nodes, { fine, context }) {
   let heroShown = true;
   let offSmooth = null;
   let offJump = null;
+  let releaseFrame = 0;
+  let owner = 'figure'; // FD-173: who is the image now, the figure or the button
+  let clearButton = null;
 
   // Undoes what gsap.matchMedia does not revert by itself (and, after a throw, the rest).
   const undo = () => {
@@ -144,12 +125,15 @@ function buildStage(stage, nodes, { fine, context }) {
     if (measure) ScrollTrigger.removeEventListener('refreshInit', measure);
     offSmooth?.();
     offJump?.();
+    cancelAnimationFrame(releaseFrame);
     clearHero?.();
     cue?.remove();
     figure.style.removeProperty('visibility');
     screen2?.revert();
     sentinel.style.removeProperty('height');
-    for (const el of [hero, statementLayer, colPortfolio, colBlog]) el.classList.remove('is-off');
+    for (const el of [hero, statementLayer]) el.classList.remove('is-off');
+    clearButton?.();
+    owner = 'figure';
     button.classList.remove('is-handoff', 'is-held');
     stage.classList.remove('is-staged', 'is-active');
     delete stage.dataset.stageMode;
@@ -179,16 +163,32 @@ function buildStage(stage, nodes, { fine, context }) {
     const eOut = ease('--e-out');
     const eInOut = ease('--e-inout');
     const m24 = px('--m-24');
-    const m40 = px('--m-40');
-    const rotCol = parseFloat(token('--rot-col'));
     const stickyTop = parseFloat(getComputedStyle(frame).top) || 0;
 
     // The figure ends as the back-to-top photo (FD-54): its lower-right corner on the
     // button's, its height the button's, so the hand-off swaps the same image at the same
     // size and place (FD-97). From untransformed offsets (the scrub state does not matter);
     // also the viewport size the pointer handler uses. The figure is in the corner before the
-    // Fork comes in (FD-98), so it never crosses a card's text or actions (FD-88).
-    const geo = { dx: 0, dy: 0, scale: 1, vw: 1, vh: 1, shift: 0 };
+    // hand-off is complete (FD-98).
+    const geo = {
+      dx: 0,
+      dy: 0,
+      scale: 1,
+      vw: 1,
+      vh: 1,
+      // FD-173: the figure's pinned lower-right corner and size, the button's rest corner and
+      // height, the plane's origin and the perspective, for the glide (figureState).
+      fx: 0,
+      fy: 0,
+      fw: 1,
+      fh: 1,
+      bx: 0,
+      by: 0,
+      bh: 1,
+      ox: 0,
+      oy: 0,
+      d: 1400,
+    };
     measure = () => {
       const frameLeft = frame.getBoundingClientRect().left;
       const offset = offsetIn(figure, frame);
@@ -203,26 +203,24 @@ function buildStage(stage, nodes, { fine, context }) {
       geo.dx = geo.vw - right - (left + figure.offsetWidth);
       geo.dy = geo.vh - bottom - (top + figure.offsetHeight);
       geo.scale = height / figure.offsetHeight;
-      const colLeft = (col) => frameLeft + fork.offsetLeft + forkCols.offsetLeft + col.offsetLeft;
-      // The columns open from ∓--m-40 and ±--rot-col, but never from beyond the window's
-      // edges (the Fork is full width; at 1024–1280 px the side margin is under 40 px). The
-      // turned column's outer edge comes forward and grows by `grow` in perspective.
-      const half = colBlog.offsetWidth / 2;
-      const turn = (rotCol * Math.PI) / 180;
-      const grow =
-        half * ((Math.cos(turn) * PERSPECTIVE) / (PERSPECTIVE - half * Math.sin(turn)) - 1);
-      const room = Math.min(
-        colLeft(colPortfolio),
-        geo.vw - (colLeft(colBlog) + colBlog.offsetWidth),
-      );
-      geo.shift = Math.max(0, Math.min(m40, Math.floor(room - grow - 1)));
+      geo.fx = left + figure.offsetWidth;
+      geo.fy = top + figure.offsetHeight;
+      geo.fw = figure.offsetWidth;
+      geo.fh = figure.offsetHeight;
+      geo.bx = geo.vw - right;
+      geo.by = geo.vh - bottom;
+      geo.bh = height;
+      const [ox, oy] = getComputedStyle(plane).transformOrigin.split(' ').map(parseFloat);
+      geo.ox = ox || geo.fw / 2;
+      geo.oy = oy || geo.fh / 2;
+      geo.d = parseFloat(getComputedStyle(figure).perspective) || 1400;
     };
     measure();
     // Every refresh measures again, a resize included (ScrollTrigger refreshes on it).
     ScrollTrigger.addEventListener('refreshInit', measure);
-    // The Fork's columns change size once the web fonts are in, and the entrance (FD-67) may
-    // still move the photo's column: measure again once both are done, so the hand-off target
-    // never keeps a value read during the entrance (FD-97).
+    // The text changes size once the web fonts are in, and the entrance (FD-67) may still move
+    // the photo's column: measure again once both are done, so the hand-off target never keeps a
+    // value read during the entrance (FD-97).
     const entrance = figure.closest('.stage-figure-col')?.getAnimations() ?? [];
     Promise.all([
       document.fonts?.ready,
@@ -263,11 +261,126 @@ function buildStage(stage, nodes, { fine, context }) {
       else screen2.hide(instant);
     };
 
-    // FD-96: each Fork card takes the pointer from the frame it is seen (nearly) in full.
-    const cols = [colPortfolio, colBlog];
-    const solid = (col) => parseFloat(col.style.opacity || '0') >= FORK_SOLID;
-    const syncFork = () => {
-      for (const col of cols) col.classList.toggle('is-off', !solid(col));
+    // FD-173: the hand-off glide. When the stage releases before the shrink has finished, the
+    // button takes over at the figure's exact current place and size (figureState) and glides into
+    // its corner in --d-slow; scrolling back up it glides to the figure's current place and size,
+    // then the figure is shown and the button held again, in the same frame. Slow scrolling
+    // finishes the shrink inside the stage, so it never glides (the swap is as in v1.5.1). A state
+    // is the button's transform relative to its rest: x, y (lower-right corner), s (scale about
+    // that corner) and o (opacity). Only transform and opacity are written, on the button.
+    // The button's own opacity at rest (FD-18); the figure lands at it (FD-97).
+    const rest = parseFloat(getComputedStyle(button).getPropertyValue('--btt-rest')) || 1;
+    const REST = () => ({ x: 0, y: 0, s: 1, o: rest });
+    const lerp = (a, b, t) => ({
+      x: a.x + (b.x - a.x) * t,
+      y: a.y + (b.y - a.y) * t,
+      s: a.s + (b.s - a.s) * t,
+      o: a.o + (b.o - a.o) * t,
+    });
+    // Where the figure's picture is now, as the pinned frame would show it (a released frame is
+    // carried up by the page; this ignores that): arithmetic on the timeline's own values and the
+    // geometry measured on refresh, no layout read. The plane's turn (rotationY) is left out.
+    const figureState = () => {
+      const sf = gsap.getProperty(figure, 'scale');
+      const sp = gsap.getProperty(plane, 'scale');
+      const f = geo.d / (geo.d - gsap.getProperty(plane, 'z'));
+      const cx = geo.fw / 2;
+      const cy = geo.fh / 2;
+      const px1 = cx + (geo.ox + (geo.fw - geo.ox) * sp - cx) * f;
+      const py1 = cy + (geo.oy + (geo.fh - geo.oy) * sp - cy) * f;
+      const brX = geo.fx + (px1 - geo.fw) * sf + gsap.getProperty(figure, 'x');
+      const brY = geo.fy + (py1 - geo.fh) * sf + gsap.getProperty(figure, 'y');
+      return {
+        x: brX - geo.bx,
+        y: brY - geo.by,
+        s: (geo.fh * sp * f * sf) / geo.bh,
+        o: gsap.getProperty(figure, 'opacity'),
+      };
+    };
+    const near = (a, b) => Math.hypot(a.x - b.x, a.y - b.y) < 2 && Math.abs(a.s - b.s) * geo.bh < 2;
+    let gliding = null; // 'out' (to the corner), 'in' (to the figure) or null
+    let glideTween = null;
+    let shownState = REST();
+    let canGlide = false; // not while setting up, refreshing or jumping
+    const place = (state) => {
+      shownState = state;
+      gsap.set(button, {
+        x: state.x,
+        y: state.y,
+        scale: state.s,
+        opacity: state.o,
+        transformOrigin: '100% 100%',
+      });
+    };
+    clearButton = () => {
+      glideTween?.kill();
+      glideTween = null;
+      gliding = null;
+      shownState = REST();
+      button.classList.remove('is-gliding');
+      gsap.set(button, { clearProps: 'transform,opacity' });
+    };
+    const glide = (mode, from, target, done) => {
+      glideTween?.kill();
+      gliding = mode;
+      button.classList.add('is-gliding');
+      // Shown at once, whatever the observer has done yet (a jump from the top).
+      button.hidden = false;
+      button.classList.add('is-on');
+      const t = { v: 0 };
+      const step = () => {
+        // The observer may have hidden the button (the page is back above the stage) while it
+        // is still the image: it stays until the glide has ended.
+        button.hidden = false;
+        place(lerp(from, target(), t.v));
+      };
+      place(from);
+      glideTween = gsap.to(t, {
+        v: 1,
+        duration: seconds('--d-slow'),
+        ease: eInOut,
+        onUpdate: step,
+        onComplete: () => {
+          glideTween = null;
+          gliding = null;
+          done();
+        },
+      });
+    };
+    const toButton = (finished) => {
+      figure.style.visibility = 'hidden';
+      button.classList.remove('is-held');
+      if (owner === 'figure') {
+        owner = 'button';
+        const from = figureState();
+        if (!finished && canGlide && !near(from, REST())) {
+          glide('out', from, REST, () => clearButton());
+        } else {
+          clearButton();
+        }
+      } else if (gliding === 'in') {
+        glide('out', shownState, REST, () => clearButton());
+      }
+    };
+    const toFigure = () => {
+      if (owner !== 'button') {
+        figure.style.visibility = '';
+        button.classList.add('is-held');
+        return;
+      }
+      const finish = () => {
+        owner = 'figure';
+        figure.style.visibility = '';
+        button.classList.add('is-held');
+        clearButton();
+        // Back above the stage the button is not offered (back-to-top.js: the sentinel).
+        if (window.scrollY <= tl.scrollTrigger.start) {
+          button.classList.remove('is-on');
+          button.hidden = true;
+        }
+      };
+      if (!canGlide || near(shownState, figureState())) finish();
+      else if (gliding !== 'in') glide('in', shownState, figureState, finish);
     };
 
     // FD-97: one write for both, on the timeline's own progress, so the figure and the button
@@ -279,10 +392,29 @@ function buildStage(stage, nodes, { fine, context }) {
       // shrink on.
       if (p >= SHRINK && !photoAtRest) restPhoto?.();
       photoAtRest = p >= SHRINK;
-      const handed = p >= HANDOFF;
-      figure.style.visibility = handed ? 'hidden' : '';
-      button.classList.toggle('is-held', !handed);
-      button.classList.toggle('is-handoff', p < 1);
+      // FD-170: also once the scroll has reached the end of the stage, however far the scrub's
+      // smoothing still lags behind: the stage is about to release (or has), and a figure still
+      // on its way would be carried down with the page. From that frame the button is the image,
+      // fixed in the corner, and the figure is hidden.
+      // FD-173: when the shrink has not finished by then, the button glides (see above).
+      const finished = p >= HANDOFF;
+      const handed = finished || (tl.scrollTrigger?.progress ?? 0) >= 1;
+      if (handed) toButton(finished);
+      else toFigure();
+      // FD-163: v1.5.1 kept this until the end of its stage, 35 % after the hand-off. The stage ends
+      // at the hand-off now, so it holds while the stage is on screen and for one frame after the
+      // swap (a fast scroll past the stage can reach the hand-off after leaving it): the swap
+      // never fades, the button's own fade is back a frame later.
+      if (p < END || stage.classList.contains('is-active')) {
+        cancelAnimationFrame(releaseFrame);
+        releaseFrame = 0;
+        button.classList.add('is-handoff');
+      } else if (!releaseFrame && button.classList.contains('is-handoff')) {
+        releaseFrame = requestAnimationFrame(() => {
+          releaseFrame = 0;
+          if (!stage.classList.contains('is-active')) button.classList.remove('is-handoff');
+        });
+      }
     };
 
     // Everything that follows the timeline's own progress. On every rendered frame; also on a
@@ -290,9 +422,8 @@ function buildStage(stage, nodes, { fine, context }) {
     // event (a page opened or reloaded below the stage).
     const syncAll = () => {
       if (!tl) return;
-      const p = tl.progress();
+      const p = clock(tl.progress());
       syncScreen2(p);
-      syncFork();
       syncHandoff(p);
     };
 
@@ -306,13 +437,18 @@ function buildStage(stage, nodes, { fine, context }) {
         scrub: SCRUB,
         invalidateOnRefresh: true,
         onUpdate: (self) => {
-          setStates(self.progress);
+          setStates(clock(self.progress));
           syncAll();
         },
-        onToggle: (self) => stage.classList.toggle('is-active', self.isActive),
+        onToggle: (self) => {
+          stage.classList.toggle('is-active', self.isActive);
+          syncAll();
+        },
         onRefresh: (self) => {
           placeSentinel(self);
+          canGlide = false;
           syncAll();
+          canGlide = true;
         },
       },
     });
@@ -341,7 +477,6 @@ function buildStage(stage, nodes, { fine, context }) {
     // 56–65 %: the figure shrinks into the back-to-top box, fast and eased (FD-98), while
     // screen 2 still stands. It lands as the button looks at rest (FD-97): at its opacity
     // (--btt-rest), its floor shadow gone (the button's photo has its own).
-    const rest = parseFloat(getComputedStyle(button).getPropertyValue('--btt-rest')) || 1;
     tl.set(figure, { transformOrigin: '100% 100%' }, 0);
     tl.to(
       figure,
@@ -356,52 +491,26 @@ function buildStage(stage, nodes, { fine, context }) {
       },
       SHRINK,
     );
-    // From 65.5 %: the Fork comes in as screen 2 leaves (67 %, above) — heading and columns
-    // half seen within FORK_FADE; the columns turn in from ±--rot-col and ∓--m-40 (each with
-    // its own perspective) and the seam draws top → bottom over
-    // FORK_OPEN_FOR.
-    tl.fromTo(
-      forkTitle,
-      { opacity: 0 },
-      { opacity: 1, duration: FORK_FADE, ease: eOut },
-      FORK_OPEN,
-    );
-    tl.fromTo(forkTitle, { y: m24 }, { y: 0, duration: FORK_OPEN_FOR / 2, ease: eOut }, FORK_OPEN);
-    for (const [col, sign] of [
-      [colPortfolio, 1],
-      [colBlog, -1],
-    ]) {
-      tl.fromTo(col, { opacity: 0 }, { opacity: 1, duration: FORK_FADE, ease: eOut }, FORK_OPEN);
-      tl.fromTo(
-        col,
-        { rotationY: sign * rotCol, x: () => -sign * geo.shift, transformPerspective: PERSPECTIVE },
-        { rotationY: 0, x: 0, duration: FORK_OPEN_FOR, ease: eOut },
-        FORK_OPEN,
-      );
-    }
-    tl.fromTo(
-      seam,
-      { xPercent: -50, x: 0, scaleY: 0, transformOrigin: '50% 0' },
-      { scaleY: 1, duration: FORK_OPEN_FOR, ease: eOut },
-      FORK_OPEN,
-    );
-    // From 65 % the back-to-top button stands where the figure was (syncHandoff, FD-97); the
-    // Fork holds to the end. A no-op tween keeps the timeline's length to 100 %.
-    tl.set({}, {}, 1);
+    // From 65 % the back-to-top button stands where the figure was (syncHandoff, FD-97), and the
+    // stage ends (FD-163). A no-op tween sets the timeline's length to END.
+    tl.set({}, {}, END);
 
     const st = tl.scrollTrigger;
     placeSentinel(st);
-    setStates(st.progress);
+    setStates(clock(st.progress));
     syncAll();
+    canGlide = true;
 
     // An instant jump (back-to-top, a focus jump) shows its target at once: the scrub's
     // smoothing would otherwise play the story through on the way (FD-70); screen 2 shows or
     // goes at once too.
     const settle = () => {
       instant = true;
+      canGlide = false;
       ScrollTrigger.update();
       st.getTween()?.progress(1);
       tl.progress(st.progress);
+      canGlide = true;
       instant = false;
     };
     offJump = onJump(settle);
@@ -409,13 +518,13 @@ function buildStage(stage, nodes, { fine, context }) {
     // FD-53: keyboard focus inside a layer that is not fully shown takes the stage to where
     // it is; inside screen 2 its content shows at once (FD-85). Pointer focus (mousedown)
     // never moves the page under the pointer.
-    const layers = { hero, statement: statementLayer, fork };
+    const layers = { hero, statement: statementLayer };
     onFocus = (event) => {
       if (!event.target.matches(':focus-visible')) return;
       const name = Object.keys(layers).find((key) => layers[key].contains(event.target));
       if (!name) return;
-      const seen = name === 'fork' ? cols.every(solid) : shown(name, st.progress);
-      if (!seen) jumpTo(st.start + SHOWN[name].at * (st.end - st.start));
+      const seen = shown(name, clock(st.progress));
+      if (!seen) jumpTo(st.start + (SHOWN[name].at / END) * (st.end - st.start));
       else if (name === 'statement') settle();
       if (name === 'statement' && screen2On) screen2.show();
     };
@@ -474,10 +583,10 @@ function buildStage(stage, nodes, { fine, context }) {
       onMove = (event) => {
         const x = event.clientX / geo.vw - 0.5;
         const y = event.clientY / geo.vh - 0.5;
-        const still = tl.progress() >= SHRINK;
+        const still = clock(tl.progress()) >= SHRINK;
         toY(still ? 0 : x * 12);
         toX(still ? 0 : -y * 6);
-        if (!shown('hero', st.progress)) return;
+        if (!shown('hero', clock(st.progress))) return;
         // Not while the entrance (FD-67) still moves the lines: GSAP would keep its offset.
         const entering = hero
           .getAnimations({ subtree: true })

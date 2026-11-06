@@ -3,7 +3,7 @@
 1.5 px strokes at every size (non-scaling), currentColor with the .la parts in --accent, so they
 follow the theme. Decorative: the text beside each one names it.
 Usage: {{> icons/line-icon name="tank" size=96}} — system and results: tank, dashboard, relay, soil,
-pump, monitor, gear, sun; topics: hen, fish, sun-water, tractor, leaf, greenhouse. `size` sets
+pump, monitor, gear, sun; topics (FD-159, 24 keys with the fallback): hen, fish, sun-water, tractor, leaf, greenhouse, software, web, mobile, ai, robotics, data, cloud, security, energy, water, environment, health, education, research, hardware, automation, iot, general (the fallback: any other name draws it). `size` sets
 the box (default 24). --}}
 <svg class="line-art line-icon" viewBox="0 0 48 48" width="{{#if size}}{{size}}{{else}}24{{/if}}" height="{{#if size}}{{size}}{{else}}24{{/if}}" aria-hidden="true" focusable="false">
   {{#if (eq name "tank")}}
@@ -71,5 +71,72 @@ the box (default 24). --}}
   {{else if (eq name "greenhouse")}}
   <path d="M6,40V22L24,8L42,22V40ZM15,40V15M33,40V15M6,22H42" />
   <path class="la" d="M22,40V33Q17,33,17,28Q22,28,22,33M26,40V33Q31,33,31,28Q26,28,26,33" />
+  {{else if (eq name "software")}}
+  <path d="M16,14L6,24L16,34M32,14L42,24L32,34" />
+  <path class="la" d="M27,10L21,38" />
+  {{else if (eq name "web")}}
+  <rect x="6" y="9" width="36" height="30" rx="3" />
+  <path d="M6,19H42" />
+  <circle class="la" cx="24" cy="29" r="6" />
+  <path class="la" d="M18,29H30" />
+  {{else if (eq name "mobile")}}
+  <rect x="14" y="5" width="20" height="38" rx="3" />
+  <path d="M21,37H27" />
+  <path class="la" d="M20,11H28" />
+  {{else if (eq name "ai")}}
+  <circle cx="11" cy="13" r="3" />
+  <circle cx="11" cy="35" r="3" />
+  <circle cx="37" cy="13" r="3" />
+  <circle cx="37" cy="35" r="3" />
+  <path d="M14,15L20,21M14,33L20,27M34,15L28,21M34,33L28,27" />
+  <circle class="la" cx="24" cy="24" r="5" />
+  {{else if (eq name "robotics")}}
+  <rect x="10" y="16" width="28" height="22" rx="4" />
+  <path d="M24,16V9M6,26V32M42,26V32" />
+  <circle cx="24" cy="7" r="2" />
+  <circle class="la" cx="18" cy="26" r="2.5" />
+  <circle class="la" cx="30" cy="26" r="2.5" />
+  <path class="la" d="M19,33H29" />
+  {{else if (eq name "data")}}
+  <path d="M6,6V42H42" />
+  <path class="la" d="M14,36V26M24,36V16M34,36V22" />
+  {{else if (eq name "cloud")}}
+  <path d="M14,36A8,8,0,0,1,12,20A12,12,0,0,1,35,17A9,9,0,0,1,36,36Z" />
+  <path class="la" d="M24,32V22M20,26L24,22L28,26" />
+  {{else if (eq name "security")}}
+  <path d="M24,5L40,11V22C40,32,33,39,24,43C15,39,8,32,8,22V11Z" />
+  <path class="la" d="M17,23L22,28L31,18" />
+  {{else if (eq name "energy")}}
+  <path class="la" d="M27,4L11,27H23L21,44L37,21H25Z" />
+  {{else if (eq name "water")}}
+  <path d="M24,6C24,6,11,20,11,29A13,13,0,0,0,37,29C37,20,24,6,24,6Z" />
+  <path class="la" d="M18,30A6,6,0,0,0,24,36" />
+  {{else if (eq name "environment")}}
+  <path d="M24,42V28M24,28C14,28,10,20,16,13C20,6,32,6,34,14C40,20,34,28,24,28Z" />
+  <path class="la" d="M24,36L30,30" />
+  {{else if (eq name "health")}}
+  <path d="M24,40C10,30,6,22,6,16A9,9,0,0,1,24,12A9,9,0,0,1,42,16C42,22,38,30,24,40Z" />
+  <path class="la" d="M10,24H18L21,18L26,30L29,24H38" />
+  {{else if (eq name "education")}}
+  <path d="M4,18L24,8L44,18L24,28Z" />
+  <path d="M12,23V32C12,36,18,39,24,39S36,36,36,32V23" />
+  <path class="la" d="M44,18V30" />
+  {{else if (eq name "research")}}
+  <circle cx="20" cy="20" r="12" />
+  <path d="M29,29L42,42" />
+  <path class="la" d="M14,22Q20,14,26,22" />
+  {{else if (eq name "hardware")}}
+  <rect x="12" y="12" width="24" height="24" rx="2" />
+  <path d="M18,6V12M24,6V12M30,6V12M18,36V42M24,36V42M30,36V42M6,18H12M6,24H12M6,30H12M36,18H42M36,24H42M36,30H42" />
+  <rect class="la" x="19" y="19" width="10" height="10" />
+  {{else if (eq name "automation")}}
+  <path d="M38,16A16,16,0,0,0,10,18M10,32A16,16,0,0,0,38,30" />
+  <path class="la" d="M38,8V16H30M10,40V32H18" />
+  {{else if (eq name "iot")}}
+  <circle class="la" cx="24" cy="24" r="4" />
+  <path d="M14,14A14,14,0,0,0,14,34M34,14A14,14,0,0,1,34,34M8,8A22,22,0,0,0,8,40M40,8A22,22,0,0,1,40,40" />
+  {{else}}
+  <path d="M24,5L40,14V34L24,43L8,34V14Z" />
+  <path class="la" d="M24,5V24L40,14M24,24L8,14M24,24V43" />
   {{/if}}
 </svg>

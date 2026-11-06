@@ -132,16 +132,19 @@ test.describe('reveals (FD-63)', () => {
     });
   }
 
-  test('phones: the Contact band photo rises once', async ({ browser }) => {
+  // H9 (1.6.0): the Contact band photo is hidden on phones (< 768 px); from 768 px it keeps its motion
+  // (the settle tests above and below).
+  test('phones: the Contact band photo is hidden (H9)', async ({ browser }) => {
     const context = await browser.newContext(touch);
     const page = await context.newPage();
     await page.goto('/index.html');
     await motionReady(page);
-    const figure = page.locator('[data-contact-figure]');
-    await figure.scrollIntoViewIfNeeded();
-    await expect.poll(() => figure.evaluate((el) => getComputedStyle(el).opacity)).toBe('1');
-    await page.waitForTimeout(700);
-    expect(await figure.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).f)).toBe(0);
+    await expect(page.locator('[data-contact-figure]')).toBeHidden();
+    expect(
+      await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      ),
+    ).toBeLessThanOrEqual(0);
     await context.close();
   });
 
@@ -375,6 +378,9 @@ test.describe('fine pointer (FD-62, FD-63)', () => {
     );
     const button = page.locator('[data-back-to-top]');
     await expect(button).toBeVisible();
+    // FD-163: the stage ends at the hand-off, so after a jump below it the swap completes when the
+    // scrub has reached the end: the button takes the pointer from then on.
+    await expect(button).not.toHaveClass(/\bis-held\b/);
     const target = await button.boundingBox();
     await moveTo(target.x + target.width / 2, target.y + target.height / 2);
     await expect(ring).toHaveAttribute('data-state', 'link');
@@ -426,6 +432,14 @@ test.describe('fine pointer (FD-62, FD-63)', () => {
     await page.mouse.move(link.x + 10, link.y + 10);
     await page.mouse.move(link.x + 12, link.y + 12);
     await expect(page.locator('.cursor-ring')).toHaveClass(/is-on/);
+    // Round 5: axe measures colours as painted, so the hero's entrance (FD-67) must be over first
+    // (mid-fade text reads as low contrast).
+    await page.waitForFunction(
+      () =>
+        !document
+          .getAnimations()
+          .some((animation) => /^enter-/.test(animation.animationName ?? '')),
+    );
     const { violations } = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze();
@@ -533,7 +547,9 @@ test.describe('entrance (FD-67)', () => {
   // The LCP element and time with and without the entrance (median of three loads each).
   for (const [width, height, kind] of [
     [1440, 900, 'IMG photo'],
-    [320, 568, 'hero text'],
+    // Round 5: 440 px tall, so the portrait (from y 456 at 320 px wide) is below the first screen
+    // and the hero text is the candidate, as the test says; at 568 px the photo reaches it.
+    [320, 440, 'hero text'],
   ]) {
     test(`LCP element and time unchanged by the entrance at ${width}×${height} (${kind})`, async ({
       browser,
@@ -640,24 +656,6 @@ test.describe('reveal transitions', () => {
     });
     expect(transition).toContain('opacity');
     expect(transition).toContain('transform');
-  });
-
-  test('phone Fork cards fade and rise', async ({ browser }) => {
-    const context = await browser.newContext(touch);
-    const page = await context.newPage();
-    await page.goto('/index.html');
-    await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'mobile');
-    const card = page.locator('[data-fork-col="blog"]');
-    await expect(card).toHaveClass(/stage-reveal/);
-    // The transition that runs when the card is revealed (.is-pre itself has none).
-    const style = await card.evaluate((el) => {
-      el.classList.remove('is-pre');
-      const cs = getComputedStyle(el);
-      return { property: cs.transitionProperty, delay: cs.transitionDelay };
-    });
-    expect(style.property).toContain('opacity');
-    expect(style.delay).toContain('0.06s');
-    await context.close();
   });
 });
 

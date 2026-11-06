@@ -117,7 +117,7 @@ function hoverBox() {
 // Card tilt (FD-62): toward the pointer, at most --rot-card, on an axis in the
 // card's plane; the lift itself is CSS (hover, and focus-within without tilt).
 function initTilt() {
-  const selector = '.card, .fork-card, .service';
+  const selector = '.card, .service';
   const max = parseFloat(token('--rot-card')) || 6;
   const hovered = hoverBox();
   let card = null;
@@ -241,7 +241,9 @@ function anchorHandler(lenis) {
     if (!target.matches('a[href], button, input, select, textarea, [tabindex]')) {
       target.setAttribute('tabindex', '-1');
     }
-    target.focus({ preventScroll: true });
+    // A link can name the element that takes focus instead (data-focus: "Start a brief" → the
+    // form's first field). Not motion; kept from 1.6.0.
+    (document.getElementById(link.dataset.focus ?? '') ?? target).focus({ preventScroll: true });
   };
 }
 

@@ -8,7 +8,7 @@
 [Code sample — add or remove this block.]
 ```
 
-[Figure: image and caption — owner adds]
+[Figure 1]
 
 ## [Second section heading]
 

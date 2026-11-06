@@ -99,6 +99,7 @@ Module-level detail: `docs/architecture.md`.
 │   ├── lhci.mjs                     Lighthouse CI with Playwright's Chromium
 │   ├── markdown.mjs                 post bodies, Markdown to HTML at build time
 │   ├── serve-django-paths.mjs       stand-in server: dist-django under the Django URLs
+│   ├── share-images.mjs             share images 1200 × 630 from the card images, at build time
 │   ├── subset-fonts.mjs             one-time font subsetting
 │   ├── test-django.mjs              runs the browser suite against DJANGO_BASE_URL
 │   ├── test-linux.mjs               runs the suite in the Playwright Linux image (Docker)

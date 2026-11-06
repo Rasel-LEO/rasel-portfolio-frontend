@@ -21,6 +21,9 @@
   // Layout
   --gutter: var(--s-4);
   --section-pad: clamp(40px, 5vw, 80px); // FD-101 (was clamp(64px, 10vw, 160px))
+
+  // FD-164: one gap above and below every Home section after the stage.
+  --home-gap: clamp(32px, 4vw, 56px);
   --header-h: 64px;
 
   // Focus ring
