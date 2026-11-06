@@ -6,11 +6,69 @@ import { expect, test } from './fixtures.js';
 
 // ---- item 1: the hand-off glide (FD-173) --------------------------------------------------
 
-// The most the visible image (the figure or the button's photo) may move between two consecutive
-// frames, in px (per 16.7 ms), as its lower-right corner or its height. The snap this replaces was 833 px at
-// 1440 × 900; the largest steps measured now are about 120 px, which is what the eased 320 ms
-// glide needs at its fastest and what the scrubbed shrink itself does at its fastest (103 px).
+// The most the visible image (the figure or the button's photo) may move per 1/60 s (16.7 ms),
+// as its lower-right corner or its height. The snap this replaces was 833 px at 1440 × 900; the
+// largest steps measured now are about 120 px, which is what the eased 320 ms glide needs at its
+// fastest and what the scrubbed shrink itself does at its fastest (103 px).
+// v1.7.2 (FD-180): the speed is measured per elapsed time, not per captured frame, on the clock
+// the motion runs on: GSAP places the image from performance.now() at the start of its ticker
+// callback, so each sample is timed by the start of the latest ticker callback before it
+// (a test-only requestAnimationFrame wrapper; the page code is unchanged). On a busy runner a
+// frame is skipped or a callback starts late, and one sample then holds more than one frame of
+// movement.
+// v1.7.3 (FD-181): three checks instead of one two-interval reading.
+//   (a) Speed: the average speed over every 3 consecutive intervals (samples i - 3 to i) stays
+//       at or below STEP_LIMIT. Three intervals even out the start-time jitter that put one
+//       two-interval reading at 132 on CI while the glide's true top speed is about 120.
+//   (b) Jump: no single interval is faster than JUMP_RATIO times the median of its neighbouring
+//       intervals (two on each side). A frame whose movement is timed one frame off reads at most
+//       2 times its neighbours; a jump reads far more. The median is floored at JUMP_FLOOR
+//       (130 / 2.5 = 52), so only an interval faster than the limit itself can fail: the shrink
+//       has a real, repeatable one-interval peak of about 72 px at about 3.6 times its neighbours
+//       as it reaches the stage end, below the limit. (b) is the guard that (a)'s averaging
+//       cannot hide a one-interval jump behind.
+//   (c) Density: the existing guard below.
 const STEP_LIMIT = 130;
+const JUMP_RATIO = 2.5;
+const JUMP_FLOOR = STEP_LIMIT / JUMP_RATIO;
+const FRAME_MS = 1000 / 60;
+// For the check to stay meaningful the motion must be sampled densely: at least MIN_MOVING
+// windows in which the image moves, and none of them longer than MAX_WINDOW_FRAMES frames (the
+// 833 px snap spread over 6 frames is still 139 px per 16.7 ms, above the limit).
+const MIN_MOVING = 12;
+const MAX_WINDOW_FRAMES = 6;
+
+// Optional, for local proof runs only: GLIDE_CPU_THROTTLE=4 slows Chromium's CPU fourfold (CDP),
+// as on a busy shared CI runner. Off by default and in CI.
+const THROTTLE = Number(process.env.GLIDE_CPU_THROTTLE) || 0;
+// Optional, for local proof runs only: GLIDE_INJECT=snap adds an 833 px snap to the recorded
+// motion within one interval, GLIDE_INJECT=jump the same 833 px spread over two intervals, at
+// the first moving interval of the glide (or of the motion, if there is no glide). Every glide
+// test must then fail. Off by default and in CI.
+const INJECT = process.env.GLIDE_INJECT || '';
+const INJECTIONS = { snap: [833], jump: [416.5, 416.5] };
+
+// Before the page's own scripts: note when GSAP's ticker callback starts on each frame, so a
+// sample knows the time its picture was computed for. The ticker is the callback requested on
+// every frame since load, so it is the one called most often (the cursor's own loop runs only
+// while the pointer settles; the sampler is left out).
+const FRAME_CLOCK = () => {
+  const raf = window.requestAnimationFrame.bind(window);
+  const calls = new Map();
+  let ticker = null;
+  let most = 0;
+  window.__frameStart = 0;
+  window.requestAnimationFrame = (callback) =>
+    raf((time) => {
+      if (!callback.__sampler) {
+        const n = (calls.get(callback) ?? 0) + 1;
+        calls.set(callback, n);
+        if (n >= most) [most, ticker] = [n, callback];
+        if (callback === ticker) window.__frameStart = performance.now();
+      }
+      return callback(time);
+    });
+};
 
 // On every animation frame: which image is visible (the stage figure or the back-to-top photo),
 // its lower-right corner and height, and whether the figure's frame is carried by the page.
@@ -29,7 +87,7 @@ const TRACKER = `(() => {
     const buttonShown = !button.hidden && bs.visibility !== 'hidden' && parseFloat(bs.opacity) > 0.05;
     const img = (figureShown ? figure : button).querySelector('img').getBoundingClientRect();
     window.__frames.push({
-      t: performance.now(),
+      t: window.__frameStart,
       y: window.scrollY,
       figureShown,
       buttonShown,
@@ -42,11 +100,17 @@ const TRACKER = `(() => {
     });
     if (!window.__stop) requestAnimationFrame(sample);
   };
+  sample.__sampler = true;
   requestAnimationFrame(sample);
 })()`;
 
 async function openHome(page) {
   await page.setViewportSize({ width: 1440, height: 900 });
+  if (THROTTLE > 1) {
+    const cdp = await page.context().newCDPSession(page);
+    await cdp.send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
+  }
+  await page.addInitScript(FRAME_CLOCK);
   await page.goto('/index.html');
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'desktop');
   await page.evaluate(() => document.fonts.ready);
@@ -54,40 +118,148 @@ async function openHome(page) {
   await page.evaluate(TRACKER);
 }
 
+const moved = (a, b) =>
+  Math.max(
+    Math.abs(b.right - a.right),
+    Math.abs(b.bottom - a.bottom),
+    Math.abs(b.height - a.height),
+  );
+
+const median = (values) => {
+  const v = [...values].sort((a, b) => a - b);
+  const m = v.length >> 1;
+  return v.length % 2 ? v[m] : (v[m - 1] + v[m]) / 2;
+};
+
+// Test-only (GLIDE_INJECT): shift the image's right edge from the chosen interval on, so the
+// recorded motion holds a snap or a two-interval jump that the page never made.
+function inject(samples) {
+  const parts = INJECTIONS[INJECT];
+  if (!parts) return null;
+  const movesAt = (i, glide) =>
+    i > 0 && (!glide || samples[i].gliding) && moved(samples[i - 1], samples[i]) > 0.5;
+  let at = samples.findIndex((_, i) => movesAt(i, true));
+  if (at < 0) at = samples.findIndex((_, i) => movesAt(i, false));
+  if (at < 0) return null;
+  samples.forEach((s, i) => {
+    s.right += parts.reduce((sum, p, j) => sum + (i >= at + j ? p : 0), 0);
+  });
+  return { kind: INJECT, at };
+}
+
 // The proof: exactly one image visible on every frame once the stage is on screen (never none,
-// never two), never carried by the page, and the visible one never moves more than STEP_LIMIT
-// between two frames.
+// never two), never carried by the page, and the visible one's movement passes the speed check
+// (a), the jump check (b) and the density check (c), timed on the motion's own frame clock.
 async function judge(page, upTo) {
   const { frames: all, end } = await page.evaluate(() => {
     window.__stop = true;
     return { frames: window.__frames, end: window.__end };
   });
   const frames = upTo ? all.slice(0, upTo) : all;
-  let maxStep = 0;
-  let worst = null;
   const bad = [];
+  // Samples on the clock: two samples with the same ticker start show pictures of one ticker
+  // call, so the later one stands for both (its movement is kept, in the next interval).
+  const samples = [];
   frames.forEach((f, i) => {
     if (f.figureShown === f.buttonShown && f.y > 1) bad.push({ i, y: f.y, why: 'shown count' });
     if (f.carried) bad.push({ i, y: f.y, why: 'figure carried by the page' });
-    if (i === 0) return;
-    const prev = frames[i - 1];
-    // Per nominal 60 Hz frame: a slow frame (a busy test machine) moves the eased glide
-    // further, so its step is scaled to 16.7 ms; a snap in one frame stays a snap.
-    const slow = Math.max(f.t - prev.t, 1000 / 60) / (1000 / 60);
-    const step =
-      Math.max(
-        Math.abs(f.right - prev.right),
-        Math.abs(f.bottom - prev.bottom),
-        Math.abs(f.height - prev.height),
-      ) / slow;
+    const last = samples.at(-1);
+    if (last && f.t < last.t) bad.push({ i, y: f.y, why: 'frame clock went back' });
+    if (last && f.t === last.t) samples[samples.length - 1] = { ...f, i };
+    else samples.push({ ...f, i });
+  });
+  const injected = inject(samples);
+
+  // One entry per interval: px moved, ms passed, px per 16.7 ms.
+  const intervals = samples.slice(1).map((s, k) => {
+    const px = moved(samples[k], s);
+    const ms = s.t - samples[k].t;
+    return { i: s.i, y: s.y, px, ms, speed: (px * FRAME_MS) / ms };
+  });
+
+  // (a) average speed over 3 consecutive intervals, and (c) how densely that was sampled.
+  let maxStep = 0;
+  let worst = null;
+  let moving = 0;
+  let maxWindow = 0;
+  samples.forEach((s, k) => {
+    if (k < 3) return;
+    const from = samples[k - 3];
+    const px = moved(from, s);
+    if (px <= 0.5) return;
+    const elapsed = s.t - from.t;
+    moving += 1;
+    maxWindow = Math.max(maxWindow, elapsed / FRAME_MS);
+    const step = (px * FRAME_MS) / elapsed;
     if (step > maxStep) {
       maxStep = step;
-      worst = { i, y: f.y, from: prev.figureShown ? 'figure' : 'button', step };
+      worst = { i: s.i, y: s.y, from: from.figureShown ? 'figure' : 'button', px, elapsed, step };
     }
   });
+
+  // (b) no single interval faster than JUMP_RATIO times the median of its neighbours.
+  let maxRatio = 0;
+  let jump = null;
+  const jumps = [];
+  intervals.forEach((iv, k) => {
+    if (iv.px <= 0.5) return;
+    const near = [k - 2, k - 1, k + 1, k + 2]
+      .filter((n) => n >= 0 && n < intervals.length)
+      .map((n) => intervals[n].speed);
+    const base = Math.max(median(near), JUMP_FLOOR);
+    const ratio = iv.speed / base;
+    if (ratio > maxRatio) [maxRatio, jump] = [ratio, { ...iv, base }];
+    if (ratio > JUMP_RATIO) jumps.push({ ...iv, base, ratio });
+  });
+
   const glideFrames = frames.filter((f) => f.gliding).length;
-  return { frames, end, maxStep, worst, bad, glideFrames };
+  return {
+    frames,
+    end,
+    maxStep,
+    worst,
+    maxRatio,
+    jump,
+    jumps,
+    bad,
+    glideFrames,
+    moving,
+    maxWindow,
+    merged: frames.length - samples.length,
+    injected,
+  };
 }
+
+// The judged motion was sampled densely enough for the per-time limit to catch a snap.
+function expectDense({ moving, maxWindow }) {
+  expect(moving, 'windows in which the image moves').toBeGreaterThanOrEqual(MIN_MOVING);
+  expect(maxWindow, 'longest moving window, in 16.7 ms frames').toBeLessThanOrEqual(
+    MAX_WINDOW_FRAMES,
+  );
+}
+
+// The speed (a) and jump (b) checks. Soft, so an injected run shows every check it trips.
+function expectSmooth(r) {
+  expect
+    .soft(r.maxStep, `(a) fastest 3-interval speed per 16.7 ms: ${JSON.stringify(r.worst)}`)
+    .toBeLessThanOrEqual(STEP_LIMIT);
+  expect
+    .soft(
+      r.jumps.length,
+      `(b) intervals over ${JUMP_RATIO} x their neighbours: ${JSON.stringify(r.jumps.slice(0, 3))}`,
+    )
+    .toBe(0);
+}
+
+const report = (name, r) =>
+  console.log(
+    `${name}: ${r.frames.length} frames (${r.merged} merged), ${r.moving} moving, longest window ` +
+      `${r.maxWindow.toFixed(1)} frames, max ${r.maxStep.toFixed(1)} px / 16.7 ms, ` +
+      `max jump ratio ${r.maxRatio.toFixed(2)}` +
+      (r.injected ? `, injected ${r.injected.kind} at ${r.injected.at}` : ''),
+    r.worst,
+    r.jump,
+  );
 
 test.describe('hand-off glide (item 1, FD-173)', () => {
   test.describe.configure({ timeout: 90_000 });
@@ -120,13 +292,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
       const mark = await page.evaluate(() => window.__frames.length);
       await wheelUp(page, delta, pause);
       await page.waitForTimeout(1200);
-      const { frames, maxStep, worst, bad, glideFrames } = await judge(page, mark);
-      if (kind === 'fast') expect(glideFrames, 'frames of the glide').toBeGreaterThan(8);
-      console.log(`${kind}: ${frames.length} frames, max step ${maxStep.toFixed(1)} px`, worst);
-      expect(bad).toEqual([]);
-      expect(maxStep, `largest step between two frames: ${JSON.stringify(worst)}`).toBeLessThan(
-        STEP_LIMIT,
-      );
+      const r = await judge(page, mark);
+      report(kind, r);
+      if (kind === 'fast') expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
+      expectSmooth(r);
+      expectDense(r);
+      expect(r.bad).toEqual([]);
     });
   }
 
@@ -143,13 +314,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
     const mark = await page.evaluate(() => window.__frames.length);
     await page.keyboard.press('Home');
     await page.waitForTimeout(1500);
-    const { frames, maxStep, worst, bad, glideFrames } = await judge(page, mark);
-    expect(glideFrames, 'frames of the glide').toBeGreaterThan(8);
-    console.log(`keys: ${frames.length} frames, max step ${maxStep.toFixed(1)} px`, worst);
-    expect(bad).toEqual([]);
-    expect(maxStep, `largest step between two frames: ${JSON.stringify(worst)}`).toBeLessThan(
-      STEP_LIMIT,
-    );
+    const r = await judge(page, mark);
+    report('keys', r);
+    expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
+    expectSmooth(r);
+    expectDense(r);
+    expect(r.bad).toEqual([]);
   });
 
   test('a flick down and straight back up: the glide out, then the glide in', async ({ page }) => {
@@ -165,13 +335,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
       await page.waitForTimeout(16);
     }
     await page.waitForTimeout(1500);
-    const { frames, maxStep, worst, bad, glideFrames } = await judge(page);
-    expect(glideFrames, 'frames of the glide').toBeGreaterThan(8);
-    console.log(`flick: ${frames.length} frames, max step ${maxStep.toFixed(1)} px`, worst);
-    expect(bad).toEqual([]);
-    expect(maxStep, `largest step between two frames: ${JSON.stringify(worst)}`).toBeLessThan(
-      STEP_LIMIT,
-    );
+    const r = await judge(page);
+    report('flick', r);
+    expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
+    expectSmooth(r);
+    expectDense(r);
+    expect(r.bad).toEqual([]);
   });
 });
 

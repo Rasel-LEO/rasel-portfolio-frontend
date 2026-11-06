@@ -416,7 +416,8 @@ test.describe('many posts and publications (a sample build)', () => {
 });
 
 test.describe('topic icons', () => {
-  test('24 keys; every named one has a drawing, "general" is the fallback', () => {
+  // 1.7.1: 24 keys plus the twelve added ones.
+  test('36 keys; every named one has a drawing, "general" is the fallback', () => {
     const required = [
       'software',
       'web',
@@ -436,7 +437,7 @@ test.describe('topic icons', () => {
       'automation',
       'general',
     ];
-    expect(TOPIC_ICONS).toHaveLength(24);
+    expect(TOPIC_ICONS).toHaveLength(36);
     for (const key of ['hen', 'fish', 'sun-water', 'tractor', 'leaf', 'greenhouse', ...required]) {
       expect(TOPIC_ICONS, key).toContain(key);
     }
@@ -455,7 +456,7 @@ test.describe('topic icons', () => {
   });
 
   test('every icon draws, in both themes, inside its box (a sample page)', async ({ page }) => {
-    // Every key rendered through a sample build of the archive: topics = all 24 keys.
+    // Every key rendered through a sample build of the archive: topics = all 36 keys.
     const content = structuredClone(loadContent());
     content.researchArchive.topics = TOPIC_ICONS.map((icon) => ({
       id: `t-${icon}`,
