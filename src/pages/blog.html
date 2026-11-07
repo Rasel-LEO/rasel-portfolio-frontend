@@ -46,7 +46,7 @@
           <ul class="list-unstyled row blog-cards mb-0" data-post-list>
             {{#each blog.posts}}
             <li class="col-md-6 col-lg-4" data-post-category="{{category}}">
-              {{> sections/blog-card tag="h3" eager=@first}}
+              {{> sections/blog-card tag="h3" eager=(lt @index 3) priority=@first}}
             </li>
             {{/each}}
           </ul>

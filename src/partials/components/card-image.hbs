@@ -1,11 +1,12 @@
 {{!-- Author: Rasel Al Mamun --}}
 {{!-- The card image of a project or post (1.7.0): 1600 × 900, WebP + AVIF, explicit size. Parameters:
 image (the card_image record), sizes (the rendered width), decorative (a card: its link already names
-it, so alt is empty; the page top keeps the alt text) and eager (the page-top image and, 1.7.4 F13, the
-first card of a list page: the LCP). 1.7.4 (F14): the 480, 960 and 1600 px widths (image.srcset and
+it, so alt is empty; the page top keeps the alt text) eager (the page-top image and, 1.7.5 FD-191, the
+whole first card row of a list page) and priority (fetchpriority="high": the page-top image and the
+first card of a list page). 1.7.4 (F14): the 480, 960 and 1600 px widths (image.srcset and
 image.avif_srcset, tools/content.mjs cardVariants), where the copies exist.
 The frame is .blog-cover (16:9, object-fit: cover, centred), so the subject sits in the centre band. --}}
 <picture>
   {{#if image.avif}}<source type="image/avif" srcset="{{#if image.avif_srcset}}{{image.avif_srcset}}{{else}}{{image.avif}}{{/if}}" sizes="{{sizes}}" />{{/if}}
-  <img src="{{image.src}}"{{#if image.srcset}} srcset="{{image.srcset}}" sizes="{{sizes}}"{{/if}} alt="{{#unless decorative}}{{image.alt}}{{/unless}}" width="{{image.width}}" height="{{image.height}}" loading="{{#if eager}}eager{{else}}lazy{{/if}}"{{#if eager}} fetchpriority="high"{{/if}} decoding="async" />
+  <img src="{{image.src}}"{{#if image.srcset}} srcset="{{image.srcset}}" sizes="{{sizes}}"{{/if}} alt="{{#unless decorative}}{{image.alt}}{{/unless}}" width="{{image.width}}" height="{{image.height}}" loading="{{#if eager}}eager{{else}}lazy{{/if}}"{{#if priority}} fetchpriority="high"{{/if}} decoding="async" />
 </picture>

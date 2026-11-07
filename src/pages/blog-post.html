@@ -52,8 +52,8 @@
             {{!-- 1.7.0: the post's card image is the page-top image — 16:9, the article's full
             width, with its alt text; the LCP, so eager. --}} {{#if post.card_image}}
             <div class="blog-cover post-cover">
-              {{> components/card-image image=post.card_image eager=true sizes="(min-width: 992px)
-              66vw, 100vw"}}
+              {{> components/card-image image=post.card_image eager=true priority=true
+              sizes="(min-width: 992px) 66vw, 100vw"}}
             </div>
             {{/if}} {{!-- P2 (1.6.0): below lg (no sidebar) "On this page" is a collapsible box
             under the cover, closed by default, only with three or more headings; a details element

@@ -42,7 +42,7 @@ test('check-privacy passes DOIs, profile ids and prose about the rule', () => {
     'https://www.scopus.com/authid/detail.uri?authorId=59354503700',
     'Never publish phone numbers, date of birth, religion, blood group or referees.',
     'References available on request.',
-    'January 2022 – April 2023',
+    'January 2022 to April 2023',
   ];
   for (const text of fine) expect(scanText(text, allowed), text).toEqual([]);
 });

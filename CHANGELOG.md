@@ -5,6 +5,15 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.7.5 — 2026-11-07
+
+A small maintenance release (FD-191).
+
+- Trial data: project periods read "January 2024 to present" and "January 2022 to April 2023", the wording Django uses; these period lines are the only visible change.
+- Lists: the whole first row of cards on the projects and Blog pages loads straight away (the first card first), so the largest image of the first screen is never a lazy one; later cards still load as they come near.
+- Blog and publication tabs: the underline and the phone row's scroll position are worked out only once the tab font has arrived, so a slow font no longer leaves the row scrolled to the wrong tab.
+- Motion and the approved design are unchanged.
+
 ## 1.7.4 — 2026-11-07
 
 The QA audit fixes.

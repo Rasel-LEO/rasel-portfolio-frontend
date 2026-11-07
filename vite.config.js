@@ -157,6 +157,8 @@ const helpers = {
     return key === nav ? ` aria-current="${current}"` : '';
   },
   eq: (a, b) => a === b,
+  // {{#if (lt @index 3)}}: the first card row of a list (1.7.5, FD-191: three cards from 992 px).
+  lt: (a, b) => a < b,
   // {{{figure entry 2}}}: a figure of the text (the formatting test page), numbered 2 on the page.
   figure: (entry, number) => figureHtml(entry, number),
   and: (a, b) => Boolean(a && b),
