@@ -8,6 +8,7 @@
 // and the JSON answer is shown in place; when the background send cannot complete, the browser
 // posts the form instead. The server-rendered errors and status are kept on load, and a
 // status is brought into view. The Django templates add the action, CSRF and sending.
+import { MOTION } from '../core/media.js';
 import { scrollToY } from '../core/scroll.js';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -41,20 +42,37 @@ function setError(control, message) {
   else control.removeAttribute('aria-invalid');
 }
 
+// 1.7.4 (F16): many mail programs cut a mailto: link after about 2,000 characters, so a longer
+// message is shortened, at a word, with a note.
+const MAILTO_MAX = 2000;
+const SHORTENED = '\n\n(Shortened to fit an email link: please paste the rest of your message.)';
+
 // mailto: with the form's content, so the message can still be sent today.
 function mailtoHref(form, email) {
-  const field = (name) => form.elements.namedItem(name)?.value.trim() ?? '';
+  const field = (name) => form.elements.namedItem(name)?.value?.trim() ?? '';
   const subject =
     form.dataset.form === 'hire'
       ? ['Brief', field('kind')].filter(Boolean).join(': ')
       : field('subject') || 'Message';
-  const lines = [
-    field('brief') || field('message'),
-    '',
-    `— ${field('name')}`,
-    field('organisation'),
-  ].filter((line, i) => i < 3 || line);
-  return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+  const message = field('brief') || field('message');
+  const href = (text) => {
+    const lines = [text, '', `— ${field('name')}`, field('organisation')].filter(
+      (line, i) => i < 3 || line,
+    );
+    return `mailto:${email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
+  };
+  if (href(message).length <= MAILTO_MAX) return href(message);
+  // The longest start of the message, cut at a word, that fits with the note.
+  let low = 0;
+  let high = message.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (href(`${message.slice(0, mid)}…${SHORTENED}`).length <= MAILTO_MAX) low = mid;
+    else high = mid - 1;
+  }
+  const cut = message.slice(0, low);
+  const atWord = cut.replace(/\s+\S*$/, '') || cut;
+  return href(`${atWord}…${SHORTENED}`);
 }
 
 function showSent(form) {
@@ -79,7 +97,6 @@ function setBusy(button, busy) {
 }
 
 const EXPIRED = 'The form expired. Please reload the page and send it again.';
-const MOTION = '(prefers-reduced-motion: no-preference)';
 
 function setStatus(status, text) {
   if (status) status.textContent = text;

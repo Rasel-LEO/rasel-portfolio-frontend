@@ -9,7 +9,8 @@ import { extname, join, relative, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const scanned = ['src', 'docs/content', 'dist'];
+// 1.7.4 (F25): docs/content/ is not in the public copy; a folder that does not exist is skipped.
+const scanned = ['src', 'docs/content', 'dist'].filter((dir) => existsSync(join(root, dir)));
 const textExtensions = new Set([
   '.html',
   '.hbs',

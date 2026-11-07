@@ -179,27 +179,3 @@ $stage-desktop: "(min-width: 992px) and (prefers-reduced-motion: no-preference)"
     stroke-width: 1.5;
   }
 }
-
-// Phones and tablets (< 992 px, motion allowed): screen 2 plays its entrance (screen2.js).
-.stage-reveal {
-  transition:
-    opacity var(--d-slow) var(--e-out) var(--reveal-delay, 0ms),
-    transform var(--d-slow) var(--e-out) var(--reveal-delay, 0ms);
-
-  &.is-pre {
-    opacity: 0;
-    transform: translateY(var(--m-24));
-    transition: none;
-  }
-
-  &.is-instant {
-    transition: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .stage-reveal.is-pre {
-    opacity: 1;
-    transform: none;
-  }
-}

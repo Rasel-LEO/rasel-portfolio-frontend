@@ -12,8 +12,13 @@ function store(theme) {
   } catch {
     // Storage blocked: the cookie below still carries the choice.
   }
-  const secure = location.protocol === 'https:' ? '; Secure' : '';
-  document.cookie = `theme=${theme}; path=/; max-age=${ONE_YEAR}; SameSite=Lax${secure}`;
+  // 1.7.4 (F21): a sandboxed frame throws on cookie writes; the theme still applies.
+  try {
+    const secure = location.protocol === 'https:' ? '; Secure' : '';
+    document.cookie = `theme=${theme}; path=/; max-age=${ONE_YEAR}; SameSite=Lax${secure}`;
+  } catch {
+    // Cookies blocked: this page keeps the theme until it is left.
+  }
 }
 
 function render(buttons, theme) {

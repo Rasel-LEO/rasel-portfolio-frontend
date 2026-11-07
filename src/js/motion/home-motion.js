@@ -11,11 +11,11 @@
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { ease, px, seconds } from './motion-tokens.js';
+import { MOTION } from '../core/media.js';
 import { onJump } from '../core/scroll.js';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const MOTION = '(prefers-reduced-motion: no-preference)';
 const PHONE = `(max-width: 767.98px) and ${MOTION}`;
 const WIDE = `(min-width: 768px) and ${MOTION}`;
 

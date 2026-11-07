@@ -5,6 +5,27 @@
 // (phones), the pressed tab is scrolled into view. The row is laid out from the first paint but
 // stays invisible until the web fonts are in (.is-set): the tab widths change at the swap, so the
 // swap must move nothing on screen (CLS 0); the underline is placed then, by transform.
+// 1.7.4 (F21): one ResizeObserver for the row on the page; a row swapped out of the page (the Blog
+// tabs after a list change) is no longer observed.
+import { MOTION } from './media.js';
+
+let observer = null;
+const placers = new Map();
+
+function observe(group, place) {
+  observer ??= new ResizeObserver((entries) => {
+    for (const entry of entries) placers.get(entry.target)?.();
+  });
+  for (const old of placers.keys()) {
+    if (!old.isConnected) {
+      observer.unobserve(old);
+      placers.delete(old);
+    }
+  }
+  placers.set(group, place);
+  observer.observe(group);
+}
+
 export function tabInk(group) {
   const ink = group.querySelector('.pf-tab-ink');
   const place = () => {
@@ -25,7 +46,7 @@ export function tabInk(group) {
       const hidden = start < view || end > view + group.clientWidth;
       const left = Math.min(start, group.scrollWidth - group.clientWidth);
       if (hidden && left !== view) {
-        const smooth = matchMedia('(prefers-reduced-motion: no-preference)').matches;
+        const smooth = matchMedia(MOTION).matches;
         group.scrollTo({ left, behavior: smooth ? 'smooth' : 'instant' });
       }
     }
@@ -35,7 +56,7 @@ export function tabInk(group) {
     group.classList.add('is-set');
     requestAnimationFrame(() => group.classList.add('is-ready'));
     // The tab widths change with the window.
-    new ResizeObserver(place).observe(group);
+    if (group.isConnected) observe(group, place);
   });
   return place;
 }

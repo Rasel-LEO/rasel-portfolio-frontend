@@ -3,6 +3,7 @@
 // back-to-top image, the Home Contact band's padding, the card beside the Contact and Hire me
 // forms, and the Hire me header order.
 import { expect, test } from './fixtures.js';
+import { pauseClock } from './pages.js';
 
 // ---- item 1: the hand-off glide (FD-173) --------------------------------------------------
 
@@ -28,6 +29,12 @@ import { expect, test } from './fixtures.js';
 //       as it reaches the stage end, below the limit. (b) is the guard that (a)'s averaging
 //       cannot hide a one-interval jump behind.
 //   (c) Density: the existing guard below.
+// v1.7.4 (F12): load-proof. The motion runs on Playwright's virtual clock: requestAnimationFrame,
+// performance.now, Date and the timers of the page are faked (page.clock), and the test advances
+// them frame by frame (runFor). GSAP's ticker — and so the shrink's scrub, the glide tween and
+// every timeline's progress — and Lenis run on that clock, so each sample is the picture GSAP
+// computed for an exact time, whatever the machine's load: a busy CPU makes the run slower, never
+// the measured motion faster. The FD-181 limits (a), (b) and (c) are unchanged.
 const STEP_LIMIT = 130;
 const JUMP_RATIO = 2.5;
 const JUMP_FLOOR = STEP_LIMIT / JUMP_RATIO;
@@ -48,28 +55,6 @@ const THROTTLE = Number(process.env.GLIDE_CPU_THROTTLE) || 0;
 const INJECT = process.env.GLIDE_INJECT || '';
 const INJECTIONS = { snap: [833], jump: [416.5, 416.5] };
 
-// Before the page's own scripts: note when GSAP's ticker callback starts on each frame, so a
-// sample knows the time its picture was computed for. The ticker is the callback requested on
-// every frame since load, so it is the one called most often (the cursor's own loop runs only
-// while the pointer settles; the sampler is left out).
-const FRAME_CLOCK = () => {
-  const raf = window.requestAnimationFrame.bind(window);
-  const calls = new Map();
-  let ticker = null;
-  let most = 0;
-  window.__frameStart = 0;
-  window.requestAnimationFrame = (callback) =>
-    raf((time) => {
-      if (!callback.__sampler) {
-        const n = (calls.get(callback) ?? 0) + 1;
-        calls.set(callback, n);
-        if (n >= most) [most, ticker] = [n, callback];
-        if (callback === ticker) window.__frameStart = performance.now();
-      }
-      return callback(time);
-    });
-};
-
 // On every animation frame: which image is visible (the stage figure or the back-to-top photo),
 // its lower-right corner and height, and whether the figure's frame is carried by the page.
 const TRACKER = `(() => {
@@ -87,7 +72,8 @@ const TRACKER = `(() => {
     const buttonShown = !button.hidden && bs.visibility !== 'hidden' && parseFloat(bs.opacity) > 0.05;
     const img = (figureShown ? figure : button).querySelector('img').getBoundingClientRect();
     window.__frames.push({
-      t: window.__frameStart,
+      // The virtual frame time (F12): the time GSAP computed this picture for.
+      t: performance.now(),
       y: window.scrollY,
       figureShown,
       buttonShown,
@@ -104,17 +90,26 @@ const TRACKER = `(() => {
   requestAnimationFrame(sample);
 })()`;
 
+// One frame of the virtual clock (60 Hz), and a wait of `ms` on it, frame by frame.
+const FRAME = 1000 / 60;
+const run = async (page, ms) => {
+  for (let left = ms; left > 0; left -= FRAME) await page.clock.runFor(Math.min(FRAME, left));
+};
+
 async function openHome(page) {
   await page.setViewportSize({ width: 1440, height: 900 });
   if (THROTTLE > 1) {
     const cdp = await page.context().newCDPSession(page);
     await cdp.send('Emulation.setCPUThrottlingRate', { rate: THROTTLE });
   }
-  await page.addInitScript(FRAME_CLOCK);
+  // The page loads on the virtual clock, flowing with real time; it stops before the motion.
+  await page.clock.install();
   await page.goto('/index.html');
   await expect(page.locator('[data-stage]')).toHaveAttribute('data-stage-mode', 'desktop');
   await page.evaluate(() => document.fonts.ready);
   await page.waitForTimeout(600);
+  await pauseClock(page);
+  await run(page, 600);
   await page.evaluate(TRACKER);
 }
 
@@ -269,13 +264,13 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
     const reach = await page.evaluate(() => window.__end + innerHeight * 1.5 - window.scrollY);
     for (let i = 0; i < Math.ceil(reach / delta); i += 1) {
       await page.mouse.wheel(0, delta);
-      await page.waitForTimeout(pause);
+      await run(page, pause);
     }
   };
   const wheelUp = async (page, delta, pause) => {
     for (let i = 0; i < 60; i += 1) {
       await page.mouse.wheel(0, -delta);
-      await page.waitForTimeout(pause);
+      await run(page, pause);
     }
   };
 
@@ -286,12 +281,12 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
     test(`${kind} wheel down and back up: one image, no snap`, async ({ page }) => {
       await openHome(page);
       await wheelDown(page, delta, pause);
-      await page.waitForTimeout(1200);
+      await run(page, 1200);
       // Going back up through a fast wheel is the scrubbed animation itself, unchanged from
       // v1.5.1 (its own large steps); the glide is proven by the flick test below.
       const mark = await page.evaluate(() => window.__frames.length);
       await wheelUp(page, delta, pause);
-      await page.waitForTimeout(1200);
+      await run(page, 1200);
       const r = await judge(page, mark);
       report(kind, r);
       if (kind === 'fast') expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
@@ -305,15 +300,15 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
     await openHome(page);
     for (let i = 0; i < 3; i += 1) {
       await page.keyboard.press('PageDown');
-      await page.waitForTimeout(300);
+      await run(page, 300);
     }
     await page.keyboard.press('End');
-    await page.waitForTimeout(1500);
+    await run(page, 1500);
     // Home takes the scrubbed animation back up as v1.5.1 does (its own large steps); the End
     // jump before it is what is judged.
     const mark = await page.evaluate(() => window.__frames.length);
     await page.keyboard.press('Home');
-    await page.waitForTimeout(1500);
+    await run(page, 1500);
     const r = await judge(page, mark);
     report('keys', r);
     expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);
@@ -327,14 +322,14 @@ test.describe('hand-off glide (item 1, FD-173)', () => {
     await page.mouse.move(700, 450);
     for (let i = 0; i < 6; i += 1) {
       await page.mouse.wheel(0, 900);
-      await page.waitForTimeout(16);
+      await run(page, 16);
     }
-    await page.waitForTimeout(120);
+    await run(page, 120);
     for (let i = 0; i < 4; i += 1) {
       await page.mouse.wheel(0, -500);
-      await page.waitForTimeout(16);
+      await run(page, 16);
     }
-    await page.waitForTimeout(1500);
+    await run(page, 1500);
     const r = await judge(page);
     report('flick', r);
     expect(r.glideFrames, 'frames of the glide').toBeGreaterThan(8);

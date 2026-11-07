@@ -2,7 +2,7 @@
 // Shared shell: skip link, header, drawer, theme, back-to-top, aria-current.
 import { expect, test } from './fixtures.js';
 import { loadContent } from '../tools/content.mjs';
-import { pagePath, staticBase, templatePages as pages, widths } from './pages.js';
+import { pagePath, pauseClock, staticBase, templatePages as pages, widths } from './pages.js';
 
 const content = loadContent();
 
@@ -335,20 +335,24 @@ test.describe('back to top', () => {
 
   // FD-70: up to 1.5 viewports it scrolls smoothly (at most 600 ms); further, the page fades
   // out, jumps and fades in, so nothing on the way plays backwards.
+  // 1.7.4 (F23): timed on the page's virtual clock (page.clock), not the test machine's: the
+  // smooth scroll runs on requestAnimationFrame, so it is done after 600 ms of page time (plus the
+  // frame that lands it), however busy the machine is.
   test('scrolls smoothly within 1.5 viewports, in at most 600 ms', async ({ page }) => {
+    await page.clock.install();
     await page.setViewportSize(DESKTOP);
     await page.goto('/blog.html');
     await addSpacer(page);
     await page.evaluate(() => window.scrollTo(0, 1300));
     const button = page.getByRole('button', { name: 'Back to top' });
     await expect(button).toBeVisible();
-    const start = Date.now();
+    await pauseClock(page);
     await button.click();
+    await page.clock.runFor(100);
     expect(await page.evaluate(() => window.scrollY)).toBeGreaterThan(0);
     await expect(page.locator('html')).not.toHaveClass(/is-jumping/);
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(0);
-    // The click round trip and the poll interval are in this, so allow some margin.
-    expect(Date.now() - start).toBeLessThan(1200);
+    await page.clock.runFor(500 + 1000 / 60);
+    expect(await page.evaluate(() => window.scrollY)).toBe(0);
   });
 
   test('fades, jumps and fades in beyond 1.5 viewports (FD-70)', async ({ page }) => {

@@ -234,11 +234,14 @@ test('FD-146: the export fails on any PDF and leaves out the placeholder folder'
   expect(exporter).toContain("'tools/preview/'");
 });
 
-test('noindex on the two template pages and the hidden formatting page only', () => {
+// 1.7.4 (F18): the 404 page is noindex too.
+test('noindex on the two template pages, the hidden formatting page and 404 only', () => {
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
     const noindex = html.includes('<meta name="robots" content="noindex" />');
-    expect(noindex, file).toBe(templateOnly.includes(file) || hiddenOnly.includes(file));
+    expect(noindex, file).toBe(
+      templateOnly.includes(file) || hiddenOnly.includes(file) || file === '404.html',
+    );
   }
 });
 
@@ -316,6 +319,80 @@ test.describe('release build', () => {
     );
     expect(html('robots.txt')).toBe(`User-agent: *\nAllow: /\nSitemap: ${siteUrl}/sitemap.xml\n`);
     expect(html('hire.html')).toContain(`<link rel="canonical" href="${siteUrl}/hire.html" />`);
+  });
+
+  // 1.7.4 (F05): a filtered list state is noindex,follow with its canonical on the list page.
+  test('SITE_URL: topic, category and search states are noindex,follow, canonical to the list', () => {
+    const files = readdirSync(out).filter((file) =>
+      /^(research|blog)-(topic|category|empty)/.test(file),
+    );
+    expect(files.some((file) => file.startsWith('research-topic-'))).toBe(true);
+    for (const file of files) {
+      const page = html(file);
+      const list = file.startsWith('research') ? 'research.html' : 'blog.html';
+      expect(page, file).toContain('<meta name="robots" content="noindex,follow" />');
+      expect(page, file).toContain(`<link rel="canonical" href="${siteUrl}/${list}" />`);
+      expect(page, file).toContain(`<meta property="og:url" content="${siteUrl}/${list}" />`);
+      expect(html('sitemap.xml'), file).not.toContain(file);
+    }
+    // The unfiltered list pages stay indexable and self-canonical.
+    for (const list of ['research.html', 'blog.html']) {
+      expect(html(list)).not.toContain('name="robots"');
+      expect(html(list)).toContain(`<link rel="canonical" href="${siteUrl}/${list}" />`);
+    }
+  });
+
+  // 1.7.4 (F18): the 404 page is noindex without a canonical.
+  test('SITE_URL: 404 is noindex with no canonical and no og:url', () => {
+    const page = html('404.html');
+    expect(page).toContain('<meta name="robots" content="noindex" />');
+    expect(page).not.toContain('rel="canonical"');
+    expect(page).not.toContain('og:url');
+  });
+});
+
+// 1.7.4 (F06): BlogPosting with the share image, url and mainEntityOfPage (the canonical),
+// datePublished, dateModified, author and publisher — schema.org's required and Google's
+// recommended Article fields — in a SITE_URL build that lists the posts.
+test.describe('BlogPosting structured data with SITE_URL', () => {
+  const siteUrl = 'https://example.org';
+  let out;
+  test.beforeAll(() => {
+    out = buildInto({ SITE_URL: siteUrl });
+  });
+  test.afterAll(() => {
+    if (out) rmSync(out, { recursive: true, force: true });
+  });
+
+  test('every post page carries the full BlogPosting', () => {
+    const posts = readdirSync(out).filter((file) => file.startsWith('post-'));
+    expect(posts.length).toBeGreaterThan(0);
+    const { blog } = loadContent();
+    for (const file of posts) {
+      const page = readFileSync(join(out, file), 'utf8');
+      const posting = [
+        ...page.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g),
+      ]
+        .map(([, json]) => JSON.parse(json))
+        .find((item) => item['@type'] === 'BlogPosting');
+      const post = blog.find((p) => file === `post-${p.slug}.html`);
+      const canonical = `${siteUrl}/${file}`;
+      expect(posting, file).toMatchObject({
+        '@context': 'https://schema.org',
+        headline: post.title,
+        image: `${siteUrl}/images/share/post-${post.slug}.jpg`,
+        url: canonical,
+        mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+        author: { '@type': 'Person', name: 'Rasel Al Mamun', url: `${siteUrl}/` },
+        publisher: { '@type': 'Person', name: 'Rasel Al Mamun' },
+      });
+      expect(posting.headline.length, file).toBeLessThanOrEqual(110);
+      expect(posting.description.length, file).toBeLessThanOrEqual(160);
+      if (post.date) {
+        expect(posting).toMatchObject({ datePublished: post.date, dateModified: post.date });
+      }
+      expect(page, file).toContain(`<link rel="canonical" href="${canonical}" />`);
+    }
   });
 });
 

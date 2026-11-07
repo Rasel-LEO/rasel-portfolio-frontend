@@ -2,6 +2,7 @@
 // Portfolio (FD-107, FD-111). Without JS every section and every publication is shown and the
 // section nav jumps to the sections. This module marks the section nav item of the section in
 // view (aria-current) and runs the publication tabs (also on publications.html).
+import { MOTION, ms, token } from '../core/media.js';
 import { tabInk } from '../core/tab-ink.js';
 
 // The section crossing the middle line of the viewport marks its nav item; none while the
@@ -35,19 +36,13 @@ function initSectionNav() {
   for (const section of sections) observer.observe(section);
 }
 
-const MOTION = matchMedia('(prefers-reduced-motion: no-preference)');
+const MOTION_OK = matchMedia(MOTION);
 // FD-111: rows re-enter 30 ms apart (no token); fade + --m-8 rise over --d-base, --e-out.
 const ROW_STAGGER = 30;
-const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-// Durations in either unit: the production CSS minifier writes 200ms as .2s.
-const ms = (name, fallback) => {
-  const value = token(name);
-  return parseFloat(value) * (value.endsWith('ms') ? 1 : 1000) || fallback;
-};
 
 // The rows a tab shows fade in and rise, one after the other (only when motion is allowed).
 function reenter(rows) {
-  if (!MOTION.matches) return;
+  if (!MOTION_OK.matches) return;
   const rise = token('--m-8') || '8px';
   const timing = { duration: ms('--d-base', 200), easing: token('--e-out'), fill: 'backwards' };
   rows.forEach((row, i) => {
@@ -93,7 +88,8 @@ function initPublicationTabs() {
   };
 
   group.addEventListener('click', (event) => {
-    const button = event.target.closest('[data-type]');
+    // 1.7.4 (F21): a click on text inside a button has an Element target; anything else is ignored.
+    const button = event.target instanceof Element ? event.target.closest('[data-type]') : null;
     if (button && button.getAttribute('aria-pressed') !== 'true') select(button);
   });
   placeInk = tabInk(group);

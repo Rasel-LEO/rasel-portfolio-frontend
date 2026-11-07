@@ -62,7 +62,8 @@ src/
     main.js       entry: shell modules, then the page module by <body data-page>, then
                   site-wide motion once the OS allows it
     core/         theme drawer back-to-top page-wipe scroll (shared scrollToY / jumpTo and
-                  the Lenis registry) tab-ink toggle-group
+                  the Lenis registry) tab-ink media (1.7.4: the OS motion queries, the token
+                  reader and isPlainClick, shared by every module)
     motion/       motion (reveals, tilt, magnetic, Lenis), motion-tokens (token reader and
                   easing), cursor, stage (picks desktop / mobile / reduced), stage-desktop
                   (pinned stage, GSAP + ScrollTrigger), screen2 (played entrance, FD-85),
@@ -77,14 +78,16 @@ public/         robots.txt, js/theme-init.js (classic script, first in <head>, F
                 images/brand/share-image-1200x630.png (FD-139), copied as supplied
 tools/          build: tokens.mjs, content.mjs (loads src/content, derives counts, order,
                 pages), markdown.mjs (post bodies, FD-37), validate-content.mjs (prebuild),
+                limits.mjs (every content limit, shared with the slot tests, FD-186),
                 subset-fonts.mjs (one-time, FD-130)
                 checks: check-csp.mjs, check-privacy.mjs (FD-23), check-django-build.mjs
                 (FD-133), check-audit.mjs + audit-allowlist.json (FD-134), check-links.mjs
                 (FD-131)
                 runners: test-linux.mjs, test-django.mjs and serve-django-paths.mjs
                 (FD-137), lhci.mjs (FD-129); the public export (FD-132, FD-138)
-tests/          Playwright specs; pages.js holds the page list, the Django URL table and
-                helpers; fixtures.js maps page URLs on the Django target (FD-137)
+tests/          Playwright specs, found by pattern (FD-188); pages.js holds the page list, the
+                Django URL table and helpers; fixtures.js maps page URLs on the Django target
+                (FD-137); global-setup.js rebuilds a stale dist/ before the specs (FD-188)
 ```
 
 ## Build targets (FD-133)

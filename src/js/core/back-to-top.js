@@ -8,9 +8,10 @@
 // story plays backwards; shorter ones scroll smoothly; reduced motion jumps at once.
 // FD-104: once shown it stays visible and clickable everywhere, over the Contact band and the
 // footer too (no tucking); the footer's bottom row keeps its place free at the page end.
+import { REDUCED } from './media.js';
 import { jumpTo, scrollToY } from './scroll.js';
 
-const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const reducedMotion = matchMedia(REDUCED);
 
 // FD-70 timings (no tokens): fade out, fade in; smooth scrolls at most this long.
 const FADE_OUT = 160;

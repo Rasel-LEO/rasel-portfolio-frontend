@@ -1,7 +1,7 @@
 // Author: Rasel Al Mamun
 // Content gates (FD-19, FD-23): tools/validate-content.mjs and tools/check-privacy.mjs
 // catch every case they promise to. Node-only; no browser page is opened.
-import { readdirSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { expect, test } from '@playwright/test';
 import { scanText } from '../tools/check-privacy.mjs';
 import { buildSite, loadContent } from '../tools/content.mjs';
@@ -114,7 +114,7 @@ test('validate-content checks blog posts (FD-36, FD-37)', () => {
   const refs = validateContent(shaped).join('\n');
   expect(refs).toContain('unknown category "no-such-category"');
   expect(refs).toContain('published without a "date"');
-  expect(refs).toContain('published with a [bracketed] standfirst');
+  expect(refs).toContain('published with a [bracketed] placeholder');
   expect(refs).toContain(`duplicate slug "${shaped.blog[0].slug}"`);
 
   const ready = structuredClone(loadContent());
@@ -204,10 +204,16 @@ test('validate-content requires the Areas-of-work index flag (FD-99)', () => {
 });
 
 // FD-109: pages show display_details; details stays for Django.
+// 1.7.4 (F25): docs/content/ (the owner's working copies of the content) is not exported; the
+// comparisons with it run in the working repository only.
+const hasDocsContent = existsSync('docs/content/public-content.json');
+
 test('FD-109: display_details on the two ASABE papers, details kept, files agree', () => {
   const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
   const content = loadContent();
-  expect(content.publications).toEqual(read('docs/content/public-content.json').publications);
+  if (hasDocsContent) {
+    expect(content.publications).toEqual(read('docs/content/public-content.json').publications);
+  }
   const short = content.publications.filter((pub) => 'display_details' in pub);
   expect(short.map((pub) => [pub.id, pub.display_details])).toEqual([
     ['aim-2026-poultry-aiot', ''],
@@ -224,6 +230,7 @@ test.describe('FD-108: Portfolio content', () => {
   const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
 
   test('src/content equals the approved content and public-content.json', () => {
+    test.skip(!hasDocsContent, 'docs/content/ is not in the public copy');
     const approved = read('docs/content/portfolio-content.json');
     const content = loadContent();
     expect(content.portfolio).toEqual(approved.portfolio);
@@ -264,7 +271,7 @@ test.describe('FD-108: Portfolio content', () => {
       ...readdirSync('src/content')
         .filter((f) => f.endsWith('.json'))
         .map((f) => `src/content/${f}`),
-      'docs/content/public-content.json',
+      ...(hasDocsContent ? ['docs/content/public-content.json'] : []),
       ...readdirSync('dist')
         .filter((f) => f.endsWith('.html'))
         .map((f) => `dist/${f}`),

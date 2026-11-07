@@ -1,8 +1,9 @@
 // Author: Rasel Al Mamun
 // Motion tokens (_tokens.scss) for the GSAP modules (stage-desktop.js, home-motion.js): the
-// only source of their easings, durations and distances.
-const rootStyle = () => getComputedStyle(document.documentElement);
-export const token = (name) => rootStyle().getPropertyValue(name).trim();
+// only source of their easings, durations and distances. The reader is core/media.js (F22).
+import { token } from '../core/media.js';
+
+export { token };
 export const px = (name) => parseFloat(token(name));
 // Durations in either unit: the production CSS minifier writes 480ms as .48s.
 export const seconds = (name) => {

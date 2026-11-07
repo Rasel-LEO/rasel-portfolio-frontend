@@ -4,7 +4,11 @@
 // the pillars, Areas of work) and every section are fully visible and readable without JavaScript,
 // with prefers-reduced-motion and in print. No empty band anywhere.
 import { expect, test } from '@playwright/test';
+import { loadContent } from '../tools/content.mjs';
 import { isDjango } from './pages.js';
+
+// 1.7.4 (F23): counts and strings from the content, not the trial data's numbers.
+const content = loadContent();
 
 test.skip(isDjango, 'static build behaviour (the Django pages carry the same markup and scripts)');
 
@@ -83,8 +87,10 @@ test.describe('without JavaScript', () => {
       const result = await page.evaluate(`(${probe})()`);
       expect(result.hidden).toEqual([]);
       expect(result.widest).toBeLessThan(420);
-      await expect(page.locator('.screen2-headline')).toContainText('Connected.');
-      await expect(page.locator('.screen2-grid .area')).toHaveCount(6);
+      await expect(page.locator('.screen2-headline')).toContainText(
+        content.home.screen2.headline_highlight,
+      );
+      await expect(page.locator('.screen2-grid .area')).toHaveCount(content.fields.length);
     });
   }
 });

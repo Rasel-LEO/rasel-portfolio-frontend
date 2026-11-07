@@ -8,12 +8,10 @@
   --d-press: 90ms;
   --d-spring: 220ms; // magnetic buttons spring back
 
-  // Primary hover: fill 4 % lighter (dark) / 4 % darker (light).
+  // Primary hover and focus: the fill 4 % lighter in both themes. 1.7.4 (F01): the light theme
+  // mixed with black, which left the dark label at 4.39:1; mixed with white it stays above 4.5:1
+  // (tests/contrast-states.spec.js).
   --btn-primary-hover: color-mix(in srgb, var(--accent-strong) 96%, #fff);
-}
-
-[data-theme="light"] {
-  --btn-primary-hover: color-mix(in srgb, var(--accent-strong) 96%, #000);
 }
 
 .icon {
@@ -230,13 +228,6 @@ a[aria-current] > .link,
     width: 14px;
     height: 14px;
   }
-}
-
-.chip-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--s-2);
-  align-items: center;
 }
 
 // Project status (FD-110): dot or tick in the semantic colour, then the label (--fg-1).

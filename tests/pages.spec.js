@@ -187,7 +187,8 @@ test('no page requests another origin', async ({ page, baseURL }) => {
 
 // FD-130 image audit: every image has its intrinsic width and height; only the images of the
 // first screen load eagerly (Home hero, Portfolio avatar, 404 figure), every
-// other image is lazy. Each <picture> source has one candidate, so no `sizes` is needed.
+// other image is lazy. A <picture> source with several candidates (1.7.4: the card images' 480, 960
+// and 1600 px) has `sizes`.
 test('FD-130: images carry dimensions and load lazily below the first screen', () => {
   const eager = (file, img) =>
     (file === 'index.html' && img.includes('fetchpriority="high"')) ||
@@ -195,9 +196,15 @@ test('FD-130: images carry dimensions and load lazily below the first screen', (
     (file === '404.html' && img.includes('P6-desktop')) ||
     // 1.7.0: the page-top card image of a project or post is the LCP.
     (/^(project-|post-|portfolio-entry|blog-post).*\.html$/.test(file) &&
-      img.includes('fetchpriority="high"'));
+      img.includes('fetchpriority="high"')) ||
+    // 1.7.4 (F13): so is the first card of a list page (one per page, checked below).
+    (/^(research|blog)[-.]/.test(file) && img.includes('fetchpriority="high"'));
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
+    if (/^(research|blog)[-.]/.test(file) && html.includes('data-list-results')) {
+      const first = (html.match(/fetchpriority="high"/g) ?? []).length;
+      expect(first, file).toBeLessThanOrEqual(1);
+    }
     for (const [img] of html.matchAll(/<img\b[\s\S]*?>/g)) {
       expect(img, file).toMatch(/\swidth="\d+"/);
       expect(img, file).toMatch(/\sheight="\d+"/);

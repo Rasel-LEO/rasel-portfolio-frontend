@@ -2,6 +2,7 @@
 import '../scss/main.scss';
 import { initBackToTop } from './core/back-to-top.js';
 import { initDrawer } from './core/drawer.js';
+import { MOTION } from './core/media.js';
 import { initPageWipe } from './core/page-wipe.js';
 import { initTheme } from './core/theme.js';
 
@@ -13,7 +14,7 @@ initPageWipe();
 
 // Run once the OS allows motion (now or later); nothing motion-related loads before (FD-52).
 function whenMotion(run) {
-  const query = matchMedia('(prefers-reduced-motion: no-preference)');
+  const query = matchMedia(MOTION);
   if (query.matches) return run();
   const onChange = () => {
     if (!query.matches) return;

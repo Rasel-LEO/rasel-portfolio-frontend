@@ -98,10 +98,13 @@ export function researchState(archive, state = {}) {
     countText: countLine(p, 'projects', 'project'),
     pager: pagerView(p, hrefFor),
     pageTitle: title,
-    // Django: self-canonical (the same query), rel="prev" / "next".
+    // rel="prev" / "next" (Django: the same query with ?page=N).
     relPrev: p.page > 1 ? hrefFor(p.page - 1) : null,
     relNext: p.page < p.pages ? hrefFor(p.page + 1) : null,
-    noindex: empty,
+    // 1.7.4 (F05): a filtered state (a topic or a search) is noindex,follow with its canonical on the
+    // list page, and never in the sitemap; the unfiltered pages are self-canonical.
+    robots: topic || q ? 'noindex,follow' : null,
+    canonical: topic || q ? 'research.html' : null,
     clearHref: '/research.html',
     file: researchFile({ topic, page: p.page, empty }),
   };
@@ -168,6 +171,9 @@ export function blogState({ postList, categories, blogView, blogPage }, state = 
     pageTitle: title,
     relPrev: p.page > 1 ? hrefFor(p.page - 1) : null,
     relNext: p.page < p.pages ? hrefFor(p.page + 1) : null,
+    // 1.7.4 (F05): a category is noindex,follow with its canonical on the Blog.
+    robots: category ? 'noindex,follow' : null,
+    canonical: category ? 'blog.html' : null,
     file: blogFile({ category, page: p.page }),
     blogPage,
   };

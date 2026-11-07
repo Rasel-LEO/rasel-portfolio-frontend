@@ -8,7 +8,11 @@ social cards. --}}
 <title>{{#if isHome}}{{profile.name}}{{else if shortTitle}}{{shortTitle}}{{else}}{{title}}{{/if}} — Ideatrium</title>
 <meta name="description" content="{{description}}" />
 <meta name="author" content="Rasel Al Mamun" />
-{{#if (or @root.noindex noindexPage)}}
+{{#if robots}}
+{{!-- 1.7.4 (F05, F18): a filtered list state (a topic, a category, a search) is "noindex,follow"
+with its canonical on the list page; the 404 page is "noindex" without a canonical. --}}
+<meta name="robots" content="{{robots}}" />
+{{else if (or @root.noindex noindexPage)}}
 {{!-- FD-131: the two template pages repeat a generated page; search engines skip them. --}}
 <meta name="robots" content="noindex" />
 {{/if}}
@@ -19,9 +23,9 @@ social cards. --}}
 {{#if relNext}}
 <link rel="next" href="{{relNext}}" />
 {{/if}}
-{{#if siteUrl}}
-<link rel="canonical" href="{{siteUrl}}/{{pageFile}}" />
-<meta property="og:url" content="{{siteUrl}}/{{pageFile}}" />
+{{#if (and siteUrl (not noCanonical))}}
+<link rel="canonical" href="{{siteUrl}}/{{#if canonicalFile}}{{canonicalFile}}{{else}}{{pageFile}}{{/if}}" />
+<meta property="og:url" content="{{siteUrl}}/{{#if canonicalFile}}{{canonicalFile}}{{else}}{{pageFile}}{{/if}}" />
 {{/if}}
 {{!-- FD-139: the site is Ideatrium; the author stays Rasel Al Mamun (meta author, Person). --}}
 <meta property="og:site_name" content="Ideatrium" />

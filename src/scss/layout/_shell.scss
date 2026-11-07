@@ -453,6 +453,17 @@
     inset-inline: 0;
     content: "";
   }
+
+  // 1.7.4 (F17): up to 667 px (phones, upright and turned) the link box itself is at least 44 px
+  // tall (29 px of text line and underline + 2 × 8 px), by block padding only; the text, its size
+  // and colour are unchanged.
+  @media (width <= 667px) {
+    padding-block: var(--s-2);
+
+    &::after {
+      inset-block: 0;
+    }
+  }
 }
 
 // Phones: LinkedIn and GitHub on one line.

@@ -84,9 +84,9 @@ Module-level detail: `docs/architecture.md`.
 │       ├── components/              buttons, links, chips, cards
 │       └── pages/                   Home, stage, Portfolio, inner pages, rich content (FD-142)
 ├── tests/                           Playwright specs (one file per area) and shared helpers
-│   ├── *.spec.js                    a11y, blog, content, django, forms, forms-live, home, inner-pages,
-│   │                                motion, pages, portfolio, release, rich, shell, stage, widths
+│   ├── *.spec.js                    one per area, run by pattern (FD-188); widths.spec.js in its own project
 │   ├── fixtures.js                  the shared test; maps page URLs on the Django target
+│   ├── global-setup.js              rebuilds dist/ and dist-django/ when older than the sources
 │   └── pages.js                     page lists, the Django URL table, build paths
 ├── tools/                           Node scripts for the build, checks and test runners
 │   ├── audit-allowlist.json         accepted development advisories with expiry (FD-134)
@@ -97,6 +97,7 @@ Module-level detail: `docs/architecture.md`.
 │   ├── check-privacy.mjs            refuses phone numbers and private CV fields
 │   ├── content.mjs                  loads src/content and derives counts, orders and pages
 │   ├── lhci.mjs                     Lighthouse CI with Playwright's Chromium
+│   ├── limits.mjs                   every content limit (§ 14.1, titles, descriptions, lists)
 │   ├── markdown.mjs                 post bodies, Markdown to HTML at build time
 │   ├── serve-django-paths.mjs       stand-in server: dist-django under the Django URLs
 │   ├── share-images.mjs             share images 1200 × 630 from the card images, at build time
