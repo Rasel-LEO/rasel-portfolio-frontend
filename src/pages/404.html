@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="en">
   <head>
-    {{> shell/head title="Page not found" description=meta.[404]}}
+    {{> shell/head title="Page not found" description=meta.[404] robots="noindex" noCanonical=true}}
   </head>
   <body data-page="not-found">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}} {{!-- FD-119, N1 and N2 (1.6.0):

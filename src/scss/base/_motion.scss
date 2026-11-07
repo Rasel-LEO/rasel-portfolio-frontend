@@ -39,7 +39,7 @@ $wipe-seam: 200ms;
 
 // Card tilt (FD-62): the lift is `translate` (hover, and focus within without
 // tilt); motion.js sets the tilt as `rotate` about an axis in the card's plane. Zero
-// specificity, so a reveal's transition (.reveal, .stage-reveal) wins while it runs.
+// specificity, so a reveal's transition (.reveal) wins while it runs.
 :where(.service) {
   transition:
     translate var(--d-base) var(--e-out),
@@ -368,8 +368,7 @@ html.lenis body {
 // Printing, or the OS setting changing before the motion modules have undone their states,
 // never leaves an unrevealed element blank.
 @media print, (prefers-reduced-motion: reduce) {
-  .reveal.is-pre,
-  .stage-reveal.is-pre {
+  .reveal.is-pre {
     opacity: 1;
     transform: none;
   }

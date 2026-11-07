@@ -2,11 +2,12 @@
 {{!-- Form field (FD-38, FD-42): visible label, "(required)" or "(optional)" in text,
 optional hint, inline error (hidden until forms.js validates; the messages live there).
 `control` is input (default), textarea or select (with `options`). The error id joins
-aria-describedby only while the field is invalid. --}}
+aria-describedby only while the field is invalid. 1.7.4 (F16): `maxlength` as in Django's form
+(name 120, email 254, organisation 160, message / brief 5000). --}}
 <div class="field">
   <label class="field-label" for="{{id}}">{{label}}{{#if required}} <span class="field-req">(required)</span>{{/if}}{{#if optional}} <span class="field-req">(optional)</span>{{/if}}</label>
   {{#if (eq control "textarea")}}
-  <textarea class="field-control" id="{{id}}" name="{{name}}" rows="6"{{#if required}} required{{/if}}{{#if hint}} aria-describedby="{{id}}-hint"{{/if}}></textarea>
+  <textarea class="field-control" id="{{id}}" name="{{name}}" rows="6"{{#if maxlength}} maxlength="{{maxlength}}"{{/if}}{{#if required}} required{{/if}}{{#if hint}} aria-describedby="{{id}}-hint"{{/if}}></textarea>
   {{else if (eq control "select")}}
   <select class="field-control" id="{{id}}" name="{{name}}"{{#if hint}} aria-describedby="{{id}}-hint"{{/if}}>
     {{#each options}}
@@ -14,7 +15,7 @@ aria-describedby only while the field is invalid. --}}
     {{/each}}
   </select>
   {{else}}
-  <input class="field-control" id="{{id}}" name="{{name}}" type="{{#if type}}{{type}}{{else}}text{{/if}}"{{#if autocomplete}} autocomplete="{{autocomplete}}"{{/if}}{{#if required}} required{{/if}}{{#if hint}} aria-describedby="{{id}}-hint"{{/if}} />
+  <input class="field-control" id="{{id}}" name="{{name}}" type="{{#if type}}{{type}}{{else}}text{{/if}}"{{#if autocomplete}} autocomplete="{{autocomplete}}"{{/if}}{{#if maxlength}} maxlength="{{maxlength}}"{{/if}}{{#if required}} required{{/if}}{{#if hint}} aria-describedby="{{id}}-hint"{{/if}} />
   {{/if}}
   {{#if hint}}
   <p class="field-hint mb-0" id="{{id}}-hint">{{hint}}</p>

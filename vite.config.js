@@ -26,15 +26,18 @@ const pages = new Set(readdirSync(pagesDir).filter((file) => file.endsWith('.htm
 // Tests only: CONTENT_FIXTURE names a JSON file whose top-level keys replace those of
 // src/content (tests/home.spec.js builds Home with a published post, FD-45).
 const fixture = process.env.CONTENT_FIXTURE;
+
+// FD-22: no domain yet. With SITE_URL empty, no canonical and no absolute OG URLs.
+const siteUrl = (process.env.SITE_URL ?? '').trim().replace(/\/+$/, '');
+
+// 1.7.4 (F06): the posts' structured data takes the domain for its absolute URLs.
 const site = buildSite(
-  fixture ? { ...loadContent(), ...JSON.parse(readFileSync(fixture, 'utf8')) } : undefined,
+  fixture ? { ...loadContent(), ...JSON.parse(readFileSync(fixture, 'utf8')) } : loadContent(),
+  { siteUrl },
 );
 
 // FD-94: the footer's copyright year is the year of the build.
 const buildYear = new Date().getFullYear();
-
-// FD-22: no domain yet. With SITE_URL empty, no canonical and no absolute OG URLs.
-const siteUrl = (process.env.SITE_URL ?? '').trim().replace(/\/+$/, '');
 
 // FD-139: the WebSite JSON-LD gets its url once a domain exists.
 if (siteUrl) site.website = { ...site.website, url: `${siteUrl}/` };

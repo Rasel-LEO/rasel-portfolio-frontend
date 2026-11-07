@@ -119,8 +119,8 @@ text "(opens in a new tab)", FD-76); `authors` (the site author in `<strong>`) �
 | `Link`                 | key (`id`), label, handle, url, order                                                                                                                                                                                                                                                   | `links.json`                                                 |
 | `Publication`          | key, year, type (journal / conference), first_author (bool), title, venue, details, display_details*, doi, project (FK Project*)                                                                                                                                                        | `publications.json`                                          |
 | `PublicationAuthor`    | publication (FK), name, is_me (bool), order                                                                                                                                                                                                                                             | `publications.json` `authors`                                |
-| `Project`              | slug (`id`), title, short_title, short_summary, role, period, status, topic (FK Topic), contribution, featured (bool), featured_order*, featured_large*, featured_role_line*, tags (M2M Tag), featured_tags (M2M Tag*)                                                                  | `projects.json`                                              |
-| `ProjectDetail`        | project (1:1), summary_line, facts (role, institution, unit, technology, output), system_note, overview, context; contribution items (ordered list)                                                                                                                                     | `projects.json` `detail`                                     |
+| `Project`              | slug (`id`), title, short_title, card_description, role_line, card_tags (3, from tags), card_image (1600 × 900, alt), meta_description* (≤ 160, 1.7.4), role, period, status, topic (FK Topic), contribution, featured (bool), featured_order*, featured_large*, tags (M2M Tag)         | `projects.json`                                              |
+| `ProjectDetail`        | project (1:1), summary_line, facts (role, institution, unit, technology, output), overview, methods, results_text, limitations (Markdown with `[Figure n]`), figures (image, n, caption, size), system_note, context; contribution items (ordered list)                                 | `projects.json` `detail`                                     |
 | `ProjectBlock`         | project (FK), kind (system / result), icon, title, text, order                                                                                                                                                                                                                          | `detail.system`, `detail.results`                            |
 | `Topic`                | key, label, icon                                                                                                                                                                                                                                                                        | `research-archive.json` `topics`                             |
 | `Award`                | year, title, by; Portfolio card: kind, highlight, icon                                                                                                                                                                                                                                  | `awards.json`, `portfolio.json` `awards.items`               |
@@ -128,7 +128,7 @@ text "(opens in a new tab)", FD-76); `authors` (the site author in `<strong>`) �
 | `Role` (experience)    | title, period, unit, institution, text, bullets (list), order                                                                                                                                                                                                                           | `portfolio.json` `experience.roles`                          |
 | `Certification`        | title, by                                                                                                                                                                                                                                                                               | `certifications.json`, `portfolio.json` `expertise.training` |
 | `SkillGroup`           | group, icon*, items (list), order                                                                                                                                                                                                                                                       | `skills.json`, `portfolio.json` `expertise.groups`           |
-| `Post`                 | slug, title, short_title, standfirst, category (FK Category), status (draft / published), date* (published), body (Markdown), cover (illustration key + alt, later an image)                                                                                                            | `blog.json`, `posts/<slug>.md`, `blog-page.json` `covers`    |
+| `Post`                 | slug, title, short_title, standfirst, card_description, card_image (1600 × 900, alt), figures*, meta_description* (≤ 160, 1.7.4), category (FK Category), status (draft / published), date* (published), body (Markdown)                                                                | `blog.json`, `posts/<slug>.md`                               |
 | `Category`             | key, label, order                                                                                                                                                                                                                                                                       | `blog-page.json` `categories`                                |
 | `Service`              | number, title, summary, items (list), evidence label + url                                                                                                                                                                                                                              | `hire.json` `services`                                       |
 | `Field` (area of work) | label, target, icon, order                                                                                                                                                                                                                                                              | `fields.json`                                                |
@@ -167,8 +167,9 @@ admin), so a wording change is a small reviewed commit with a dated record.
 Validation that `tools/validate-content.mjs` runs before every build must move into model
 validation or a management command: unique ids/slugs, publication → project references, DOI
 format, ISO dates, a published post has a date and a written standfirst, a Markdown body per
-post, featured cards and their order, `featured_tags` a subset of `tags`, no
-`[bracketed]` placeholder on published content. `tools/check-privacy.mjs` (no phone numbers,
+post, featured cards and their order, `card_tags` (three) a subset of `tags`, no
+`[bracketed]` placeholder anywhere in published content, and (1.7.4, FD-186) every limit of
+`tools/limits.mjs`: page titles, 160-character descriptions, the § 14.1 slots and list counts. `tools/check-privacy.mjs` (no phone numbers,
 no private CV fields, FD-23) should run on rendered pages in the Django test suite.
 
 Post bodies are Markdown rendered at build time with the rules of FD-37 / FD-41
@@ -381,7 +382,8 @@ author` and the `Person` stay Rasel Al Mamun.
   (`images/brand/share-image-1200x630.png`, 1200 × 630, `image/png`, alt "Ideatrium — by
   Rasel Al Mamun"), `twitter:card` `summary_large_image`. Icons and manifest: the root files
   (section 5); `theme-color` per colour scheme, the `bg-0` token of each theme.
-- One meta description per page (`meta.json`, the project contribution, the post standfirst).
+- One meta description per page, at most 160 characters (`meta.json`; a project's or post's
+  `meta_description`, 1.7.4 — see § 19).
 - JSON-LD: `Person` on every page, `WebSite` on Home (name Ideatrium, `url` the site root
   when `SITE_URL` is set, `author` the Person; FD-139), `ScholarlyArticle` per publication on
   Portfolio and publications, `BlogPosting` on posts (`tools/content.mjs`).
@@ -398,7 +400,8 @@ so the footer link gets `aria-current="page"`), the footer link on every page (`
 `<p class="footer-privacy">` in `.footer-legal`), the sitemap entry, and the Django test table
 entry `privacy.html` → `/privacy/` (already in `tests/pages.js`).
 
-- `noindex` on the two template pages; in Django it applies only to draft previews.
+- `noindex` on the two template pages; in Django it applies only to draft previews. 1.7.4: the
+  404 page and every filtered list state are `noindex` too (§ 19).
 
 ## 11. Accessibility and motion contracts
 
@@ -448,13 +451,17 @@ read `src/` and `dist/`; their Django equivalents are model and view tests.
 
 ## 13. Owner content to supply
 
-- Blog posts: the three posts are drafts with `[bracketed]` bodies; final text, dates and
-  `status: published`.
-- The public CV PDF, served at `/cv/Rasel_Al_Mamun_CV.pdf` (`docs/content/web-cv.md` is its text; `profile.cv.href` is that path, FD-146).
-- Final project photographs (`[Photo: …]` placeholders stay until supplied) and a larger
-  original hero photograph (the hero stays 720 px wide until then, FD-130).
-- Poultry AIoT project details: the M.S. thesis project (in progress) has no `detail` block yet,
-  so its page shows the summary fields only.
+Updated for 1.7.x. The owner's real content is loaded locally and never committed; the repository
+builds with the trial content.
+
+- Blog posts: final text, dates, card images and `status: published` (the trial posts are drafts).
+  A published post may not keep any `[bracketed]` placeholder (the validator fails, FD-186).
+- `meta_description` for each project and post (at most 160 characters, FD-185); without one the
+  fallbacks apply and the validator warns.
+- Card images (1600 × 900, WebP and AVIF) for each project and post; for the static preview also
+  their 480 and 960 px copies (`<name>-480.webp`, …), which Django makes itself (FD-187).
+- The public CV PDF, served at `/cv/Rasel_Al_Mamun_CV.pdf` (`profile.cv.href` is that path, FD-146).
+- A larger original hero photograph (the hero stays 720 px wide until then, FD-130).
 - The domain (`SITE_URL`): canonical URLs, absolute social images, sitemap.
 
 ## 14. Release 1.6.0: dynamic slots, two phases, final content
@@ -712,3 +719,49 @@ Decisions FD-173 … FD-176.
 
 - **What to expect (FD-175):** the card has no visible label; `components/expect-box` renders `contact.expect.heading` in a visually hidden `h2` (it names the card for screen readers). Hire me's header (FD-176): `p.eyebrow`, then the availability `p.availability.t-small` (still hidden when empty; `data-available` sets the dot), then `div.hire-head-row` with the `h1` and the Start a brief link (`.band-actions`). The classes `band-head` and `band-aside` are gone.
 - **Motion:** only `stage-desktop.js` (the glide) and one CSS rule (`.back-to-top.is-gliding`) changed; Django mounts the same script and styles.
+
+## 19. 1.7.4 changes for Django
+
+Decisions FD-184 … FD-190 (`docs/decisions.md`), from the QA audit of v1.7.3. Everything Django
+must mirror:
+
+- **`meta_description`** (FD-185): a new optional field on `Project` and `Post`, at most 160
+  characters (model validation; a missing one is a warning in the admin, not an error). It is the
+  page's `<meta name="description">`, `og:description` and `twitter:description`. Without it: a
+  project uses `ProjectDetail.summary_line`, else its `card_description` — never the contribution
+  text; a post uses its standfirst cut at the last full sentence within 160 characters (if there is
+  none, at the last word with "…"). A post whose standfirst is still a placeholder uses
+  "<title> — a post by <name>".
+- **Filtered lists** (FD-185): `/portfolio/research/?topic=…`, `?q=…` and `/blog/?category=…` render
+  `<meta name="robots" content="noindex,follow">`, and their `<link rel="canonical">` and `og:url`
+  are the unfiltered list (`/portfolio/research/`, `/blog/`); they are never in the sitemap. The
+  unfiltered lists and their `?page=N` stay indexable and self-canonical.
+- **404** (FD-185): `<meta name="robots" content="noindex">`, no canonical and no `og:url`
+  (`shell/head` takes `robots` and `noCanonical`; the 404 template passes both).
+- **`BlogPosting`** (FD-185): add `image` (the post's share image, absolute), `url` and
+  `mainEntityOfPage` (`{"@type": "WebPage", "@id": <canonical>}`), `datePublished`, `dateModified`
+  (the last edit when later than the publication date, else the publication date), `author` (the
+  Person with its `url`, the site root, and `sameAs`) and `publisher` (the same Person).
+- **Used-only filter options** (FD-187): the topic select and the category tabs list only topics
+  and categories with at least one published item. A query naming an unused one shows the
+  unfiltered list.
+- **First card eager** (FD-187): on the projects archive and the Blog (every state and page), the
+  first card's `<img>` has `loading="eager"` and `fetchpriority="high"`; every other card stays
+  `loading="lazy"` (`sections/archive-card` and `sections/blog-card` take `eager`, which they pass to
+  `components/card-image`).
+- **Card `srcset`** (FD-187): every card image (lists, Home, the page top) is
+  `<source type="image/avif" srcset="…480 480w, …960 960w, …1600 1600w" sizes="…">` and
+  `<img src="…1600" srcset="…480 480w, …960 960w, …1600 1600w" sizes="…">`, with the `sizes`
+  each partial already passes. Django makes the 480 / 960 / 1600 renditions it already makes.
+- **Form `maxlength`** (FD-187): `name` 120, `email` 254, `organisation` 160, `message` / `brief`
+  5000 on the Contact and Hire me fields — the same limits as Django's form fields. The static
+  mailto fallback (frontend only) shortens a long message; the live form is unaffected.
+- **CSS** (FD-184, arrives with the asset sync): the light theme's primary-button hover and focus
+  fill (mixed with white, ≥ 4.5:1), and the footer email links' 8 px block padding up to 667 px
+  (44 px targets). No template change.
+- **Scripts** (FD-187, FD-190, arrive with the asset sync): `list-nav.js` (latest request wins),
+  the shared `core/media.js`, `theme.js` and `tab-ink.js` robustness. No `data-*` hook changed;
+  motion behaviour is unchanged.
+- **Content limits** (FD-186): `tools/limits.mjs` is the one table of § 14.1 plus the page-title
+  rule (short title + " — Ideatrium" ≤ 60) and the 160-character descriptions; Django's model
+  validation should enforce the same numbers.

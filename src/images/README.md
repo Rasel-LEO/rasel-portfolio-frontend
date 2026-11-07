@@ -23,3 +23,9 @@ image free of such metadata.
 | `arrow.svg`                              | in-house                                                                       | the arrow between the Hire me process steps (CSS mask)                                                                  |
 
 The figure frames stay 720 px wide until a larger original photograph exists (FD-130).
+
+`projects/` and `posts/` hold the trial card images and figures (placeholder drawings, 1600 × 900
+for the cards). 1.7.4 (FD-187): each card image also has a 480 and a 960 px copy beside it
+(`trial-card-1-480.webp`, `trial-card-1-960.avif`, …, the same image resized, no metadata), which
+the pages offer in `srcset`; Django makes these widths itself. A card image without its copies is
+served at 1600 px only and the content check warns.

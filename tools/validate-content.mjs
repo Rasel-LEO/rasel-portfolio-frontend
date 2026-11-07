@@ -4,12 +4,27 @@
 // type, exactly one `me: true` author per publication; blog posts (FD-36, FD-37): known
 // category, draft/published status, unique slugs, a Markdown body per post; the Blog,
 // Hire me, Contact, meta and Home blocks; the Portfolio block (FD-107, FD-108). Plain checks,
-// no schema library.
+// no schema library. 1.7.4 (F03, F10): every documented limit of tools/limits.mjs — page titles,
+// search descriptions, the § 14.1 slot maxima and list counts — and no [bracketed] placeholder
+// anywhere in a published post's standfirst or body.
 import { existsSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { loadContent, loadPostBodies, postSource } from './content.mjs';
+import { buildSite, cardVariants, loadContent, loadPostBodies, postSource } from './content.mjs';
+import {
+  CARD_LIMITS as LIMITS,
+  DESCRIPTION_MAX,
+  LIST_MAX,
+  MANY,
+  MAX,
+  TITLE_MAX,
+  pageTitle,
+  placeholders,
+} from './limits.mjs';
 import { FIGURE_SIZES, figureMarkers, isBracketed } from './markdown.mjs';
+
+// The list maxima live in tools/limits.mjs (shared with tests/slots.spec.js).
+export { LIST_MAX };
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 
@@ -180,25 +195,6 @@ const isDetail = (v) =>
 const isHead = (v) => isText(v?.eyebrow) && isText(v.heading) && isText(v.intro);
 const isViewAll = (v) => isText(v) && v.includes('{count}');
 
-// The hard limits of the card fields (1.7.0). The large Home card has the roomier ones; every
-// other card is small. `short_title` is the card title; a post's card title is its title.
-const LIMITS = {
-  title: { large: 55, small: 40 },
-  description: { large: 140, small: 100 },
-  roleLine: 50,
-  blogTitle: 80,
-  blogDescription: 110,
-};
-// 1.7.1: the most items each Portfolio list may hold (measured at 320 – 1440 px, tests/slots.spec.js
-// MANY; docs/handover-django.md § 14.1). More fails the build.
-export const LIST_MAX = {
-  awards: 9,
-  education: 4,
-  expertiseGroups: 4,
-  expertiseItems: 12,
-  certifications: 2,
-  bullets: 3,
-};
 // The soft limits: a warning, not a failure (fewer words than this reads as thin).
 const MIN_WORDS = {
   title: { large: 4, small: 3 },
@@ -278,6 +274,8 @@ export function contentWarnings(content, bodies = {}) {
     if (words(project.card_description) < MIN_WORDS.description[size]) {
       warnings.push(`${where}: card description under ${MIN_WORDS.description[size]} words`);
     }
+    // 1.7.4 (F02, F07): the search description falls back to the summary line or card description.
+    if (!project.meta_description) warnings.push(`${where}: no meta_description`);
     if (project.detail) {
       const figures = project.detail.figures ?? [];
       const texts = ['overview', 'methods', 'results_text', 'limitations'].map(
@@ -294,11 +292,22 @@ export function contentWarnings(content, bodies = {}) {
     if (words(post.card_description) < MIN_WORDS.blogDescription) {
       warnings.push(`${where}: card description under ${MIN_WORDS.blogDescription} words`);
     }
+    // 1.7.4 (F02): the search description falls back to the standfirst, cut at a sentence.
+    if (!post.meta_description) warnings.push(`${where}: no meta_description`);
     const figures = post.figures ?? [];
     if (post.slug in bodies) {
       checkFigures([], where, [bodies[post.slug]], figures, [1, 3]).forEach((message) =>
         warnings.push(message),
       );
+    }
+  }
+  // 1.7.4 (F14): a card image without its 480 and 960 px copies is served at 1600 px only.
+  for (const [where, image] of [
+    ...content.projects.map((p) => [`projects "${p.id}"`, p.card_image]),
+    ...content.blog.map((p) => [`blog "${p.slug}"`, p.card_image]),
+  ]) {
+    if (image?.src && !cardVariants(image)) {
+      warnings.push(`${where}: card image has no 480 / 960 px copies (served at 1600 px only)`);
     }
   }
   return warnings;
@@ -376,6 +385,8 @@ const shapes = {
     'featured_order*': (v) => Number.isInteger(v) && v > 0,
     // FD-102: the one large Home card.
     'featured_large*': (v) => v === true,
+    // 1.7.4 (F02, F07): the search description (at most 160 characters, checked below).
+    'meta_description*': isText,
   },
   awards: { year: Number.isInteger, title: isText, by: isText },
   education: { year: isText, degree: isText, institution: isText, thesis: isText },
@@ -386,7 +397,7 @@ const shapes = {
     slug: (v) => SLUG.test(v),
     category: (v) => SLUG.test(v),
     title: isText,
-    // FD-128: the page <title> (with ' — Rasel Al Mamun', at most 60 characters).
+    // FD-128, FD-139: the page <title> is short_title + ' — Ideatrium', at most 60 characters.
     short_title: isText,
     standfirst: isText,
     // 1.7.0: the card description (Blog list and Latest posts show it, not the standfirst), the
@@ -396,6 +407,8 @@ const shapes = {
     'figures*': (v) => Array.isArray(v) && v.length > 0 && v.every(isFigure),
     status: (v) => POST_STATUSES.includes(v),
     'date*': (v) => ISO_DATE.test(v) && !Number.isNaN(Date.parse(v)),
+    // 1.7.4 (F02): the search description (at most 160 characters, checked below).
+    'meta_description*': isText,
   },
   blogPage: {
     // B1, B2 (1.6.0): the eyebrow, and the count line (plural / singular).
@@ -661,8 +674,16 @@ export function validateContent(content, bodies) {
     if (post.status === 'published' && !post.date) {
       problems.push(`blog "${post.slug}": published without a "date"`);
     }
-    if (post.status === 'published' && isBracketed(post.standfirst)) {
-      problems.push(`blog "${post.slug}": published with a [bracketed] standfirst`);
+    // 1.7.4 (F10): no placeholder anywhere in a published post's standfirst or body.
+    if (post.status === 'published') {
+      const left = [
+        ...placeholders(post.standfirst),
+        ...(bodies && post.slug in bodies ? placeholders(bodies[post.slug]) : []),
+      ];
+      if (isBracketed(post.standfirst) || left.length) {
+        const sample = left.slice(0, 3).join(', ') || post.standfirst.slice(0, 40);
+        problems.push(`blog "${post.slug}": published with a [bracketed] placeholder: ${sample}`);
+      }
     }
     // 1.7.0: hard limits of the Blog card, and the body's [Figure n] markers against the figures.
     const where = `blog "${post.slug}"`;
@@ -754,6 +775,7 @@ export function validateContent(content, bodies) {
 
   const projectIds = new Set(content.projects.map((project) => project.id));
   problems.push(...checkPortfolio(content, projectIds));
+  problems.push(...checkLimits(content, bodies));
   for (const pub of content.publications) {
     const where = `publications "${pub.id}"`;
     if (pub.project && !projectIds.has(pub.project)) {
@@ -764,6 +786,118 @@ export function validateContent(content, bodies) {
     if (pub.first_author !== (pub.authors[0].me === true)) {
       problems.push(`${where}: "first_author" disagrees with the author order`);
     }
+  }
+  return problems;
+}
+
+// 1.7.4 (F03, F10): the documented limits of tools/limits.mjs (docs/handover-django.md § 14.1).
+function checkLimits(content, bodies) {
+  const problems = [];
+  const { profile, portfolio, hire, contact } = content;
+  // Page titles: the short title and " — Ideatrium", at most 60 characters.
+  const titles = [
+    ['home', profile.name],
+    ['privacy', content.privacy.short_title],
+    ...content.projects.map((p) => [`projects "${p.id}"`, p.short_title]),
+    ...content.blog.map((p) => [`blog "${p.slug}"`, p.short_title]),
+    ...content.researchArchive.topics.map((t) => [`topic "${t.id}"`, `Projects — ${t.label}`]),
+    ...content.blogPage.categories.map((c) => [`category "${c.id}"`, `Blog — ${c.label}`]),
+  ];
+  for (const [where, short] of titles) {
+    const title = pageTitle(short);
+    if (title.length > TITLE_MAX) {
+      problems.push(
+        `${where}: page title "${title}" is ${title.length} characters (max ${TITLE_MAX})`,
+      );
+    }
+  }
+  // Search descriptions: every one a page can carry, at most 160 characters.
+  // The derived ones come from the site build (a broken figure marker throws there; it is reported
+  // by the figure check instead).
+  let site = { portfolioView: {}, projectList: [], postList: [] };
+  try {
+    site = buildSite(content, { bodies: bodies ?? {}, showDrafts: true, release: false });
+  } catch {
+    // Reported by checkFigures.
+  }
+  const descriptions = [
+    ...Object.entries(content.meta).map(([key, text]) => [`meta.${key}`, text]),
+    ['profile.summary', profile.summary],
+    ['privacy.description', content.privacy.description],
+    ...content.projects
+      .filter((p) => p.meta_description)
+      .map((p) => [`projects "${p.id}" meta_description`, p.meta_description]),
+    ...content.blog
+      .filter((p) => p.meta_description)
+      .map((p) => [`blog "${p.slug}" meta_description`, p.meta_description]),
+    ['the projects archive description', site.portfolioView.researchDescription],
+    ['the publications description', site.portfolioView.publicationsDescription],
+    ...site.projectList.map((p) => [`projects "${p.id}" description`, p.description]),
+    ...site.postList.map((p) => [`blog "${p.slug}" description`, p.description]),
+  ];
+  for (const [where, text] of descriptions) {
+    if (String(text ?? '').length > DESCRIPTION_MAX) {
+      problems.push(`${where}: ${text.length} characters (max ${DESCRIPTION_MAX})`);
+    }
+  }
+  // The § 14.1 text slots.
+  const role = (r, key) => `portfolio.experience.roles "${r.title}" ${key}`;
+  const service = (s, key) => `hire.services "${s.n}" ${key}`;
+  const slots = [
+    ['profile.second_role', profile.second_role, MAX.second_role],
+    ['profile.eyebrow', profile.eyebrow, MAX.eyebrow],
+    ['profile.eyebrow_short', profile.eyebrow_short, MAX.eyebrow_short],
+    ['profile.role_line', profile.role_line, MAX.role_line],
+    ['profile.statement', profile.statement, MAX.statement],
+    ['profile.location_line', profile.location_line, MAX.location_line],
+    ['profile.author_line', profile.author_line, MAX.author_line],
+    ['profile.email', profile.email, MAX.email],
+    ['profile.secondary_email', profile.secondary_email, MAX.email],
+    ['portfolio.profile.summary_line', portfolio.profile.summary_line, MAX.summary_line],
+    ['portfolio.profile.eyebrow', portfolio.profile.eyebrow, MAX.portfolio_eyebrow],
+    ['portfolio.profile.location_line', portfolio.profile.location_line, MAX.location_line],
+    ['hire.availability', hire.availability, MAX.availability],
+    ['contact.intro', contact.intro, MAX.contact_intro],
+    ...content.links.map((l) => [`links "${l.id}" label`, l.label, MAX.link_label]),
+    ...content.fields.map((f, i) => [`fields[${i}] label`, f.label, MAX.area_label]),
+    ...hire.services.flatMap((s) => [
+      [service(s, 'title'), s.title, MAX.service_title],
+      [service(s, 'summary'), s.summary, MAX.service_summary],
+      [service(s, 'evidence label'), s.evidence.label, MAX.evidence_label],
+      ...s.items.map((item, i) => [service(s, `item ${i + 1}`), item, MAX.service_item]),
+    ]),
+    ...portfolio.experience.roles.flatMap((r) => [
+      [role(r, 'title'), r.title, MAX.role_title],
+      [role(r, 'period'), r.period, MAX.role_period],
+      [role(r, 'unit'), r.unit, MAX.role_unit],
+      [role(r, 'institution'), r.institution, MAX.role_institution],
+      [role(r, 'text'), r.text, MAX.role_text],
+      ...r.bullets.map((b, i) => [role(r, `bullet ${i + 1}`), b, MAX.role_bullet]),
+    ]),
+    ...contact.audiences.map((a, i) => [`contact.audiences[${i}]`, a, MAX.audience]),
+    ...contact.subjects.map((a, i) => [`contact.subjects[${i}]`, a, MAX.subject]),
+    ...hire.form_kinds.map((a, i) => [`hire.form_kinds[${i}]`, a, MAX.form_kind]),
+  ];
+  for (const [where, text, most] of slots) {
+    if (String(text ?? '').length > most) {
+      problems.push(`${where}: ${text.length} characters (max ${most})`);
+    }
+  }
+  // The list slots.
+  const lists = [
+    ['links', content.links, MANY.links],
+    ['footer.research_profiles', content.footer.research_profiles, MANY.footerLinks],
+    ['footer.connect_profiles', content.footer.connect_profiles, MANY.footerLinks],
+    ['fields', content.fields, MANY.areas],
+    ['hire.services', hire.services, MANY.services],
+    ...hire.services.map((s) => [service(s, 'items'), s.items, MANY.serviceItems]),
+    ['portfolio.experience.roles', portfolio.experience.roles, MANY.roles],
+    ['contact.subjects', contact.subjects, MANY.options],
+    ['hire.form_kinds', hire.form_kinds, MANY.options],
+    ['contact.audiences', contact.audiences, MANY.audiences],
+  ];
+  for (const [where, list, most] of lists) {
+    if (list.length > most) problems.push(`${where}: ${list.length} items (max ${most})`);
   }
   return problems;
 }

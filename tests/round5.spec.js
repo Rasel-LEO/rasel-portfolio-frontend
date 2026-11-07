@@ -3,7 +3,7 @@
 // hand-off after the shorter stage, Selected work at v1.5.1's size with the image inside, the section
 // gaps, the phone footer row, the Projects navbar item and the hero centred on large screens.
 import { expect, test } from './fixtures.js';
-import { themes, useTheme } from './pages.js';
+import { revealAll, themes, useTheme } from './pages.js';
 
 const box = (locator) => locator.boundingBox();
 
@@ -369,6 +369,9 @@ test.describe('section gaps (items 3 and 4)', () => {
     for (const width of [320, 390, 430, 767]) {
       await page.setViewportSize({ width, height: 844 });
       await page.goto('/index.html');
+      // 1.7.4 (F12): measured once screen 2's entrance and every reveal have settled (under load
+      // the entrance could still be moving the areas).
+      await revealAll(page);
       const gap = await page.evaluate(() => {
         const last = [...document.querySelectorAll('.screen2-grid > li')].at(-1);
         const hire = document.querySelector('.hire-band');

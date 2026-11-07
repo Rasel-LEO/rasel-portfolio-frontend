@@ -13,59 +13,15 @@ import { createServer } from 'node:http';
 import { extname, join, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 import { loadContent } from '../tools/content.mjs';
-import { LIST_MAX, validateContent } from '../tools/validate-content.mjs';
+import { LIST_MAX, MANY, MAX } from '../tools/limits.mjs';
+import { validateContent } from '../tools/validate-content.mjs';
 
 const root = resolve(import.meta.dirname, '..');
 const slotsDir = join(root, '.slots');
 
-// The documented maxima (characters) — the same table as docs/handover-django.md.
-export const MAX = {
-  second_role: 40,
-  eyebrow: 100,
-  eyebrow_short: 48,
-  role_line: 70,
-  statement: 300,
-  summary_line: 140,
-  portfolio_eyebrow: 100,
-  location_line: 60,
-  author_line: 100,
-  availability: 100,
-  email: 40,
-  link_label: 28,
-  area_label: 28,
-  service_title: 40,
-  service_summary: 90,
-  service_item: 50,
-  evidence_label: 28,
-  role_title: 40,
-  role_period: 30,
-  role_unit: 40,
-  role_institution: 50,
-  role_text: 160,
-  role_bullet: 60,
-  contact_intro: 120,
-  audience: 60,
-  subject: 30,
-  form_kind: 40,
-};
-// The most items a list is tested with.
-export const MANY = {
-  areas: 8,
-  services: 4,
-  roles: 5,
-  links: 9,
-  footerLinks: 8,
-  options: 8,
-  audiences: 6,
-  // 1.7.1: the Portfolio lists, measured at 320, 390, 768, 1024 and 1440 px (docs/handover-django.md
-  // § 14.1): the largest count that keeps every layout rule — the validator's LIST_MAX.
-  awards: LIST_MAX.awards,
-  education: LIST_MAX.education,
-  expertiseGroups: LIST_MAX.expertiseGroups,
-  expertiseItems: LIST_MAX.expertiseItems,
-  certifications: LIST_MAX.certifications,
-  bullets: LIST_MAX.bullets,
-};
+// The documented maxima (characters) and list counts — docs/handover-django.md § 14.1. 1.7.4
+// (F03, F10): one shared module, tools/limits.mjs, which the content validator enforces too.
+export { MANY, MAX };
 
 const WORDS = 'research hardware software sensors robotics analysis systems field data edge'.split(
   ' ',

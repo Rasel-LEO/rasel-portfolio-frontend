@@ -7,6 +7,7 @@
     "standfirst": "Exploring local processing for farm monitoring and control.",
     "status": "draft",
     "card_description": "Why farm decisions belong next to the sensor, not in a distant cloud service.",
+    "meta_description": "Why decisions on a poultry farm belong next to the sensor: local processing for farm monitoring and control, not a distant cloud service.",
     "card_image": {
       "src": "/images/posts/trial-card-1.webp",
       "avif": "/images/posts/trial-card-1.avif",
@@ -45,6 +46,7 @@
     "standfirst": "A practical guide to choosing a controller for farm IoT.",
     "status": "draft",
     "card_description": "A practical comparison of two controllers for farm IoT, with the trade-offs.",
+    "meta_description": "ESP32 or Raspberry Pi for farm IoT? A practical comparison of the two controllers, with the trade-offs.",
     "card_image": {
       "src": "/images/posts/trial-card-2.webp",
       "avif": "/images/posts/trial-card-2.avif",
@@ -73,6 +75,7 @@
     "standfirst": "Lessons from turning a research project into a journal article.",
     "status": "draft",
     "card_description": "What turning an undergraduate thesis into a journal paper taught me about publishing.",
+    "meta_description": "What turning an undergraduate thesis into a journal paper taught me about publishing research.",
     "card_image": {
       "src": "/images/posts/trial-card-3.webp",
       "avif": "/images/posts/trial-card-3.avif",

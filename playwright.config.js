@@ -10,16 +10,26 @@ if (django && !djangoBaseURL) {
   throw new Error('TEST_TARGET=django needs DJANGO_BASE_URL, for example http://127.0.0.1:8001');
 }
 
+// 1.7.4 (F23): every tests/*.spec.js runs in the `chromium` project (`npm test`), found by
+// pattern, so a new spec file runs without being listed anywhere; the seven-width matrix has its
+// own project and command (`npm run test:widths`). The global setup rebuilds a stale dist/.
+const WIDTHS = '**/widths.spec.js';
+
 export default defineConfig({
   testDir: 'tests',
+  testMatch: '**/*.spec.js',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: [['list'], ['html', { open: 'never' }]],
+  globalSetup: './tests/global-setup.js',
   use: {
     baseURL: django ? djangoBaseURL : 'http://localhost:4173',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    { name: 'chromium', testIgnore: WIDTHS, use: { ...devices['Desktop Chrome'] } },
+    { name: 'widths', testMatch: WIDTHS, use: { ...devices['Desktop Chrome'] } },
+  ],
   webServer: django
     ? undefined
     : {

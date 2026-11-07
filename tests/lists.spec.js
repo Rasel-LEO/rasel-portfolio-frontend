@@ -146,7 +146,8 @@ test.describe('projects archive: server-rendered states', () => {
 
     await page.goto('/research-empty.html');
     await expect(page).toHaveTitle('Projects — search — Ideatrium');
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+    // 1.7.4 (F05): a filtered state is noindex,follow.
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex,follow');
     await expect(page.locator('[data-project-card]')).toHaveCount(0);
     await expect(page.locator('[data-results-status]')).toHaveText(
       'No projects match your search.',
@@ -232,6 +233,46 @@ test.describe('projects archive with JavaScript: enhancement', () => {
     await page.getByRole('link', { name: 'Clear filters' }).click();
     await expect(page.locator('[data-project-card]')).toHaveCount(9);
     await expect(page.getByRole('searchbox')).toHaveValue('');
+  });
+
+  // 1.7.4 (F11): the latest request wins; a hash-only history entry fetches nothing.
+  test('a slow earlier answer never overwrites a newer one', async ({ page }) => {
+    await page.goto('/research.html');
+    const topics = site.archive.topics.map((t) => t.id);
+    const [slow, fast] = [topics[0], topics[1]];
+    let release;
+    const held = new Promise((resolve) => {
+      release = resolve;
+    });
+    await page.route(`**/research.html?topic=${slow}`, async (route) => {
+      await held;
+      await route.continue().catch(() => {});
+    });
+    await page.getByRole('combobox').selectOption(slow);
+    await page.getByRole('combobox').selectOption(fast);
+    const wanted = researchState(site.archive, { topic: fast });
+    await expect(page).toHaveURL(new RegExp(`[?]topic=${fast}$`));
+    await expect(page.locator('[data-list-announce]')).toHaveText(wanted.countText);
+    release();
+    await page.waitForTimeout(500);
+    await expect(page).toHaveURL(new RegExp(`[?]topic=${fast}$`));
+    await expect(page.locator('[data-project-card]')).toHaveCount(wanted.cards.length);
+    await expect(page.getByRole('combobox')).toHaveValue(fast);
+  });
+
+  test('Back over a #hash entry fetches nothing', async ({ page }) => {
+    await page.goto('/research.html');
+    await page.evaluate(() => {
+      location.hash = 'main';
+    });
+    let fetched = 0;
+    page.on('request', (request) => {
+      if (request.resourceType() === 'fetch') fetched += 1;
+    });
+    await page.goBack();
+    await page.waitForTimeout(500);
+    expect(fetched).toBe(0);
+    await expect(page.locator('[data-project-card]')).toHaveCount(9);
   });
 });
 
@@ -331,13 +372,12 @@ test.describe('many posts and publications (a sample build)', () => {
     await page.getByRole('link', { name: 'Next' }).click();
     await expect(page.locator('.blog-card')).toHaveCount(3);
     await expect(page).toHaveTitle('Blog — Tech review — page 2 — Ideatrium');
-    // A category without posts: the empty state with a way back; no pager.
+    // 1.7.4 (F08): a category without posts is not offered; its query shows the whole Blog.
+    await expect(tabs.getByRole('link', { name: 'Agricultural engineering' })).toHaveCount(0);
     await page.goto(`${served.url}/blog.html?category=agricultural-engineering`);
-    await expect(page.locator('.empty-state')).toContainText(content.blogPage.empty_category);
-    await expect(
-      page.locator('.empty-state').getByRole('link', { name: 'Show all posts' }),
-    ).toHaveAttribute('href', '/blog.html');
-    await expect(page.getByRole('navigation', { name: 'Blog pages' })).toHaveCount(0);
+    await expect(page.locator('.empty-state')).toHaveCount(0);
+    await expect(page.locator('.blog-card')).toHaveCount(9);
+    await expect(page).toHaveTitle('Blog — Ideatrium');
     // One page: no pagination (the category with 8 posts).
     await page.goto(`${served.url}/blog.html?category=education`);
     await expect(page.locator('.blog-card')).toHaveCount(8);

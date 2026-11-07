@@ -81,14 +81,15 @@
                 data-form="hire"
                 data-email="{{profile.email}}"
               >
-                {{> components/field id="hire-name" name="name" label="Name" required=true
-                autocomplete="name"}} {{> components/field id="hire-email" name="email"
-                label="Email" type="email" required=true autocomplete="email"}} {{#if
-                hire.form_kinds.length}}{{> components/field id="hire-kind" name="kind" label="What
-                do you need?" control="select" options=hire.form_kinds }}{{/if}} {{>
-                components/field id="hire-organisation" name="organisation" label="Organisation"
-                optional=true autocomplete="organization"}} {{> components/field id="hire-brief"
-                name="brief" label="Brief" control="textarea" required=true}}
+                {{> components/field id="hire-name" name="name" label="Name" maxlength=120
+                required=true autocomplete="name"}} {{> components/field id="hire-email"
+                name="email" maxlength=254 label="Email" type="email" required=true
+                autocomplete="email"}} {{#if hire.form_kinds.length}}{{> components/field
+                id="hire-kind" name="kind" label="What do you need?" control="select"
+                options=hire.form_kinds }}{{/if}} {{> components/field id="hire-organisation"
+                name="organisation" label="Organisation" maxlength=160 optional=true
+                autocomplete="organization"}} {{> components/field id="hire-brief" name="brief"
+                maxlength=5000 label="Brief" control="textarea" required=true}}
                 <div class="form-actions">
                   <button class="btn btn-primary" type="submit">
                     Send the brief

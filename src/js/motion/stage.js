@@ -8,10 +8,12 @@
 //   on phones the photo band's parallax (home-motion.js, FD-73);
 // - reduced motion: nothing; the static document layout.
 // home-motion.js (GSAP) also runs the Contact band's settle (FD-72) on every width.
+import { MOTION, REDUCED } from '../core/media.js';
+
 export const queries = {
-  desktop: '(min-width: 992px) and (prefers-reduced-motion: no-preference)',
-  mobile: '(max-width: 991.98px) and (prefers-reduced-motion: no-preference)',
-  reduced: '(prefers-reduced-motion: reduce)',
+  desktop: `(min-width: 992px) and ${MOTION}`,
+  mobile: `(max-width: 991.98px) and ${MOTION}`,
+  reduced: REDUCED,
 };
 
 const belowFold = (el) => el.getBoundingClientRect().top > window.innerHeight;

@@ -12,6 +12,8 @@ import { isDjango, pagePath, phonePortrait, servedLink, venueLine } from './page
 const content = loadContent();
 const site = buildSite(content, { showDrafts: true });
 const screen2 = content.home.screen2;
+// 1.7.4 (F23): the status chip's words for each status value (components/status-chip).
+const STATUS_TEXT = { 'in-progress': 'In progress', done: 'Completed', planned: 'Planned' };
 
 // WCAG relative luminance and contrast of two computed rgb() colours.
 const luminance = (rgb) => {
@@ -99,7 +101,7 @@ test.describe('Home document', () => {
 
   test('hero CTAs: Hire me, Portfolio and the shared CV action', async ({ page }) => {
     const ctas = page.locator('.hero-ctas a');
-    await expect(ctas).toHaveCount(3);
+    await expect(ctas).toHaveCount(content.home.ctas.length);
     await expect(ctas.nth(0)).toHaveAttribute('href', pagePath('hire.html'));
     await expect(ctas.nth(0)).toHaveClass(/btn-primary/);
     await expect(ctas.nth(1)).toHaveAttribute('href', pagePath('portfolio.html'));
@@ -272,8 +274,7 @@ test.describe('Home document', () => {
       .toSorted((a, b) => a.featured_order - b.featured_order);
     const large = featured.find((p) => p.featured_large);
     const small = featured.filter((p) => !p.featured_large);
-    expect(large.id).toBe('poultry-aiot-edge');
-    expect(small.map((p) => p.id)).toEqual(['biofloc-iot', 'solar-irrigation']);
+    expect(large, 'one featured_large project').toBeTruthy();
     const section = page.locator('[data-home="selected"]');
     await expect(section.locator('.eyebrow')).toHaveText(content.home.selected.eyebrow);
     await expect(section.getByRole('heading', { level: 2 })).toHaveText(
@@ -281,7 +282,7 @@ test.describe('Home document', () => {
     );
     await expect(section.locator('.section-intro')).toHaveText(content.home.selected.intro);
     const cards = section.locator('[data-featured-project] .work-card');
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(featured.length);
     // The large card first: amber "Featured project", the role line, title, summary, period,
     // tags and status.
     const first = cards.nth(0);
@@ -289,7 +290,9 @@ test.describe('Home document', () => {
     await expect(first.locator('.work-eyebrow')).toHaveText(content.home.selected.large_eyebrow);
     await expect(first.locator('.work-role-line')).toHaveText(large.role_line);
     await expect(first.locator('.work-period')).toHaveText(large.period);
-    await expect(first.locator('.card-status')).toHaveText('In progress');
+    if (large.status) {
+      await expect(first.locator('.card-status')).toHaveText(STATUS_TEXT[large.status]);
+    }
     // H3 (1.6.0), round 5 (FD-172): the cover is a full-width strip at the card's top, inside the card's
     // height (v1.5.1's); the small cards have none.
     await expect(first.locator('.blog-cover')).toHaveCount(1);
@@ -316,12 +319,9 @@ test.describe('Home document', () => {
       const response = await page.request.get(pagePath(`project-${project.id}.html`));
       expect(response.status(), project.id).toBe(200);
     }
-    expect(Object.fromEntries([large, ...small].map((p) => [p.id, p.card_tags]))).toEqual({
-      'poultry-aiot-edge': ['IoT', 'Edge AI', 'Control systems'],
-      // FD-108: "Automation" added.
-      'biofloc-iot': ['IoT', 'Aquaculture', 'Automation'],
-      'solar-irrigation': ['IoT', 'Solar energy', 'Irrigation'],
-    });
+    // Each card's three tags are its card_tags (the FD-108 tag update is checked against the approved
+    // content in tests/content.spec.js).
+    for (const project of [large, ...small]) expect(project.card_tags).toHaveLength(3);
     await page.goto(`/project-${large.id}.html`);
     for (const tag of large.tags) {
       await expect(page.locator('.pill', { hasText: tag }).first()).toBeVisible();
@@ -355,8 +355,8 @@ test.describe('Home document', () => {
     await expect(section.locator('.section-intro')).toHaveText(content.home.latest.intro);
     // H6 (1.6.0): the Blog's own card, with its cover on top.
     const cards = section.locator('.blog-card');
-    await expect(cards).toHaveCount(3);
-    for (const [i, post] of content.blog.entries()) {
+    await expect(cards).toHaveCount(site.latestPosts.length);
+    for (const [i, post] of site.latestPosts.entries()) {
       const card = cards.nth(i);
       const label = content.blogPage.categories.find((c) => c.id === post.category).label;
       await expect(card.locator('.blog-card-category')).toHaveText(label);
@@ -812,19 +812,19 @@ test.describe('Selected publications (FD-91)', () => {
     );
     await expect(section.locator('.section-intro')).toHaveText(content.home.publications.intro);
     const rows = section.locator('.home-pub');
-    expect(papers).toHaveLength(3);
     await expect(rows).toHaveCount(papers.length);
     for (const [i, pub] of papers.entries()) {
       const row = rows.nth(i);
       // The site author is always the first author in this list.
       expect(pub.authors[0].me, pub.id).toBe(true);
-      expect(pub.authors[0].name).toBe('Al Mamun, M. R.');
       await expect(row.locator('.home-pub-index')).toHaveText(String(i + 1).padStart(2, '0'));
       await expect(row.locator('.home-pub-type')).toHaveText(
         pub.type === 'journal' ? 'Journal' : 'Conference',
       );
       await expect(row.getByRole('heading', { level: 3 })).toHaveText(pub.title);
-      await expect(row.locator('.home-pub-authors')).toHaveText('Al Mamun, M. R., et al.');
+      await expect(row.locator('.home-pub-authors')).toHaveText(
+        `${pub.authors[0].name}${pub.authors.length > 1 ? ', et al.' : ''}`,
+      );
       await expect(row.locator('.home-pub-venue em')).toHaveText(pub.venue);
       await expect(row.locator('.home-pub-venue')).toHaveText(venueLine(pub, ' · '));
       const doi = row.getByRole('link', { name: /^DOI/ });
@@ -1131,7 +1131,9 @@ test.describe('Latest posts with a published post (FD-45)', () => {
     delete process.env.SHOW_DRAFTS;
     try {
       expect(buildSite(content, { release: true, bodies: {} }).postList).toEqual([]);
-      expect(buildSite(content, { release: false, bodies: {} }).postList).toHaveLength(3);
+      expect(buildSite(content, { release: false, bodies: {} }).postList).toHaveLength(
+        content.blog.length,
+      );
     } finally {
       if (saved !== undefined) process.env.SHOW_DRAFTS = saved;
     }
@@ -1169,7 +1171,7 @@ test.describe('Latest posts layout (FD-103)', () => {
     await page.goto('/index.html');
     await page.evaluate(() => document.fonts.ready);
     const cards = await rects(page, '[data-home="latest"] .blog-card');
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(site.latestPosts.length);
     for (const key of ['width', 'height', 'top']) {
       const values = cards.map((card) => card[key]);
       expect(Math.max(...values) - Math.min(...values), key).toBeLessThanOrEqual(1);
@@ -1182,7 +1184,7 @@ test.describe('Latest posts layout (FD-103)', () => {
     const [title] = await rects(page, '#latest-title');
     expect(more.bottom).toBeLessThanOrEqual(cards[0].top);
     expect(more.top).toBeLessThan(title.bottom);
-    expect(Math.abs(more.right - cards[2].right)).toBeLessThanOrEqual(1);
+    expect(Math.abs(more.right - cards.at(-1).right)).toBeLessThanOrEqual(1);
     await page
       .locator('[data-home="latest"]')
       .screenshot({ path: 'tests/screenshots/home/latest-posts-1440-dark.png' });
@@ -1198,7 +1200,7 @@ test.describe('Latest posts layout (FD-103)', () => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto('/index.html');
     const cards = await rects(page, '[data-home="latest"] .blog-card');
-    expect(cards).toHaveLength(3);
+    expect(cards).toHaveLength(site.latestPosts.length);
     for (let i = 1; i < cards.length; i += 1) {
       expect(cards[i].top).toBeGreaterThanOrEqual(cards[i - 1].bottom);
     }

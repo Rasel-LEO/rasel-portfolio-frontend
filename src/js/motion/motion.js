@@ -6,19 +6,13 @@
 // - Fine-pointer desktops: Lenis smooth wheel scrolling (FD-64).
 // Every part is undone when its condition stops matching (window size, pointer, the OS
 // motion setting), so no hidden state or inline style is left behind.
+import { isPlainClick, MOTION, ms, token } from '../core/media.js';
 import { clearSmoothScroll, setSmoothScroll } from '../core/scroll.js';
 
-const MOTION = '(prefers-reduced-motion: no-preference)';
 const FINE = '(hover: hover) and (pointer: fine)';
 const DESKTOP = '(min-width: 992px)';
 
-const token = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 const px = (name) => parseFloat(token(name)) || 0;
-// Durations in either unit: the production CSS minifier writes 320ms as .32s.
-const ms = (name, fallback) => {
-  const value = token(name);
-  return parseFloat(value) * (value.endsWith('ms') ? 1 : 1000) || fallback;
-};
 
 // Reveal staggers: cards --stagger (60 ms), chips 40 ms (no token); at most four
 // steps.
@@ -227,8 +221,7 @@ function initMagnetic() {
 // target takes focus, as a native jump would give it.
 function anchorHandler(lenis) {
   return (event) => {
-    if (event.defaultPrevented || event.button !== 0) return;
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    if (!isPlainClick(event)) return;
     const link = event.target.closest('a[href^="#"]');
     const id = link ? decodeURIComponent(link.hash.slice(1)) : '';
     const target = id && document.getElementById(id);

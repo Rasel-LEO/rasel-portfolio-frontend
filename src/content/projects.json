@@ -13,6 +13,7 @@
     "featured_large": true,
     "topic": "poultry",
     "card_description": "IoT-based monitoring and control with AI-edge computing.",
+    "meta_description": "An IoT-based monitoring and control system with AI-edge computing for poultry farm management: real-time data collection and control algorithms.",
     "role_line": "Research Assistant · M.S. thesis",
     "card_tags": ["IoT", "Edge AI", "Control systems"],
     "card_image": {
@@ -35,6 +36,7 @@
     "topic": "poultry",
     "short_title": "Real-time poultry monitoring & control",
     "card_description": "IoT monitoring system for poultry farms (B.Sc. thesis).",
+    "meta_description": "A B.Sc. thesis project: an IoT-based real-time monitoring and controlling system for poultry farms, with sensors for tracking and monitoring.",
     "role_line": "Undergraduate research (B.Sc. thesis)",
     "card_tags": ["IoT", "Sensors", "Poultry"],
     "card_image": {
@@ -141,6 +143,7 @@
       ]
     },
     "card_description": "IoT monitoring and control for aquaculture.",
+    "meta_description": "An IoT-based biofloc system: real-time water-quality monitoring and automated control for biofloc aquaculture.",
     "role_line": "Research team",
     "card_tags": ["IoT", "Aquaculture", "Automation"],
     "card_image": {
@@ -163,6 +166,7 @@
     "topic": "machinery",
     "short_title": "Farm machinery tracking & hiring",
     "card_description": "IoT and edge AI for tracking and hiring agricultural machinery.",
+    "meta_description": "A real-time IoT and edge-AI system for tracking and hiring agricultural machinery: hardware, software, data collection and analysis.",
     "role_line": "Research team",
     "card_tags": ["IoT", "Edge AI", "Farm machinery"],
     "card_image": {
@@ -259,6 +263,7 @@
       ]
     },
     "card_description": "IoT-enabled irrigation for precision agriculture.",
+    "meta_description": "Solar-powered IoT monitoring and automatic pump control for precision irrigation in agriculture.",
     "role_line": "Research team",
     "card_tags": ["IoT", "Solar energy", "Irrigation"],
     "card_image": {
@@ -281,6 +286,7 @@
     "topic": "aquaculture",
     "short_title": "Solar-powered fish feed spreader",
     "card_description": "Modification and evaluation of an IoT-based automated fish feeder.",
+    "meta_description": "The modification and evaluation of an IoT-based, solar-powered automated fish feed spreader.",
     "role_line": "Research team",
     "card_tags": ["IoT", "Aquaculture", "Machine design"],
     "card_image": {
@@ -303,6 +309,7 @@
     "topic": "crop",
     "short_title": "Potato volume & size grading",
     "card_description": "Neural-network prediction from two-dimensional RGB images.",
+    "meta_description": "A neural-network model that predicts the volume and weight of potatoes and grades them by size from two-dimensional RGB images.",
     "role_line": "Research team",
     "card_tags": ["Machine vision", "Neural networks", "Post-harvest"],
     "card_image": {
@@ -325,6 +332,7 @@
     "topic": "machinery",
     "short_title": "Power tiller ergonomics by age",
     "card_description": "Ergonomic performance of power tiller operators of different ages.",
+    "meta_description": "An assessment of the ergonomic performance of power tiller operators of different ages.",
     "role_line": "Research team",
     "card_tags": ["Farm machinery", "Ergonomics", "Data analysis"],
     "card_image": {
@@ -347,6 +355,7 @@
     "topic": "aquaculture",
     "short_title": "Biofloc system for winter",
     "card_description": "Modifying a biofloc system for the winter season.",
+    "meta_description": "The modification of a biofloc aquaculture system for the winter season.",
     "role_line": "Research team",
     "card_tags": ["Aquaculture", "Biofloc", "Hardware"],
     "card_image": {
@@ -369,6 +378,7 @@
     "topic": "poultry",
     "short_title": "Low-cost egg incubator",
     "card_description": "Semi-automated incubator for homestead egg hatching.",
+    "meta_description": "A low-cost, semi-automated egg incubator for homestead egg hatching: machine design and data collection.",
     "role_line": "Research team",
     "card_tags": ["Machine design", "Poultry", "Automation"],
     "card_image": {
@@ -391,6 +401,7 @@
     "topic": "cea",
     "short_title": "LED lighting for hydroponic lettuce",
     "card_description": "Effect of coloured LED combinations in a hydroponic system.",
+    "meta_description": "The effect of different combinations of coloured LED light in a hydroponic system for lettuce.",
     "role_line": "Research team",
     "card_tags": ["Controlled environment agriculture", "Hydroponics", "Data analysis"],
     "card_image": {
@@ -413,6 +424,7 @@
     "topic": "machinery",
     "short_title": "Walking-type multi-nozzle sprayer",
     "card_description": "Design and development of a multi-nozzle sprayer.",
+    "meta_description": "The design and development of a walking-type multi-nozzle sprayer.",
     "role_line": "Research team",
     "card_tags": ["Farm machinery", "Crop protection", "Agricultural engineering"],
     "card_image": {
@@ -435,6 +447,7 @@
     "topic": "crop",
     "short_title": "Precision rice seed germination",
     "card_description": "Sustainable and conventional approaches compared.",
+    "meta_description": "Sustainable and conventional approaches to rice seed germination compared, aiming for precision agriculture.",
     "role_line": "Research team",
     "card_tags": ["Precision agriculture", "Rice", "Agricultural engineering"],
     "card_image": {
@@ -457,6 +470,7 @@
     "topic": "irrigation",
     "short_title": "Solar & AI smart irrigation",
     "card_description": "IoT irrigation with solar power and AI decision making.",
+    "meta_description": "An IoT-enabled smart irrigation system enhanced with solar power and AI for optimised decision making.",
     "role_line": "Research team",
     "card_tags": ["IoT", "AI", "Irrigation"],
     "card_image": {
@@ -479,6 +493,7 @@
     "topic": "aquaculture",
     "short_title": "Insulated ice boxes for fisheries",
     "card_description": "Sustainable ice storage boxes for marine fisheries compared.",
+    "meta_description": "The design and comparative performance analysis of sustainable insulated ice storage boxes for marine fisheries.",
     "role_line": "Research team",
     "card_tags": ["Fisheries", "Post-harvest", "Design"],
     "card_image": {

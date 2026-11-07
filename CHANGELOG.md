@@ -5,6 +5,19 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.7.4 — 2026-11-07
+
+The QA audit fixes.
+
+- Accessibility (FD-184): in the light theme the primary buttons ("Hire me", "Send", "Download CV" and the Home actions) keep at least 4.5:1 contrast when hovered or focused; their hover fill is now slightly lighter instead of darker. On phones the two footer email links are 44 px tall touch targets. These are the only visible changes.
+- Search (FD-185): projects and posts can have their own search description (`meta_description`, at most 160 characters); without one a project uses its summary line or card description and a post its standfirst, cut at a full sentence. Filtered project and Blog pages are `noindex,follow` with the list page as canonical, the 404 page is `noindex`, and the blog post data names its image, address, dates, author and publisher.
+- Content check (FD-186): every documented limit is checked before each build from one shared table — page titles, descriptions, the editable text slots and every list — and a published post may not contain a `[bracketed]` placeholder anywhere.
+- Lists, images and forms (FD-187): filter options appear only when they have items; the first card of a list loads first; card images come in 480, 960 and 1600 px widths; form fields have the same length limits as the Django forms, and a very long message is shortened in the email fallback.
+- Tests (FD-188): the motion tests run on a controlled page clock, so a busy machine no longer fails them; tests read their counts from the content, rebuild a stale build themselves and pick up new test files automatically.
+- CI (FD-189): the test job runs in Playwright's own container image, so the browser and its system packages are no longer installed on every run.
+- Clean-up (FD-190): unused code removed, shared helpers for the motion setting and link clicks, safer cookie and observer handling, and the working copies of the content are no longer in the public export.
+- Motion and the approved design are otherwise unchanged.
+
 ## 1.7.3 — 2026-11-06
 
 - Includes everything in 1.7.1 and 1.7.2.

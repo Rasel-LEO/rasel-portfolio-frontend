@@ -1020,9 +1020,10 @@ test.describe('project pages', () => {
       await expect(page.locator('h1')).toHaveText(project.title);
       await expect(page).toHaveTitle(`${project.short_title} — Ideatrium`);
       titles.add(await page.title());
+      // 1.7.4 (F07): the project's search description, never the contribution text.
       await expect(page.locator('meta[name="description"]')).toHaveAttribute(
         'content',
-        project.contribution,
+        project.description,
       );
       // S5: "← Projects".
       await expect(page.getByRole('navigation', { name: 'Back' })).toHaveText('Projects');

@@ -6,6 +6,7 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { cutAtSentence } from './limits.mjs';
 import { blogFile } from './lists.mjs';
 import { isBracketed, readingMinutes, renderMarkdown } from './markdown.mjs';
 
@@ -106,6 +107,44 @@ const longDate = (iso) =>
 // A featured project as its Home card (1.7.0: card_tags, exactly three, on every card).
 const homeCard = (project) => project && { ...project, cardTags: project.card_tags };
 
+// 1.7.4 (F14): the widths of a card image, the same ones Django makes. The 1600 px file is the card
+// image itself; the 480 and 960 px copies sit beside it as <name>-480.webp, <name>-960.webp (and
+// .avif twins when the image has an AVIF).
+export const CARD_WIDTHS = [480, 960, 1600];
+const variantPath = (path, width) => path.replace(/\.(webp|avif)$/, `-${width}.$1`);
+
+// The srcset of a card image's WebP and AVIF, or null when its 480 and 960 px copies do not exist
+// (the image is then served at 1600 px only; the validator warns).
+export function cardVariants(image, srcDir = join(root, 'src')) {
+  if (!image?.src) return null;
+  const formats = [image.src, image.avif].filter(Boolean);
+  const copies = formats.flatMap((path) =>
+    CARD_WIDTHS.slice(0, -1).map((w) => variantPath(path, w)),
+  );
+  if (!copies.every((path) => existsSync(join(srcDir, path)))) return null;
+  const srcset = (path) =>
+    CARD_WIDTHS.map((w) => `${w === 1600 ? path : variantPath(path, w)} ${w}w`).join(', ');
+  return { srcset: srcset(image.src), avif_srcset: image.avif ? srcset(image.avif) : undefined };
+}
+
+// The card image with its srcset (F14); an explicit srcset in the content is kept.
+const withVariants = (image) =>
+  image && !image.srcset ? { ...image, ...cardVariants(image) } : image;
+
+// 1.7.4 (F02, F07): the search description (meta, og: and twitter:description), at most 160
+// characters. A project: its meta_description, else the detail's summary line, else its card
+// description (never the contribution list). A post: its meta_description, else the standfirst cut
+// at the last full sentence within 160 characters; a bracketed standfirst gives a generic line.
+const projectDescription = (project) =>
+  cutAtSentence(
+    project.meta_description ?? project.detail?.summary_line ?? project.card_description,
+  );
+const postDescription = (post, profile) => {
+  if (post.meta_description) return cutAtSentence(post.meta_description);
+  if (isBracketed(post.standfirst)) return `${post.title} — a post by ${profile.name}`;
+  return cutAtSentence(post.standfirst);
+};
+
 // 1.7.0: the share image (1200 × 630) of a project or post, made at build time from its card image
 // (vite.config.js shareImages) and named after the page it belongs to.
 export const shareImagePath = (kind, key) => `/images/share/${kind}-${key}.jpg`;
@@ -164,6 +203,9 @@ export function buildSite(
     // the release build.
     showDrafts = (process.env.SHOW_DRAFTS ?? '').trim() === '' ? !release : showDraftsFromEnv(),
     bodies = loadPostBodies(content.blog),
+    // 1.7.4 (F06): the domain (SITE_URL) for the absolute URLs of the BlogPosting data; empty
+    // without a domain (FD-22).
+    siteUrl = '',
   } = {},
 ) {
   const { profile, links, publications, projects, awards, fields, portfolio, researchArchive } =
@@ -183,6 +225,8 @@ export function buildSite(
     facts: projectFacts(project),
     text: renderProjectText(project.detail),
     shareImage: shareImagePath('project', project.id),
+    card_image: withVariants(project.card_image),
+    description: projectDescription(project),
   }));
   projectList.forEach((project, i) => {
     const prev = projectList[i - 1];
@@ -210,7 +254,7 @@ export function buildSite(
   }));
 
   const person = personLd(profile, links, fields);
-  const postList = buildPosts(content, { showDrafts, bodies, person });
+  const postList = buildPosts(content, { showDrafts, bodies, person, siteUrl });
   // Home (FD-103): the built posts now, without a Draft chip; in the release build (FD-45) only
   // published ones. Newest first (undated in the data's order), up to three.
   const latestPosts = postList
@@ -228,14 +272,18 @@ export function buildSite(
       String(n),
     );
   };
-  const categories = content.blogPage.categories.map((category) => {
-    const posts = postList.filter((post) => post.category === category.id);
-    return {
-      ...category,
-      count: posts.length,
-      countText: `${countText(posts)} in ${category.label}`,
-    };
-  });
+  // 1.7.4 (F08): only categories with at least one post this build lists are offered (the release
+  // build lists published posts only; Django: published posts).
+  const categories = content.blogPage.categories
+    .map((category) => {
+      const posts = postList.filter((post) => post.category === category.id);
+      return {
+        ...category,
+        count: posts.length,
+        countText: `${countText(posts)} in ${category.label}`,
+      };
+    })
+    .filter((category) => category.count > 0);
 
   const counts = {
     publications: publications.length,
@@ -383,10 +431,13 @@ function projectFacts(project) {
 // The research archive (FD-115): one card per project — topic, status, short title, role line,
 // short summary, two pills — with the words the search matches (titles and tags) and the
 // count line for all projects. The filter's count is the same label with other numbers.
+// 1.7.4 (F08): the topic filter offers only topics with at least one project.
 function archiveView(archive, projectList) {
   const total = projectList.length;
+  const used = new Set(projectList.map((project) => project.topic));
   return {
     ...archive,
+    topics: archive.topics.filter((topic) => used.has(topic.id)),
     total,
     cards: projectList.map((project) => ({
       ...project,
@@ -397,18 +448,17 @@ function archiveView(archive, projectList) {
 }
 
 // Blog posts in the order of blog.json, drafts left out unless showDrafts (FD-36).
-function buildPosts({ blog, blogPage, profile }, { showDrafts, bodies, person }) {
+function buildPosts({ blog, blogPage, profile }, { showDrafts, bodies, person, siteUrl }) {
   const labels = Object.fromEntries(blogPage.categories.map((c) => [c.id, c.label]));
   const visible = blog.filter((post) => showDrafts || post.status !== 'draft');
   const list = visible.map((post) => {
     const body = bodies[post.slug] ?? '';
     const minutes = readingMinutes(body);
-    // FD-39 meta rule: the standfirst once written, otherwise a generic line.
-    const description = isBracketed(post.standfirst)
-      ? `${post.title} — a post by ${profile.name}`
-      : post.standfirst;
+    // FD-39 meta rule, 1.7.4 (F02): meta_description, else the standfirst (cut at a sentence).
+    const description = postDescription(post, profile);
     return {
       ...post,
+      card_image: withVariants(post.card_image),
       file: postFile(post.slug),
       draft: post.status === 'draft',
       categoryLabel: labels[post.category],
@@ -450,22 +500,37 @@ function buildPosts({ blog, blogPage, profile }, { showDrafts, bodies, person })
     post.categoryHref = `/${blogFile({ category: post.category })}`;
     // P2: the mobile "On this page" box needs three or more headings.
     post.tocLong = post.toc.length >= 3;
-    post.ld = postingLd(post, person);
+    post.ld = postingLd(post, person, siteUrl);
   });
   return list;
 }
 
-// schema.org BlogPosting, one per post page.
-function postingLd(post, person) {
+// schema.org BlogPosting, one per post page. 1.7.4 (F06): the share image, the canonical URL
+// (url and mainEntityOfPage, once SITE_URL is set), datePublished and dateModified (the same date:
+// the content has no later one; Django uses its last edit when later), the author and the
+// publisher (both the Person).
+function postingLd(post, person, siteUrl = '') {
+  const canonical = siteUrl ? `${siteUrl}/${post.file}` : null;
+  const author = {
+    '@type': 'Person',
+    name: person.name,
+    ...(siteUrl ? { url: `${siteUrl}/` } : {}),
+    sameAs: person.sameAs,
+  };
   return {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
     headline: post.title,
     description: post.description,
+    image: `${siteUrl}${post.shareImage}`,
+    ...(canonical
+      ? { url: canonical, mainEntityOfPage: { '@type': 'WebPage', '@id': canonical } }
+      : {}),
     articleSection: post.categoryLabel,
     inLanguage: 'en',
-    ...(post.date ? { datePublished: post.date } : {}),
-    author: { '@type': 'Person', name: person.name, sameAs: person.sameAs },
+    ...(post.date ? { datePublished: post.date, dateModified: post.date } : {}),
+    author,
+    publisher: author,
   };
 }
 

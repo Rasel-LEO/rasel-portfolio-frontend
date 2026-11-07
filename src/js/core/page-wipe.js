@@ -6,15 +6,14 @@
 // buttons), downloads, links a page module has already handled, and reduced motion. Enter on a
 // link is a click too. The listener sits on window, so the document's handlers run first.
 import Offcanvas from 'bootstrap/js/dist/offcanvas.js';
+import { isPlainClick, MOTION } from './media.js';
 
-const MOTION = '(prefers-reduced-motion: no-preference)';
 const CLOSE_MAX = 300;
 // If the browser stays on this page (a download, a 204, a failed request) the wipe reopens.
 const STAY_MAX = 2000;
 
 function wipeTarget(event) {
-  if (event.defaultPrevented || event.button !== 0) return null;
-  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return null;
+  if (!isPlainClick(event)) return null;
   const link = event.target instanceof Element ? event.target.closest('a[href]') : null;
   // SVG links have no URL in .href.
   if (!(link instanceof HTMLAnchorElement) || link.hasAttribute('download')) return null;
@@ -48,12 +47,13 @@ export function initPageWipe() {
       timers.push(setTimeout(reopen, STAY_MAX));
     };
     const half = wipe.querySelector('.half');
+    // 1.7.4 (F21): without the halves, the timer below navigates.
     const onEnd = (event) => {
       if (event.target !== half || event.propertyName !== 'transform') return;
       half.removeEventListener('transitionend', onEnd);
       go();
     };
-    half.addEventListener('transitionend', onEnd);
+    half?.addEventListener('transitionend', onEnd);
     timers.push(setTimeout(go, CLOSE_MAX));
     wipe.classList.add('is-leaving');
   };

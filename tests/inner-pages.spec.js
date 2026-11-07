@@ -2,7 +2,7 @@
 // The inner pages (FD-112 … FD-119) — content, illustrations, Blog, post, research
 // archive, project pages, Hire me, Contact, 404 and the site-wide link styles.
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { expect, test } from './fixtures.js';
@@ -11,11 +11,15 @@ import { validateContent } from '../tools/validate-content.mjs';
 import { isDjango, pagePath } from './pages.js';
 
 const read = (path) => JSON.parse(readFileSync(path, 'utf8'));
-const inner = read('docs/content/inner-pages-content.json');
+// 1.7.4 (F25): docs/content/ (the owner's working copies of the content) is not in the public copy;
+// without it the comparisons with it skip and the project details come from src/content.
+const innerFile = 'docs/content/inner-pages-content.json';
+const inner = existsSync(innerFile) ? read(innerFile) : null;
 const site = buildSite();
 
 test.describe('item 1: content', () => {
   test('src/content and public-content.json equal the approved content file', () => {
+    test.skip(!inner, 'docs/content/ is not in the public copy');
     const content = loadContent();
     const pub = read('docs/content/public-content.json');
     for (const blogPage of [content.blogPage, pub.blog_page]) {
@@ -338,7 +342,9 @@ test.describe('item 6: project detail template (FD-116)', () => {
     test(`${project.file}: blocks from the data only; facts equal the content file`, async ({
       page,
     }) => {
-      const detail = inner.projects[project.id].detail;
+      const detail = (
+        inner?.projects[project.id] ?? loadContent().projects.find((p) => p.id === project.id)
+      ).detail;
       await page.goto(`/${project.file}`);
       // S5 (1.6.0): one back link at the top, "← Projects".
       const back = page.getByRole('navigation', { name: 'Back' });

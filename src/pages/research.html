@@ -2,7 +2,8 @@
 <html lang="en">
   <head>
     {{> shell/head title=archive.pageTitle description=portfolioView.researchDescription
-    relPrev=archive.relPrev relNext=archive.relNext noindexPage=archive.noindex}}
+    relPrev=archive.relPrev relNext=archive.relNext robots=archive.robots
+    canonicalFile=archive.canonical}}
   </head>
   <body data-page="research">
     {{> shell/page-wipe}} {{> shell/header}} {{> shell/drawer}}
@@ -90,7 +91,7 @@
           <ul class="list-unstyled row pf-cards archive-cards mb-0" data-archive-list>
             {{#each archive.cards}}
             <li class="col-md-6 col-lg-4" data-project-card>
-              {{> sections/archive-card tag="h3"}}
+              {{> sections/archive-card tag="h3" eager=@first}}
             </li>
             {{/each}}
           </ul>

@@ -175,7 +175,7 @@ export async function revealAll(page) {
     }
     window.scrollTo({ top: 0, behavior: 'instant' });
   });
-  await page.waitForFunction(() => !document.querySelector('.reveal, .stage-reveal.is-pre'));
+  await page.waitForFunction(() => !document.querySelector('.reveal'));
   // Home screen 2 (FD-85): its entrance has finished; below 992 px it has played.
   await page.waitForFunction(
     () =>
@@ -192,3 +192,19 @@ export async function revealAll(page) {
 // A pattern for a URL that ends with the page's path on the current target.
 export const pageEnd = (file) =>
   new RegExp(`${[...pagePath(file)].map((c) => (/\w/.test(c) ? c : `\\${c}`)).join('')}$`);
+
+// 1.7.4 (F12, F23): stop the page's virtual clock (page.clock, installed before the page loaded) a
+// moment after the page's own now. Under load the page's time can pass that moment before the
+// call arrives ("cannot fast-forward to the past"), so it is asked again with a fresh now.
+export async function pauseClock(page, ahead = 100) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    const now = await page.evaluate(() => Date.now());
+    try {
+      await page.clock.pauseAt(now + ahead * (attempt + 1));
+      return;
+    } catch (error) {
+      if (!/past/i.test(String(error))) throw error;
+    }
+  }
+  throw new Error('pauseClock: the page clock could not be paused');
+}

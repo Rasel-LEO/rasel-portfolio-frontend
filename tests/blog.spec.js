@@ -12,28 +12,34 @@ import { isDjango, pagePath, postPages } from './pages.js';
 
 const site = buildSite(loadContent(), { showDrafts: true });
 const posts = site.postList;
+// 1.7.4 (F23): counts and labels from the content, not the trial data's numbers.
+const allCount = site.blogView.countText;
+const markdownOf = (post) => readFileSync(`src/content/posts/${post.slug}.md`, 'utf8');
+const h2Count = (post) => (markdownOf(post).match(/^## /gm) ?? []).length;
+const codeCount = (post) => (markdownOf(post).match(/^```/gm) ?? []).length / 2;
 
 test.describe('Blog list', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/blog.html');
   });
 
-  test('lists the three posts as image cards with category and Draft labels', async ({ page }) => {
+  test('lists every post as an image card with category and Draft labels', async ({ page }) => {
     test.skip(
       isDjango,
       'Django: the seed posts are drafts and Django does not publish drafts (FD-137)',
     );
     const items = page.locator('[data-post-category]');
-    await expect(items).toHaveCount(3);
-    for (const [i, post] of posts.entries()) {
+    await expect(items).toHaveCount(Math.min(posts.length, 9));
+    for (const [i, post] of posts.slice(0, 9).entries()) {
       const item = items.nth(i);
       await expect(item.locator('.blog-card-category')).toHaveText(post.categoryLabel);
-      await expect(item.locator('[data-draft-label]')).toHaveText('Draft');
+      const draft = post.draft ? ', Draft' : '';
+      if (post.draft) await expect(item.locator('[data-draft-label]')).toHaveText('Draft');
       // 1.5.0: the category and "Draft" read as two words ("…, Draft"), and the link name says
       // the post is a draft.
-      await expect(item.locator('.blog-card-meta')).toHaveText(`${post.categoryLabel}, Draft`);
+      await expect(item.locator('.blog-card-meta')).toHaveText(`${post.categoryLabel}${draft}`);
       await expect(item.locator('.blog-card-link')).toHaveAccessibleName(
-        `Read article: ${post.title} (draft)`,
+        `Read article: ${post.title}${post.draft ? ' (draft)' : ''}`,
       );
       const link = item.getByRole('link', { name: post.title });
       await expect(link).toHaveAttribute('href', pagePath(post.file));
@@ -50,7 +56,7 @@ test.describe('Blog list', () => {
     const group = page.getByRole('navigation', { name: 'Blog categories' });
     await expect(group).toBeVisible();
     const count = page.locator('.blog-count');
-    await expect(count).toHaveText('3 articles');
+    await expect(count).toHaveText(allCount);
 
     for (const category of site.categories) {
       const button = group.getByRole('link', { name: category.label });
@@ -60,14 +66,18 @@ test.describe('Blog list', () => {
         'aria-current',
         'page',
       );
-      await expect(count).toHaveText(`1 article in ${category.label}`);
+      await expect(count).toHaveText(category.countText);
       const visible = page.locator('[data-post-category]:visible');
-      await expect(visible).toHaveCount(1);
-      await expect(visible).toHaveAttribute('data-post-category', category.id);
+      await expect(visible).toHaveCount(Math.min(category.count, 9));
+      for (const item of await visible.all()) {
+        await expect(item).toHaveAttribute('data-post-category', category.id);
+      }
     }
     await group.getByRole('link', { name: 'All' }).click();
-    await expect(page.locator('[data-post-category]:visible')).toHaveCount(3);
-    await expect(count).toHaveText('3 articles');
+    await expect(page.locator('[data-post-category]:visible')).toHaveCount(
+      Math.min(posts.length, 9),
+    );
+    await expect(count).toHaveText(allCount);
   });
 });
 
@@ -81,8 +91,10 @@ test.describe('Blog without JavaScript', () => {
     );
     await page.goto('/blog.html');
     await expect(page.getByRole('navigation', { name: 'Blog categories' })).toBeVisible();
-    await expect(page.locator('[data-post-category]:visible')).toHaveCount(3);
-    for (const post of posts) {
+    await expect(page.locator('[data-post-category]:visible')).toHaveCount(
+      Math.min(posts.length, 9),
+    );
+    for (const post of posts.slice(0, 9)) {
       await expect(page.getByRole('link', { name: post.title })).toBeVisible();
     }
   });
@@ -113,12 +125,16 @@ test.describe('Post pages', () => {
         pagePath(`blog-category-${post.category}.html`),
       );
       await expect(page.locator('.entry-meta')).toHaveText(`${post.minutes} min read`);
-      await expect(page.locator('.page-head .chip-draft')).toHaveText('Draft');
+      if (post.draft) await expect(page.locator('.page-head .chip-draft')).toHaveText('Draft');
       await expect(page.locator('.prose .standfirst')).toHaveText(post.standfirst);
-      await expect(page.locator('.prose h2')).toHaveCount(2);
-      await expect(page.locator('.prose pre.prose-code code')).toHaveCount(1);
-      await expect(page.locator('.prose figure.fig figcaption')).toHaveCount(post.figures.length);
-      await expect(page.locator('.prose figure.fig .fig-label').first()).toHaveText('Figure 1.');
+      await expect(page.locator('.prose h2')).toHaveCount(h2Count(post));
+      await expect(page.locator('.prose pre.prose-code code')).toHaveCount(codeCount(post));
+      await expect(page.locator('.prose figure.fig figcaption')).toHaveCount(
+        post.figures?.length ?? 0,
+      );
+      if (post.figures?.length) {
+        await expect(page.locator('.prose figure.fig .fig-label').first()).toHaveText('Figure 1.');
+      }
       await expect(page.getByRole('link', { name: 'Back to all articles' })).toHaveAttribute(
         'href',
         pagePath('blog.html'),
@@ -139,13 +155,15 @@ test.describe('Post pages', () => {
       }
 
       await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'article');
-      // FD-39: the standfirst once written (FD-103), else a generic line.
-      await expect(page.locator('meta[name="description"]')).toHaveAttribute(
-        'content',
-        post.standfirst.startsWith('[')
-          ? `${post.title} — a post by ${site.profile.name}`
-          : post.standfirst,
-      );
+      // FD-39, 1.7.4 (F02): meta_description, else the standfirst cut at a sentence (≤ 160).
+      for (const selector of [
+        'meta[name="description"]',
+        'meta[property="og:description"]',
+        'meta[name="twitter:description"]',
+      ]) {
+        await expect(page.locator(selector)).toHaveAttribute('content', post.description);
+      }
+      expect(post.description.length).toBeLessThanOrEqual(160);
       const ld = await page
         .locator('script[type="application/ld+json"]')
         .evaluateAll((els) => els.map((el) => JSON.parse(el.textContent)));
@@ -153,10 +171,17 @@ test.describe('Post pages', () => {
       expect(postings).toHaveLength(1);
       expect(postings[0]).toMatchObject({
         headline: post.title,
+        description: post.description,
         inLanguage: 'en',
         articleSection: post.categoryLabel,
         author: { '@type': 'Person', name: site.profile.name },
+        publisher: { '@type': 'Person', name: site.profile.name },
+        // 1.7.4 (F06): the share image (absolute once SITE_URL is set, tests/release.spec.js).
+        image: post.shareImage,
       });
+      if (post.date) {
+        expect(postings[0]).toMatchObject({ datePublished: post.date, dateModified: post.date });
+      }
     });
   }
 
