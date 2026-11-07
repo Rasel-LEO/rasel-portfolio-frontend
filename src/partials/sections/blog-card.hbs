@@ -7,7 +7,7 @@ while drafts are shown; a hidden ", " separates the two for screen readers, and 
 stretched over the card. --}}
 <article class="card blog-card" data-reveal>
   <div class="blog-cover">
-    {{> components/card-image image=card_image decorative=true eager=eager sizes="(min-width: 992px) 33vw, (min-width: 768px) 50vw, 100vw"}}
+    {{> components/card-image image=card_image decorative=true eager=eager priority=priority sizes="(min-width: 992px) 33vw, (min-width: 768px) 50vw, 100vw"}}
   </div>
   <div class="blog-card-body">
     <p class="blog-card-meta mb-0"><span class="t-label blog-card-category">{{categoryLabel}}</span>{{#if draft}}<span class="visually-hidden">, </span><span class="blog-card-draft" data-draft-label>Draft</span>{{/if}}</p>

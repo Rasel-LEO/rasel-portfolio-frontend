@@ -190,6 +190,9 @@ test('no page requests another origin', async ({ page, baseURL }) => {
 // other image is lazy. A <picture> source with several candidates (1.7.4: the card images' 480, 960
 // and 1600 px) has `sizes`.
 test('FD-130: images carry dimensions and load lazily below the first screen', () => {
+  // A list card image (its sizes) and how many came before it on the page.
+  const LIST_CARD = 'sizes="(min-width: 992px) 33vw, (min-width: 768px) 50vw, 100vw"';
+  let card = 0;
   const eager = (file, img) =>
     (file === 'index.html' && img.includes('fetchpriority="high"')) ||
     (file === 'portfolio.html' && img.includes('avatar-512')) ||
@@ -197,19 +200,22 @@ test('FD-130: images carry dimensions and load lazily below the first screen', (
     // 1.7.0: the page-top card image of a project or post is the LCP.
     (/^(project-|post-|portfolio-entry|blog-post).*\.html$/.test(file) &&
       img.includes('fetchpriority="high"')) ||
-    // 1.7.4 (F13): so is the first card of a list page (one per page, checked below).
-    (/^(research|blog)[-.]/.test(file) && img.includes('fetchpriority="high"'));
+    // 1.7.5 (FD-191): so is the first card row of a list page (three cards; only the first has
+    // fetchpriority="high", checked below).
+    (/^(research|blog)[-.]/.test(file) && card < 3 && img.includes(LIST_CARD));
   for (const file of pages) {
     const html = readFileSync(`dist/${file}`, 'utf8');
     if (/^(research|blog)[-.]/.test(file) && html.includes('data-list-results')) {
       const first = (html.match(/fetchpriority="high"/g) ?? []).length;
       expect(first, file).toBeLessThanOrEqual(1);
     }
+    card = 0;
     for (const [img] of html.matchAll(/<img\b[\s\S]*?>/g)) {
       expect(img, file).toMatch(/\swidth="\d+"/);
       expect(img, file).toMatch(/\sheight="\d+"/);
       if (eager(file, img)) expect(img, file).not.toContain('loading="lazy"');
       else expect(img, file).toContain('loading="lazy"');
+      if (img.includes(LIST_CARD)) card += 1;
     }
     for (const [source] of html.matchAll(/<source\b[^>]*>/g)) {
       // FD-142: Django's released images (the rich-content figure samples) list their WebP

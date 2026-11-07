@@ -745,7 +745,7 @@ must mirror:
 - **Used-only filter options** (FD-187): the topic select and the category tabs list only topics
   and categories with at least one published item. A query naming an unused one shows the
   unfiltered list.
-- **First card eager** (FD-187): on the projects archive and the Blog (every state and page), the
+- **First card eager** (FD-187; 1.7.5 extends it to the whole first row, § 20): on the projects archive and the Blog (every state and page), the
   first card's `<img>` has `loading="eager"` and `fetchpriority="high"`; every other card stays
   `loading="lazy"` (`sections/archive-card` and `sections/blog-card` take `eager`, which they pass to
   `components/card-image`).
@@ -765,3 +765,19 @@ must mirror:
 - **Content limits** (FD-186): `tools/limits.mjs` is the one table of § 14.1 plus the page-title
   rule (short title + " — Ideatrium" ≤ 60) and the 160-character descriptions; Django's model
   validation should enforce the same numbers.
+
+## 20. 1.7.5 changes for Django
+
+Decision FD-191 (`docs/decisions.md`). Everything Django must mirror:
+
+- **Eager first row** (replaces the "First card eager" item of § 19): on the projects archive and
+  the Blog (every state and page) the first **three** cards' `<img>` have `loading="eager"`; only
+  the first card's also has `fetchpriority="high"`; every later card stays `loading="lazy"`.
+  `sections/archive-card` and `sections/blog-card` take `eager` and `priority` and pass both to
+  `components/card-image`, which writes `fetchpriority="high"` only for `priority`. In the Django
+  loop: `eager` = `forloop.counter <= 3`, `priority` = `forloop.first`. The project and post page
+  tops pass `eager=true priority=true` (markup unchanged).
+- **Period wording**: a project period is "Month YYYY to Month YYYY", "Month YYYY to present" or
+  "YYYY to YYYY" (no dash); Django renders the same text, the frontend prints it as given.
+- **Script** (arrives with the asset sync): `tab-ink.js` waits for the tabs' fonts before it first
+  measures a tab row and re-measures when a tab changes size. No template or `data-*` hook changed.

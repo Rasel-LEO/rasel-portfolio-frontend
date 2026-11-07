@@ -185,19 +185,21 @@ test.describe('filter options with results only (F08)', () => {
   });
 });
 
-test.describe('list pages: the first card eager, every card in three widths (F13, F14)', () => {
+test.describe('list pages: the first card row eager, every card in three widths (FD-191, F14)', () => {
   for (const file of ['research.html', 'blog.html']) {
-    test(`${file}: first card eager with fetchpriority high, the others lazy`, async ({ page }) => {
+    test(`${file}: first row eager, fetchpriority high on the first card only, the rest lazy`, async ({
+      page,
+    }) => {
       test.skip(isDjango && file === 'blog.html', 'Django publishes no post (FD-137)');
       await page.goto(pagePath(file));
       const imgs = page.locator('main [data-list-results] .blog-cover img');
       const n = await imgs.count();
       expect(n).toBeGreaterThan(1);
-      await expect(imgs.first()).toHaveAttribute('loading', 'eager');
+      // The whole first row of the widest layout (three cards from 992 px) loads eagerly.
       await expect(imgs.first()).toHaveAttribute('fetchpriority', 'high');
-      for (let i = 1; i < n; i += 1) {
-        await expect(imgs.nth(i)).toHaveAttribute('loading', 'lazy');
-        await expect(imgs.nth(i)).not.toHaveAttribute('fetchpriority', /.*/);
+      for (let i = 0; i < n; i += 1) {
+        await expect(imgs.nth(i)).toHaveAttribute('loading', i < 3 ? 'eager' : 'lazy');
+        if (i > 0) await expect(imgs.nth(i)).not.toHaveAttribute('fetchpriority', /.*/);
       }
       // 480, 960 and 1600 w for the WebP and the AVIF, with sizes.
       const srcset = await imgs.first().getAttribute('srcset');

@@ -36,8 +36,8 @@
         {{!-- 1.7.0: the card image is the page-top image — 16:9, the full content width, with its
         alt text; the LCP, so eager. --}}
         <div class="blog-cover project-cover">
-          {{> components/card-image image=project.card_image eager=true sizes="(min-width: 1400px)
-          1296px, (min-width: 992px) 960px, 100vw"}}
+          {{> components/card-image image=project.card_image eager=true priority=true
+          sizes="(min-width: 1400px) 1296px, (min-width: 992px) 960px, 100vw"}}
         </div>
         {{#if project.detail.system}}
         <section class="system" aria-labelledby="system-title" data-reveal>
