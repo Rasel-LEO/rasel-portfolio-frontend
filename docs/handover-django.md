@@ -781,3 +781,12 @@ Decision FD-191 (`docs/decisions.md`). Everything Django must mirror:
   "YYYY to YYYY" (no dash); Django renders the same text, the frontend prints it as given.
 - **Script** (arrives with the asset sync): `tab-ink.js` waits for the tabs' fonts before it first
   measures a tab row and re-measures when a tab changes size. No template or `data-*` hook changed.
+
+## 21. 1.7.6 changes for Django
+
+Decision FD-192 (`docs/decisions.md`). Everything Django must mirror:
+
+- **Home intro full stop** (synced copy): the Home "Selected publications" intro
+  (`home.publications.intro`) is now "First-author papers." with a full stop, matching the
+  Portfolio intro. Update the synced Home copy (data or template text) to the same string. No
+  template, class, script or `data-*` hook changed.

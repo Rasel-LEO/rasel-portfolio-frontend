@@ -5,6 +5,13 @@ Author: Rasel Al Mamun
 All notable changes to this project. Versions 0.1 – 0.9 are the development milestones before
 the first public release (1.0.0). Decision ids (FD-xx) refer to `docs/decisions.md`.
 
+## 1.7.6 — 2026-11-09
+
+A tiny maintenance release (FD-192).
+
+- Home: the "Selected publications" intro now reads "First-author papers." with a full stop, like the Portfolio intro. This line is the only visible change.
+- Motion and the approved design are unchanged.
+
 ## 1.7.5 — 2026-11-07
 
 A small maintenance release (FD-191).
