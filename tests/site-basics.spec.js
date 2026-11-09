@@ -83,6 +83,8 @@ test.describe('final content, word for word', () => {
     );
     expect(pf.profile.summary_line).toHaveLength(121);
     expect(pf.publications.intro).toBe('First-author papers in IoT and agricultural engineering.');
+    // FD-192: the Home intro ends with a full stop, like the Portfolio intro.
+    expect(content.home.publications.intro).toBe('First-author papers.');
     expect(pf.projects.heading).toBe('Selected projects');
     expect(pf.projects.intro).toBe(
       'Research and software projects: IoT, edge AI, automation and applications.',
